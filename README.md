@@ -32,7 +32,7 @@
 项目代码由美国豆包编写，预留了自行拓展的接口，不过感觉4个世界观基本够用了，感兴趣的可以自己改改。
 好用的话麻烦帮我点个免费的star☆吧
 
-感谢[nnlmc](https://github.com/nnlmc)移植的GsCore版本，仓库地址：https://github.com/nnlmc/ChisaEating
+感谢[Mimo](https://github.com/MimoKit)移植的GsCore版本，仓库地址：https://github.com/MimoKit/ChisaEating
 
 当前版本：`v2.3.3` | 作者：Rua432
 
