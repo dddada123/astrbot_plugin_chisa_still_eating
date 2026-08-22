@@ -1,769 +1,1357 @@
 {
-  "enable_blacklist": {
-    "description": "🚫 启用群聊黑名单",
-    "hint": "【最高优先级】开启后，黑名单内的群组将绝对无法触发吃什么功能。",
-    "type": "bool",
-    "default": false
-  },
-  "blacklist_groups": {
-    "description": "📝 群聊黑名单列表",
-    "hint": "在此填写需要屏蔽的群号（点击添加，一行一个）。",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "force_download_assets": {
+        "description": "🔄 强制重新下载基础图库 (约160M)",
+        "hint": "勾选并保存后，插件将在后台从Github自动拉取图库包。如一直下载失败，请取消勾选并前往 Readme 查看夸克/百度网盘链接进行手动下载。",
+        "type": "bool",
+        "default": false
     },
-    "default": []
-  },
-  "enable_whitelist": {
-    "description": "✅ 启用群聊白名单",
-    "hint": "开启后，只有在白名单内的群组才能触发功能。（注意：若一个群同时在黑白名单内，会被黑名单拦截）",
-    "type": "bool",
-    "default": false
-  },
-  "whitelist_groups": {
-    "description": "📝 群聊白名单列表",
-    "hint": "在此填写允许使用的群号（点击添加，一行一个）。",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "admin_users": {
+        "default": [],
+        "description": "👑 管理员账号白名单",
+        "items": {
+            "type": "string"
+        },
+        "hint": "只有在这里配置了QQ号/账号ID的用户，才可以使用 /加菜 功能上传菜品。",
+        "type": "list"
     },
-    "default": []
-  },
-  "active_world": {
-    "description": "🎯 默认激活世界观",
-    "hint": "下拉选择默认主导推荐官所在的世界。用于决定常规句式人称 and 基础表情包来源。",
-    "type": "string",
-    "options": [
-      "世界1(鸣潮)",
-      "世界2(原神)",
-      "世界3(自定义)",
-      "世界4(自定义)"
-    ],
-    "default": "世界1(鸣潮)"
-  },
-  "world1_aliases": {
-    "description": "🔍 世界1 触发别名",
-    "hint": "发送例如“鸣潮特产”、“索拉里斯特产”，自动强转到世界1抓取食物。可自定义唤醒前缀。格式: [\"鸣潮\", \"索拉里斯\"]",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "weight_3d": {
+        "description": "🌎 三次元池权重",
+        "hint": "出厂默认: 70。与开启了哪些世界无关，按数字大小进行概率分配",
+        "type": "int",
+        "default": 70
     },
-    "default": [
-      "鸣潮",
-      "索拉里斯"
-    ]
-  },
-  "world2_aliases": {
-    "description": "🔍 世界2 触发别名",
-    "hint": "发送例如“原神特产”、“提瓦特特产”，自动强转到世界2抓取食物。可自定义唤醒前缀。格式: [\"原神\", \"提瓦特\"]",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "weight_w1": {
+        "description": "🪐 鸣潮(世界1)池权重",
+        "hint": "出厂默认: 20。未启用的世界请务必填0",
+        "type": "int",
+        "default": 20
     },
-    "default": [
-      "原神",
-      "提瓦特"
-    ]
-  },
-  "world3_aliases": {
-    "description": "🔍 世界3 触发别名",
-    "hint": "自定义世界3的触发别名列表",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "weight_w2": {
+        "description": "🪐 原神(世界2)池权重",
+        "type": "int",
+        "default": 5,
+        "hint": "出厂默认: 5"
     },
-    "default": []
-  },
-  "world4_aliases": {
-    "description": "🔍 世界4 触发别名",
-    "hint": "自定义世界4的触发别名列表",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "weight_w3": {
+        "description": "🪐 终末地(世界3)池权重",
+        "type": "int",
+        "default": 5,
+        "hint": "出厂默认: 5"
     },
-    "default": []
-  },
-  "global_meme_prob": {
-    "description": "🎲 常规 Meme 掉落概率 (%)",
-    "hint": "普通发饭时，附带发送常规吐槽表情包的概率 (0-100)",
-    "type": "int",
-    "default": 30
-  },
-  "chef_meme_prob": {
-    "description": "🍳 厨师图鉴触发概率 (%)",
-    "hint": "触发带【厨师名】的特制食物时，同步发送该厨师立绘/动图的概率 (0-100)",
-    "type": "int",
-    "default": 50
-  },
-  "interception_egg_chance": {
-    "description": "⚔️ 拦截乱入夺食概率 (%)",
-    "hint": "由于触发防刷屏拦截时，值班干饭人直接乱入夺食并发送抢饭语录的概率 (0-100)",
-    "type": "int",
-    "default": 50
-  },
-  "history_limit": {
-    "description": "🕰️ 群组防重复记忆长度",
-    "hint": "同一个群聊内，最近X次抽取到的食物/饮品绝对不会重复出现。设置为0则关闭此功能。",
-    "type": "int",
-    "default": 30
-  },
-  "spam_threshold": {
-    "description": "🛑 防刷屏拦截触发次数",
-    "hint": "60秒内允许连续触发的最大次数。超过后将发送各推荐官的【无语】打断表情与人设化句式。",
-    "type": "int",
-    "default": 3
-  },
-  "enable_ai": {
-    "description": "🤖 开启 AI 优先智能拟人回复",
-    "hint": "开启后将自动接入当前 AstrBot 所配置的底层人格数据进行现场对白。",
-    "type": "bool",
-    "default": false
-  },
-  "ai_probability": {
-    "description": "🎲 AI 回复触发概率",
-    "hint": "0-100。当上方开启AI回复后，每次抽签有对应概率不走死板模板，而是让大模型现场生成带有情绪的台词。",
-    "type": "int",
-    "default": 5
-  },
-  "egg_prob": {
-    "description": "🎁 抢饭彩蛋劫持概率",
-    "hint": "每次生成推荐时触发抢饭宇宙的概率(0-100)。触发后将截断发图，替换为抢饭叙事。",
-    "type": "int",
-    "default": 10
-  },
-  "egg_pool": {
-    "description": "🍚 指定出场干饭人卡池 (不填则全员随机)",
-    "hint": "填单个名字=绝对指定；填多个名字请用分号 ; 隔开 (如：千咲;派蒙)。添加自定义角色方法请查阅插件 README 文档。",
-    "type": "string",
-    "default": ""
-  },
-  "repeat_prob": {
-    "description": "🔁 摆烂复读概率",
-    "hint": "触发推荐官陷入沉思并摆烂复读的概率(0-100)，触发时附带【思考】表情包。",
-    "type": "int",
-    "default": 10
-  },
-  "repeat_cooldown": {
-    "description": "⏳ 摆烂复读冷却锁定时间 (秒)",
-    "hint": "触发一次摆烂复读后，该群聊在指定秒数内将强制进入正常推荐流程，绝不连续摆烂。默认60秒。",
-    "type": "int",
-    "default": 60
-  },
-  "eat_fallback_words": {
-    "description": "💬 「吃什么」发呆摆烂词库",
-    "hint": "触发吃什么复读或库为空时的兜底回复句式",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "weight_w4": {
+        "description": "🪐 世界4池权重",
+        "type": "int",
+        "default": 0,
+        "hint": "出厂默认: 0"
     },
-    "default": [
-      "是啊，吃什么"
-    ]
-  },
-  "drink_fallback_words": {
-    "description": "💬 「喝什么」发呆摆烂词库",
-    "hint": "触发喝什么复读或库为空时的兜底回复句式",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "weight_w5": {
+        "description": "🪐 世界5池权重",
+        "type": "int",
+        "default": 0,
+        "hint": "出厂默认: 0"
     },
-    "default": [
-      "是啊，喝什么"
-    ]
-  },
-  "mode_loyal": {
-    "description": "⚔️ 誓死效忠模式",
-    "hint": "【互斥模式】开启后推荐官死守本世界观，绝对不吃其他世界的特产（三次元不影响）。",
-    "type": "bool",
-    "default": false
-  },
-  "mode_roller": {
-    "description": "🚜 压路机入口模式",
-    "hint": "【互斥模式】只吃二次元世界的特色料理，完全屏蔽和过滤掉三次元的常规普通食物。",
-    "type": "bool",
-    "default": false
-  },
-  "mode_normie": {
-    "description": "🌍 二刺猿不熟模式",
-    "hint": "【互斥模式】完全不吃任何二次元特产，强制要求只吃三次元常规食物。",
-    "type": "bool",
-    "default": false
-  },
-  "trigger_eat": {
-    "description": "🍔 【吃什么】触发词",
-    "hint": "全局唤醒食物抽选的关键词列表",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "enable_blacklist": {
+        "description": "🚫 启用群聊黑名单",
+        "hint": "【最高优先级】开启后，黑名单内的群组将绝对无法触发吃什么功能。",
+        "type": "bool",
+        "default": false
     },
-    "default": [
-      "吃什么",
-      "吃啥",
-      "吃点儿啥"
-    ]
-  },
-  "trigger_drink": {
-    "description": "🥤 【喝什么】触发词",
-    "hint": "全局唤醒饮品抽选的关键词列表",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "blacklist_groups": {
+        "description": "📝 群聊黑名单列表",
+        "hint": "在此填写需要屏蔽的群号（点击添加，一行一个）。",
+        "type": "list",
+        "items": {
+            "type": "string"
+        },
+        "default": []
     },
-    "default": [
-      "喝什么",
-      "喝啥",
-      "喝点儿啥"
-    ]
-  },
-  "trigger_dark": {
-    "description": "☠️ 【黑暗料理】触发词",
-    "hint": "作死召唤各世界特异黑暗料理卡池的触发词",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "enable_whitelist": {
+        "description": "✅ 启用群聊白名单",
+        "hint": "开启后，只有在白名单内的群组才能触发功能。（注意：若一个群同时在黑白名单内，会被黑名单拦截）",
+        "type": "bool",
+        "default": false
     },
-    "default": [
-      "来点黑暗料理",
-      "黑暗料理"
-    ]
-  },
-  "trigger_common_eat": {
-    "description": "🍔 【现实食物】绝对锁定触发词",
-    "hint": "识别到这些词时，100% 只从 common (三次元) 卡池抽取食物",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "whitelist_groups": {
+        "description": "📝 群聊白名单列表",
+        "hint": "在此填写允许使用的群号（点击添加，一行一个）。",
+        "type": "list",
+        "items": {
+            "type": "string"
+        },
+        "default": []
     },
-    "default": [
-      "来点现实的食物",
-      "来点三次元食物"
-    ]
-  },
-  "trigger_common_drink": {
-    "description": "🥤 【现实饮品】绝对锁定触发词",
-    "hint": "识别到这些词时，100% 只从 common (三次元) 卡池抽取饮品",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "global_meme_prob": {
+        "description": "🎲 常规 Meme 掉落概率 (%)",
+        "hint": "普通发饭时，附带发送常规吐槽表情包的概率 (0-100)",
+        "type": "int",
+        "default": 30
     },
-    "default": [
-      "来点现实的饮品",
-      "来点三次元饮品"
-    ]
-  },
-  "common_food_text": {
-    "description": "🍱 三次元文字食物卡池",
-    "hint": "没有图片也能吃的现实美食！填写在此处的菜名会和 common 文件夹的图片混合抽选。",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "chef_meme_prob": {
+        "description": "🍳 厨师图鉴触发概率 (%)",
+        "hint": "触发带【厨师名】的特制食物时，同步发送该厨师立绘/动图的概率 (0-100)",
+        "type": "int",
+        "default": 50
     },
-    "default": [
-      "黄焖鸡米饭",
-      "麻婆豆腐",
-      "猪脚饭",
-      "兰州牛肉面"
-    ]
-  },
-  "common_drink_text": {
-    "description": "🧋 三次元文字饮品卡池",
-    "hint": "没有图片也能喝的现实饮品！",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "interception_egg_chance": {
+        "description": "⚔️ 拦截乱入夺食概率 (%)",
+        "hint": "由于触发防刷屏拦截时，值班干饭人直接乱入夺食并发送抢饭语录的概率 (0-100)",
+        "type": "int",
+        "default": 50
     },
-    "default": [
-      "冰可乐",
-      "乌龙茶",
-      "冰吸生椰拿铁",
-      "白开水"
-    ]
-  },
-  "crossover_templates": {
-    "description": "🌀 跨次元大乱斗联动句式池",
-    "hint": "大乱斗模式下跨界抽中其他世界食物时触发。支持变量: {bot_a}~{bot_d}, {world_a}~{world_d}, {full_food_desc}。",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "history_limit": {
+        "description": "🕰️ 群组防重复记忆长度",
+        "hint": "同一个群聊内，最近X次抽取到的食物/饮品绝对不会重复出现。设置为0则关闭此功能。",
+        "type": "int",
+        "default": 30
     },
-    "default": [
-      "{bot_a}在穿过隧门的过程中，意外来到了{world_b}，并和{bot_b}一起吃了{full_food_desc}！",
-      "{bot_a}为了寻找稀有食材，不小心跌入时空裂缝掉进{world_b}，被{bot_b}请客吃了一顿{full_food_desc}。",
-      "次元壁破裂啦！{bot_a}从{world_b}顺手拿走了一份{full_food_desc}，并高高兴兴地带回了{world_a}。",
-      "{bot_a}在探索新区域时迷路到了{world_b}，刚好遇到了正端着一盘{full_food_desc}的{bot_b}。"
-    ]
-  },
-  "dark_templates": {
-    "description": "☠️ 黑暗料理专属全局句式池",
-    "hint": "抽到黑暗料理时触发。支持占位符: {bot}, {full_food_desc}",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "spam_threshold": {
+        "description": "🛑 防刷屏拦截触发次数",
+        "hint": "60秒内允许连续触发的最大次数。超过后将发送各推荐官的【无语】打断表情与人设化句式。",
+        "type": "int",
+        "default": 3
     },
-    "default": [
-      "救命，这{full_food_desc}真的是碳基生物能咽下去的吗？！",
-      "端上来的居然是{full_food_desc}...{bot}看了一眼，决定战术后仰。",
-      "看到{full_food_desc}的那一刻，{bot}的沉默震耳欲聋...",
-      "这盘{full_food_desc}散发着诡异的光芒，谁敢动筷子啊！",
-      "警报！{bot}发现了一份危险的{full_food_desc}，建议立刻销毁！"
-    ]
-  },
-  "generic_templates": {
-    "description": "💬 常规无联动普通推荐句式池",
-    "hint": "抽中三次元普通食物或未触发跨界特产时的后备推荐池。可用变量: {bot}, {food}",
-    "type": "list",
-    "items": {
-      "type": "string"
+    "enable_ai": {
+        "description": "🤖 开启 AI 优先智能拟人回复",
+        "hint": "开启后将自动接入当前 AstrBot 所配置的底层人格数据进行现场对白。",
+        "type": "bool",
+        "default": false
     },
-    "default": [
-      "铛铛！为你抽中了美味的{food}！",
-      "经过深思熟虑，{bot}把这盘{food}端到了你面前。",
-      "别纠结啦，今天就吃{food}吧！",
-      "经过一番精密的摇号，{bot}宣布今天派发的美食是{food}！",
-      "听{bot}的，今天尝试一下{food}准没错~"
-    ]
-  },
-  "world1": {
-    "description": "🌊 【世界 1】配置 (鸣潮)",
-    "hint": "索拉里斯世界观专属情绪仓与叙事池",
-    "type": "object",
-    "items": {
-      "1.世界名称": {
-        "description": "1.世界名称",
-        "hint": "当前世界的主名称",
+    "ai_probability": {
+        "description": "🎲 AI 回复触发概率",
+        "hint": "0-100。当上方开启AI回复后，每次抽签有对应概率不走死板模板，而是让大模型现场生成带有情绪的台词。",
+        "type": "int",
+        "default": 5
+    },
+    "egg_prob": {
+        "description": "🎁 抢饭彩蛋劫持概率",
+        "hint": "每次生成推荐时触发抢饭宇宙的概率(0-100)。触发后将截断发图，替换为抢饭叙事。",
+        "type": "int",
+        "default": 10
+    },
+    "egg_pool": {
+        "description": "🍚 指定出场干饭人卡池 (不填则全员随机)",
+        "hint": "填单个名字=绝对指定；填多个名字请用分号 ; 隔开 (如：千咲;派蒙)。添加自定义角色方法请查阅插件 README 文档。",
         "type": "string",
-        "default": "鸣潮"
-      },
-      "2.世界别称": {
-        "description": "2.世界别称",
-        "hint": "触发地区特产时的别名",
+        "default": ""
+    },
+    "repeat_prob": {
+        "description": "🔁 摆烂复读概率",
+        "hint": "触发推荐官陷入沉思并摆烂复读的概率(0-100)，触发时附带【思考】表情包。",
+        "type": "int",
+        "default": 10
+    },
+    "repeat_cooldown": {
+        "description": "⏳ 摆烂复读冷却锁定时间 (秒)",
+        "hint": "触发一次摆烂复读后，该群聊在指定秒数内将强制进入正常推荐流程，绝不连续摆烂。默认60秒。",
+        "type": "int",
+        "default": 60
+    },
+    "eat_fallback_words": {
+        "description": "💬 「吃什么」发呆摆烂词库",
+        "hint": "触发吃什么复读或库为空时的兜底回复句式",
         "type": "list",
         "items": {
-          "type": "string"
+            "type": "string"
         },
         "default": [
-          "索拉里斯",
-          "鸣潮世界"
+            "是啊，吃什么"
         ]
-      },
-      "3.自称池": {
-        "description": "3.自称池",
-        "hint": "推荐官自称 ({bot})",
+    },
+    "drink_fallback_words": {
+        "description": "💬 「喝什么」发呆摆烂词库",
+        "hint": "触发喝什么复读或库为空时的兜底回复句式",
         "type": "list",
         "items": {
-          "type": "string"
+            "type": "string"
         },
         "default": [
-          "爱弥斯",
-          "小爱",
-          "雪绒豹豹"
+            "是啊，喝什么"
         ]
-      },
-      "4.专属句式": {
-        "description": "4.专属句式",
-        "hint": "本世界普通推荐",
+    },
+    "mode_loyal": {
+        "description": "⚔️ 誓死效忠模式",
+        "hint": "【互斥模式】开启后推荐官死守本世界观，绝对不吃其他世界的特产（三次元不影响）。",
+        "type": "bool",
+        "default": false
+    },
+    "mode_roller": {
+        "description": "🚜 压路机入口模式",
+        "hint": "【互斥模式】只吃二次元世界的特色料理，完全屏蔽和过滤掉三次元的常规普通食物。",
+        "type": "bool",
+        "default": false
+    },
+    "mode_normie": {
+        "description": "🌍 二刺猿不熟模式",
+        "hint": "【互斥模式】完全不吃任何二次元特产，强制要求只吃三次元常规食物。",
+        "type": "bool",
+        "default": false
+    },
+    "trigger_eat": {
+        "description": "🍔 【吃什么】触发词",
+        "hint": "全局唤醒食物抽选的关键词列表",
         "type": "list",
         "items": {
-          "type": "string"
+            "type": "string"
         },
         "default": [
-          "{bot}觉得今天这顿非{food}莫属啦",
-          "唔...根据{bot}的精密测算，今天你和{food}的相性是百分之百哦",
-          "{bot}强烈建议你尝尝{food}，绝对不踩雷",
-          "既然不知道吃什么，那就来一份索拉里斯特产的{food}吧",
-          "快看快看，新鲜出炉的{food}！这可是索拉里斯最抢手的美食呢"
+            "吃什么",
+            "吃啥",
+            "吃点儿啥"
         ]
-      },
-      "5.厨师句式": {
-        "description": "5.厨师句式",
-        "hint": "【厨师】前缀专属联动",
+    },
+    "trigger_drink": {
+        "description": "🥤 【喝什么】触发词",
+        "hint": "全局唤醒饮品抽选的关键词列表",
         "type": "list",
         "items": {
-          "type": "string"
+            "type": "string"
         },
         "default": [
-          "哇！这可是【{chef}】亲自下厨特制的{food}哦",
-          "尝尝看！【{chef}】对这份{food}可是非常有自信呢",
-          "这份{food}里满满都是【{chef}】的心意，不吃完的话{bot}可要生气啦",
-          "天哪，居然能捕捉到【{chef}】亲手捏制的{food}，今天运气简直太好啦",
-          "【{chef}】带着热腾腾的{food}走过来了，快趁热吃吧"
+            "喝什么",
+            "喝啥",
+            "喝点儿啥"
         ]
-      },
-      "6.打断句式": {
-        "description": "6.打断句式",
-        "hint": "防刷屏阻断文案",
+    },
+    "trigger_dark": {
+        "description": "☠️ 【黑暗料理】触发词",
+        "hint": "作死召唤各世界特异黑暗料理卡池的触发词",
         "type": "list",
         "items": {
-          "type": "string"
+            "type": "string"
         },
         "default": [
-          "{bot}认为吃得太多对健康不好哦，稍微休息会儿吧",
-          "哎呀，后厨的锅都被你点冒烟啦，{bot}觉得需要给厨师放个假",
-          "数据终端显示你的饱食度已经超标了呢，{bot}建议先去散散步哦",
-          "警报！检测到点菜频率过快，{bot}申请开启防刷屏管制！",
-          "再吃下去肚子就要变成圆滚滚的啦，{bot}才不帮你抱走呢"
+            "来点黑暗料理",
+            "黑暗料理"
         ]
-      },
-      "7.文字食物": {
-        "description": "7.文字食物",
-        "hint": "纯文字卡池",
+    },
+    "trigger_common_eat": {
+        "description": "🍔 【现实食物】绝对锁定触发词",
+        "hint": "识别到这些词时，100% 只从 common (三次元) 卡池抽取食物",
         "type": "list",
         "items": {
-          "type": "string"
+            "type": "string"
         },
         "default": [
-          "香柠切片",
-          "冷调激浪",
-          "今州排骨",
-          "龙吐珠"
+            "来点现实的食物",
+            "来点三次元食物"
         ]
-      },
-      "8.文字饮品": {
-        "description": "8.文字饮品",
-        "hint": "纯文字卡池",
+    },
+    "trigger_common_drink": {
+        "description": "🥤 【现实饮品】绝对锁定触发词",
+        "hint": "识别到这些词时，100% 只从 common (三次元) 卡池抽取饮品",
         "type": "list",
         "items": {
-          "type": "string"
+            "type": "string"
         },
         "default": [
-          "今州特调",
-          "清神茶"
+            "来点现实的饮品",
+            "来点三次元饮品"
         ]
-      },
-      "9.文字黑暗料理": {
-        "description": "9.文字黑暗料理",
-        "hint": "危险特产",
+    },
+    "common_food_text": {
+        "description": "🍱 三次元文字食物卡池",
+        "hint": "没有图片也能吃的现实美食！填写在此处的菜名会和 common 文件夹的图片混合抽选。",
         "type": "list",
         "items": {
-          "type": "string"
+            "type": "string"
         },
         "default": [
-          "工业爆炸物",
-          "清汤变异巨蜥",
-          "异种残响烤串"
+            "黄焖鸡米饭",
+            "麻婆豆腐",
+            "猪脚饭",
+            "兰州牛肉面"
         ]
-      },
-      "10.黑暗料理句式": {
-        "description": "10.黑暗料理句式",
-        "hint": "端上黑暗料理时的惊恐文案",
+    },
+    "common_drink_text": {
+        "description": "🧋 三次元文字饮品卡池",
+        "hint": "没有图片也能喝的现实饮品！",
         "type": "list",
         "items": {
-          "type": "string"
+            "type": "string"
         },
         "default": [
-          "{bot}颤颤巍巍地端上一盘{full_food_desc}，并别开了视线",
-          "警报！警报！{bot}发现了一份极度危险的{full_food_desc}",
-          "{bot}强忍着逃跑的冲动，为你呈上了传说中的残留物{full_food_desc}",
-          "{bot}默默戴上了防毒面具，把那一盘散发着诡异不祥红光的{full_food_desc}推到了你面前",
-          "救命啊！这盘{full_food_desc}它刚才是不是动了一下？{bot}害怕地躲到了椅子后面"
+            "冰可乐",
+            "乌龙茶",
+            "冰吸生椰拿铁",
+            "白开水"
         ]
-      }
-    }
-  },
-  "world2": {
-    "description": "✨ 【世界 2】配置 (原神)",
-    "hint": "提瓦特大陆专属情绪仓与叙事池",
-    "type": "object",
-    "items": {
-      "1.世界名称": {
-        "description": "1.世界名称",
-        "hint": "当前世界的主名称",
+    },
+    "generic_templates": {
+        "description": "💬 常规无联动普通推荐句式池",
+        "hint": "抽中三次元普通食物或未触发跨界特产时的后备推荐池。可用变量: {bot}, {food}",
+        "type": "list",
+        "items": {
+            "type": "string"
+        },
+        "default": [
+            "铛铛！为你抽中了美味的{food}！",
+            "经过深思熟虑，{bot}把这盘{food}端到了你面前。",
+            "别纠结啦，今天就吃{food}吧！",
+            "经过一番精密的摇号，{bot}宣布今天派发的美食是{food}！",
+            "听{bot}的，今天尝试一下{food}准没错~"
+        ]
+    },
+    "generic_drink_templates": {
+        "default": [
+            "铛铛！为你抽中了清爽的{food}！",
+            "喝杯{food}解解渴吧！",
+            "听{bot}的，今天来一杯{food}准没错~"
+        ],
+        "description": "🥤 常规无联动饮品推荐句式池",
+        "items": {
+            "type": "string"
+        },
+        "hint": "抽中三次元普通饮品或未触发跨界时的后备饮品推荐池。可用变量: {bot}, {food}",
+        "type": "list"
+    },
+    "crossover_templates": {
+        "description": "🌀 跨次元大乱斗联动句式池",
+        "hint": "大乱斗模式下跨界抽中其他世界食物时触发。支持变量: {bot_a}~{bot_d}, {world_a}~{world_d}, {full_food_desc}。",
+        "type": "list",
+        "items": {
+            "type": "string"
+        },
+        "default": [
+            "{bot_a}在穿过隧门的过程中，意外来到了{world_b}，并和{bot_b}一起吃了{full_food_desc}！",
+            "{bot_a}为了寻找稀有食材，不小心跌入时空裂缝掉进{world_b}，被{bot_b}请客吃了一顿{full_food_desc}。",
+            "次元壁破裂啦！{bot_a}从{world_b}顺手拿走了一份{full_food_desc}，并高高兴兴地带回了{world_a}。",
+            "{bot_a}在探索新区域时迷路到了{world_b}，刚好遇到了正端着一盘{full_food_desc}的{bot_b}。"
+        ]
+    },
+    "crossover_drink_templates": {
+        "default": [
+            "{bot_a}去{world_b}进货时，顺手带回了一杯{full_food_desc}！",
+            "{bot_a}遇到了{bot_b}，一起畅饮了{full_food_desc}！"
+        ],
+        "description": "🌀 跨次元大乱斗饮品联动句式池",
+        "items": {
+            "type": "string"
+        },
+        "hint": "大乱斗模式下跨界抽中其他世界饮品时触发。",
+        "type": "list"
+    },
+    "dark_templates": {
+        "description": "☠️ 黑暗料理专属全局句式池",
+        "hint": "抽到黑暗料理时触发。支持占位符: {bot}, {full_food_desc}",
+        "type": "list",
+        "items": {
+            "type": "string"
+        },
+        "default": [
+            "救命，这{full_food_desc}真的是碳基生物能咽下去的吗？！",
+            "端上来的居然是{full_food_desc}...{bot}看了一眼，决定战术后仰。",
+            "看到{full_food_desc}的那一刻，{bot}的沉默震耳欲聋...",
+            "这盘{full_food_desc}散发着诡异的光芒，谁敢动筷子啊！",
+            "警报！{bot}发现了一份危险的{full_food_desc}，建议立刻销毁！"
+        ]
+    },
+    "dark_drink_templates": {
+        "default": [
+            "这杯{full_food_desc}真的能喝吗？！",
+            "{bot}端着这杯冒着诡异气泡的{full_food_desc}，陷入了沉思..."
+        ],
+        "description": "☠️ 黑暗饮品专属全局句式池",
+        "items": {
+            "type": "string"
+        },
+        "hint": "抽到黑暗饮品时触发。支持占位符: {bot}, {full_food_desc}",
+        "type": "list"
+    },
+    "active_world": {
+        "description": "🎯 默认激活世界观",
+        "hint": "下拉选择默认主导推荐官所在的世界。用于决定常规句式人称和基础表情包来源。请确保所选世界已开启，否则可能无数据。",
         "type": "string",
-        "default": "原神世界"
-      },
-      "2.世界别称": {
-        "description": "2.世界别称",
-        "hint": "触发地区特产时的别名",
+        "options": [
+            "世界1(鸣潮)",
+            "世界2(原神)",
+            "世界3(终末地)",
+            "世界4(自定义1)",
+            "世界5(自定义2)"
+        ],
+        "default": "世界1(鸣潮)"
+    },
+    "world1_aliases": {
+        "description": "🔍 世界1 触发别名",
+        "hint": "发送例如“鸣潮特产”、“索拉里斯特产”，自动强转到世界1抓取食物。可自定义唤醒前缀。格式: [\"鸣潮\", \"索拉里斯\"]",
         "type": "list",
         "items": {
-          "type": "string"
+            "type": "string"
         },
         "default": [
-          "提瓦特"
+            "鸣潮",
+            "索拉里斯"
         ]
-      },
-      "3.自称池": {
-        "description": "3.自称池",
-        "hint": "推荐官自称 ({bot})",
+    },
+    "world2_aliases": {
+        "description": "🔍 世界2 触发别名",
+        "hint": "发送例如“原神特产”、“提瓦特特产”，自动强转到世界2抓取食物。可自定义唤醒前缀。格式: [\"原神\", \"提瓦特\"]",
         "type": "list",
         "items": {
-          "type": "string"
+            "type": "string"
         },
         "default": [
-          "派蒙",
-          "本向导"
+            "原神",
+            "提瓦特"
         ]
-      },
-      "4.专属句式": {
-        "description": "4.专属句式",
-        "hint": "本世界普通推荐",
+    },
+    "world3_aliases": {
+        "description": "🔍 世界3 触发别名 (终末地)",
+        "hint": "发送例如“终末地特产”，自动强转到世界3抓取食物。格式: [\"终末地\", \"塔卫二\", \"帝江号\"]",
         "type": "list",
         "items": {
-          "type": "string"
+            "type": "string"
         },
         "default": [
-          "前面的区域，以后再来探索吧！先跟{bot}吃点{food}填饱肚子",
-          "旅行者，{bot}的肚子已经咕咕叫了...我们快去吃{food}好不好",
-          "愿风神保佑你今天吃到的{food}是最美味的",
-          "听冒险家协会的人说，提瓦特的{food}最近超级火爆哦",
-          "看在{food}的份上，{bot}就勉为其难再给你当一天向导吧"
+            "终末地",
+            "塔卫二",
+            "帝江号"
         ]
-      },
-      "5.厨师句式": {
-        "description": "5.厨师句式",
-        "hint": "【厨师】前缀专属联动",
+    },
+    "world4_aliases": {
+        "description": "🔍 世界4 触发别名",
+        "hint": "自定义世界4的触发别名列表",
         "type": "list",
         "items": {
-          "type": "string"
+            "type": "string"
         },
-        "default": [
-          "哇！是【{chef}】的特色料理{food}！快分{bot}一口，就一口",
-          "【{chef}】特意为你准备了{food}哦，吃饱了才有力气冒险嘛",
-          "这份{food}可是【{chef}】花了好长时间才做好的，旅行者可千万别浪费",
-          "天哪，是【{chef}】亲手掌勺的美味！这盘{food}归{bot}了",
-          "闻到万民堂的香味了！【{chef}】端着热腾腾的{food}来看我们啦"
-        ]
-      },
-      "6.打断句式": {
-        "description": "6.打断句式",
-        "hint": "防刷屏阻断文案",
-        "type": "list",
+        "default": []
+    },
+    "world5_aliases": {
+        "default": [],
+        "description": "🔍 世界5 触发别名",
         "items": {
-          "type": "string"
+            "type": "string"
         },
-        "default": [
-          "喂！你点得太快啦！{bot}的嘴巴都要跟不上了",
-          "再吃下去莫娜都要看不起我们了...{bot}建议先消化一下",
-          "你这家伙，是想把万民堂吃破产吗！{bot}命令你停止点菜",
-          "嗝~{bot}揉了稳滚滚的肚子，表示真的塞不下更多的菜了",
-          "前面的区域（指厨房）以后再来探索吧！厨师已经被你刷罢工了"
-        ]
-      },
-      "7.文字食物": {
-        "description": "7.文字食物",
-        "hint": "纯文字卡池",
-        "type": "list",
+        "hint": "自定义世界5的触发别名列表",
+        "type": "list"
+    },
+    "world1": {
+        "description": "🌊 【世界 1】配置 (鸣潮)",
+        "hint": "索拉里斯世界观专属情绪仓与叙事池",
+        "type": "object",
         "items": {
-          "type": "string"
-        },
-        "default": [
-          "甜甜花酿鸡",
-          "蜜酱胡萝卜煎肉",
-          "水煮黑背鲈",
-          "摩拉肉"
-        ]
-      },
-      "8.文字饮品": {
-        "description": "8.文字饮品",
-        "hint": "纯文字卡池",
-        "type": "list",
+            "enable": {
+                "description": "🌟 启用该世界",
+                "default": true,
+                "hint": "开启后该世界才会参与抽签大乱斗；关闭后完全屏蔽该世界。",
+                "type": "bool"
+            },
+            "1.世界名称": {
+                "description": "1.世界名称",
+                "hint": "当前世界的主名称",
+                "type": "string",
+                "default": "鸣潮",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "2.世界别称": {
+                "description": "2.世界别称",
+                "hint": "触发地区特产时的别名",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "索拉里斯",
+                    "鸣潮世界"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "3.自称池": {
+                "description": "3.自称池",
+                "hint": "推荐官自称 ({bot})",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "爱弥斯",
+                    "小爱",
+                    "雪绒豹豹"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "4.专属句式": {
+                "description": "4.专属句式",
+                "hint": "本世界普通推荐",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "{bot}觉得今天这顿非{food}莫属啦",
+                    "唔...根据{bot}的精密测算，今天你和{food}的相性是百分之百哦",
+                    "{bot}强烈建议你尝尝{food}，绝对不踩雷",
+                    "既然不知道吃什么，那就来一份索拉里斯特产的{food}吧",
+                    "快看快看，新鲜出炉的{food}！这可是索拉里斯最抢手的美食呢"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "5.厨师句式": {
+                "description": "5.厨师句式",
+                "hint": "【厨师】前缀专属联动",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "哇！这可是【{chef}】亲自下厨特制的{food}哦",
+                    "尝尝看！【{chef}】对这份{food}可是非常有自信呢",
+                    "这份{food}里满满都是【{chef}】的心意，不吃完的话{bot}可要生气啦",
+                    "天哪，居然能捕捉到【{chef}】亲手捏制的{food}，今天运气简直太好啦",
+                    "【{chef}】带着热腾腾的{food}走过来了，快趁热吃吧"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "6.打断句式": {
+                "description": "6.打断句式",
+                "hint": "防刷屏阻断文案",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "{bot}认为吃得太多对健康不好哦，稍微休息会儿吧",
+                    "哎呀，后厨的锅都被你点冒烟啦，{bot}觉得需要给厨师放个假",
+                    "数据终端显示你的饱食度已经超标了呢，{bot}建议先去散散步哦",
+                    "警报！检测到点菜频率过快，{bot}申请开启防刷屏管制！",
+                    "再吃下去肚子就要变成圆滚滚的啦，{bot}才不帮你抱走呢"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "7.文字食物": {
+                "description": "7.文字食物",
+                "hint": "纯文字卡池",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "香柠切片",
+                    "冷调激浪",
+                    "今州排骨",
+                    "龙吐珠"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "8.文字饮品": {
+                "description": "8.文字饮品",
+                "hint": "纯文字卡池",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "今州特调",
+                    "清神茶"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "9.文字黑暗料理": {
+                "description": "9.文字黑暗料理",
+                "hint": "危险特产",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "工业爆炸物",
+                    "清汤变异巨蜥",
+                    "异种残响烤串"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "10.黑暗料理句式": {
+                "description": "10.黑暗料理句式",
+                "hint": "端上黑暗料理时的惊恐文案",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "{bot}颤颤巍巍地端上一盘{full_food_desc}，并别开了视线",
+                    "警报！警报！{bot}发现了一份极度危险的{full_food_desc}",
+                    "{bot}强忍着逃跑的冲动，为你呈上了传说中的残留物{full_food_desc}",
+                    "{bot}默默戴上了防毒面具，把那一盘散发着诡异不祥红光的{full_food_desc}推到了你面前",
+                    "救命啊！这盘{full_food_desc}它刚才是不是动了一下？{bot}害怕地躲到了椅子后面"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "11.专属饮品句式": {
+                "default": [
+                    "这是{bot}为你推荐的饮品{food}，解解渴吧",
+                    "{bot}觉得这杯{food}最适合现在的你啦"
+                ],
+                "description": "11.专属饮品句式",
+                "items": {
+                    "type": "string"
+                },
+                "hint": "本世界饮品普通推荐",
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "12.厨师饮品句式": {
+                "default": [
+                    "哇！这可是【{chef}】特调的{food}哦，快尝尝",
+                    "【{chef}】端来了这杯{food}，看起来很不错呢"
+                ],
+                "description": "12.厨师饮品句式",
+                "items": {
+                    "type": "string"
+                },
+                "hint": "【厨师】前缀饮品专属联动",
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "13.黑暗饮品句式": {
+                "default": [
+                    "{bot}颤抖着递上这杯{full_food_desc}，它还在冒着诡异的泡泡..."
+                ],
+                "description": "13.黑暗饮品句式",
+                "items": {
+                    "type": "string"
+                },
+                "hint": "黑暗饮品惊恐文案",
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            }
+        }
+    },
+    "world2": {
+        "description": "✨ 【世界 2】配置 (原神)",
+        "hint": "提瓦特大陆专属情绪仓与叙事池",
+        "type": "object",
         "items": {
-          "type": "string"
-        },
-        "default": [
-          "蒲公英酒",
-          "苹果酿",
-          "莓果味汽水"
-        ]
-      },
-      "9.文字黑暗料理": {
-        "description": "9.文字黑暗料理",
-        "hint": "危险特产",
-        "type": "list",
+            "enable": {
+                "description": "🌟 启用该世界",
+                "default": true,
+                "hint": "开启后该世界才会参与抽签大乱斗；关闭后完全屏蔽该世界。",
+                "type": "bool"
+            },
+            "1.世界名称": {
+                "description": "1.世界名称",
+                "hint": "当前世界的主名称",
+                "type": "string",
+                "default": "原神世界",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "2.世界别称": {
+                "description": "2.世界别称",
+                "hint": "触发地区特产时的别名",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "提瓦特"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "3.自称池": {
+                "description": "3.自称池",
+                "hint": "推荐官自称 ({bot})",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "派蒙"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "4.专属句式": {
+                "description": "4.专属句式",
+                "hint": "本世界普通推荐",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "前面的区域，以后再来探索吧！先跟{bot}吃点{food}填饱肚子",
+                    "旅行者，{bot}的肚子已经咕咕叫了...我们快去吃{food}好不好",
+                    "愿风神保佑你今天吃到的{food}是最美味的",
+                    "听冒险家协会的人说，提瓦特的{food}最近超级火爆哦",
+                    "看在{food}的份上，{bot}就勉为其难再给你当一天向导吧"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "5.厨师句式": {
+                "description": "5.厨师句式",
+                "hint": "【厨师】前缀专属联动",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "哇！是【{chef}】的特色料理{food}！快分{bot}一口，就一口",
+                    "【{chef}】特意为你准备了{food}哦，吃饱了才有力气冒险嘛",
+                    "这份{food}可是【{chef}】花了好长时间才做好的，旅行者可千万别浪费",
+                    "天哪，是【{chef}】亲手掌勺的美味！这盘{food}归{bot}了",
+                    "闻到万民堂的香味了！【{chef}】端着热腾腾的{food}来看我们啦"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "6.打断句式": {
+                "description": "6.打断句式",
+                "hint": "防刷屏阻断文案",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "喂！你点得太快啦！{bot}的嘴巴都要跟不上了",
+                    "再吃下去莫娜都要看不起我们了...{bot}建议先消化一下",
+                    "你这家伙，是想把万民堂吃破产吗！{bot}命令你停止点菜",
+                    "嗝~{bot}揉了稳滚滚的肚子，表示真的塞不下更多的菜了",
+                    "前面的区域（指厨房）以后再来探索吧！厨师已经被你刷罢工了"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "7.文字食物": {
+                "description": "7.文字食物",
+                "hint": "纯文字卡池",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "甜甜花酿鸡",
+                    "蜜酱胡萝卜煎肉",
+                    "水煮黑背鲈",
+                    "摩拉肉"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "8.文字饮品": {
+                "description": "8.文字饮品",
+                "hint": "纯文字卡池",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "蒲公英酒",
+                    "苹果酿",
+                    "莓果味汽水"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "9.文字黑暗料理": {
+                "description": "9.文字黑暗料理",
+                "hint": "危险特产",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "奇怪的烤肉排",
+                    "微妙的甜甜花酿鸡",
+                    "散发诡异气息的冷面"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "10.黑暗料理句式": {
+                "description": "10.黑暗料理句式",
+                "hint": "端上黑暗料理时的惊恐文案",
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "{bot}用防毒面具捂住脸，用夹子把{full_food_desc}推到了你面前",
+                    "{bot}疯狂摇头，指了指桌上那盘散发着诡异紫光的{full_food_desc}",
+                    "哇啊啊！这盘【{full_food_desc}】绝对是隐藏的深渊造物，快把它拿开",
+                    "{bot}颤颤巍巍地递过一盘{full_food_desc}，并小声提醒你自备复活药水",
+                    "旅行者……你确定真的要吃这盘焦黑如炭的{full_food_desc}吗"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "11.专属饮品句式": {
+                "default": [
+                    "这是{bot}为你推荐的饮品{food}，解解渴吧",
+                    "{bot}觉得这杯{food}最适合现在的你啦"
+                ],
+                "description": "11.专属饮品句式",
+                "items": {
+                    "type": "string"
+                },
+                "hint": "本世界饮品普通推荐",
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "12.厨师饮品句式": {
+                "default": [
+                    "哇！这可是【{chef}】特调的{food}哦，快尝尝",
+                    "【{chef}】端来了这杯{food}，看起来很不错呢"
+                ],
+                "description": "12.厨师饮品句式",
+                "items": {
+                    "type": "string"
+                },
+                "hint": "【厨师】前缀饮品专属联动",
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "13.黑暗饮品句式": {
+                "default": [
+                    "{bot}颤抖着递上这杯{full_food_desc}，它还在冒着诡异的泡泡..."
+                ],
+                "description": "13.黑暗饮品句式",
+                "items": {
+                    "type": "string"
+                },
+                "hint": "黑暗饮品惊恐文案",
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            }
+        }
+    },
+    "world3": {
+        "description": "⚙️ 【世界 3】配置 (终末地)",
+        "hint": "塔卫二专属情绪仓与叙事池",
+        "type": "object",
         "items": {
-          "type": "string"
-        },
-        "default": [
-          "奇怪的烤肉排",
-          "微妙的甜甜花酿鸡",
-          "散发诡异气息的冷面"
-        ]
-      },
-      "10.黑暗料理句式": {
-        "description": "10.黑暗料理句式",
-        "hint": "端上黑暗料理时的惊恐文案",
-        "type": "list",
+            "enable": {
+                "description": "🌟 启用该世界",
+                "default": true,
+                "hint": "开启后该世界才会参与抽签大乱斗；关闭后完全屏蔽该世界。",
+                "type": "bool"
+            },
+            "1.世界名称": {
+                "type": "string",
+                "default": "终末地",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "2.世界别称": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "塔卫二"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "3.自称池": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "管理员",
+                    "咕咕嘎嘎"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "4.专属句式": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "{bot}从协议回收部门翻出了一份{food}，这可是稀罕物。",
+                    "工程中心刚送来的{food}，{bot}觉得味道应该不错。",
+                    "清理完佩丽卡布置的任务，{bot}决定和你一起吃点{food}。",
+                    "虽然塔卫二的物资匮乏，但这份{food}{bot}还是想留给你。"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "5.厨师句式": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "【{chef}】特批的补给到了，是专门为你做的{food}！",
+                    "{bot}看到【{chef}】在厨房捣鼓了半天，原来是给你准备了{food}。",
+                    "这可是【{chef}】用塔卫二的特产加工的{food}，快尝尝！",
+                    "【{chef}】递给{bot}一盘{food}，说是慰劳你今天的辛苦。"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "6.打断句式": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "协议回收部门的库存都被你点空了！{bot}拒绝发货。",
+                    "佩丽卡说再吃下去基地的能量就不够了！"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "7.文字食物": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "营养膏",
+                    "合成凝胶"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "8.文字饮品": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "能量饮料",
+                    "提神合剂"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "9.文字黑暗料理": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "源石变异体残骸",
+                    "工业废液提取物"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "10.黑暗料理句式": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "{bot}惊恐地看着这盘{full_food_desc}，这东西真的符合安全协议吗？！",
+                    "警报！检测到高浓度污染反应！{bot}建议立刻把这盘{full_food_desc}扔进焚化炉！",
+                    "{bot}捂住鼻子，将散发着刺鼻气味的{full_food_desc}推得远远的。",
+                    "这绝不是人类能吃的东西...{bot}看着{full_food_desc}，陷入了深深的绝望。"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "11.专属饮品句式": {
+                "default": [
+                    "干完活来杯{food}最解乏了，{bot}强推！",
+                    "这杯{food}是工程部特调的，{bot}觉得你得试试。",
+                    "塔卫二的清凉特饮{food}，{bot}给你满上了。",
+                    "{bot}递给你一杯{food}，补充一下水分吧。"
+                ],
+                "description": "11.专属饮品句式",
+                "items": {
+                    "type": "string"
+                },
+                "hint": "本世界饮品普通推荐",
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "12.厨师饮品句式": {
+                "default": [
+                    "【{chef}】特调的{food}，据说能恢复百分百的精力！",
+                    "哇，【{chef}】居然有空给你倒了一杯{food}！",
+                    "这杯{food}里加了【{chef}】的秘方，{bot}都想偷喝一口。",
+                    "【{chef}】端来的这杯{food}，你可得好好品尝。"
+                ],
+                "description": "12.厨师饮品句式",
+                "items": {
+                    "type": "string"
+                },
+                "hint": "【厨师】前缀饮品专属联动",
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "13.黑暗饮品句式": {
+                "default": [
+                    "{bot}看着这杯冒着诡异气泡的{full_food_desc}，严重怀疑它有毒！",
+                    "喝了这杯{full_food_desc}，你确定不会被感染吗？{bot}很担心...",
+                    "这杯{full_food_desc}的颜色太可怕了，{bot}建议你闭着眼睛喝。",
+                    "{bot}颤抖着把这杯{full_food_desc}递给你，准备好了医疗包。"
+                ],
+                "description": "13.黑暗饮品句式",
+                "items": {
+                    "type": "string"
+                },
+                "hint": "黑暗饮品惊恐文案",
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            }
+        }
+    },
+    "world4": {
+        "description": "🔧 【世界 4】配置",
+        "hint": "自定义世界观卡槽",
+        "type": "object",
         "items": {
-          "type": "string"
+            "enable": {
+                "description": "🌟 启用该世界",
+                "default": false,
+                "type": "bool"
+            },
+            "1.世界名称": {
+                "type": "string",
+                "default": "世界4",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "2.世界别称": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "3.自称池": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "向导4"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "4.专属句式": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "这是{bot}为你推荐的{food}",
+                    "这是{bot}为你准备的{food}"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "5.厨师句式": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "【{chef}】特制了{food}哦"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "6.打断句式": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "别刷啦！"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "7.文字食物": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "8.文字饮品": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "9.文字黑暗料理": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "10.黑暗料理句式": {
+                "type": "list",
+                "items": {
+                    "type": "string"
+                },
+                "default": [
+                    "可怕的{full_food_desc}"
+                ],
+                "condition": {
+                    "enable": true
+                }
+            },
+            "11.专属饮品句式": {
+                "default": [
+                    "这是{bot}为你推荐的饮品{food}，解解渴吧",
+                    "{bot}觉得这杯{food}最适合现在的你啦"
+                ],
+                "description": "11.专属饮品句式",
+                "items": {
+                    "type": "string"
+                },
+                "hint": "本世界饮品普通推荐",
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "12.厨师饮品句式": {
+                "default": [
+                    "哇！这可是【{chef}】特调的{food}哦，快尝尝",
+                    "【{chef}】端来了这杯{food}，看起来很不错呢"
+                ],
+                "description": "12.厨师饮品句式",
+                "items": {
+                    "type": "string"
+                },
+                "hint": "【厨师】前缀饮品专属联动",
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "13.黑暗饮品句式": {
+                "default": [
+                    "{bot}颤抖着递上这杯{full_food_desc}，它还在冒着诡异的泡泡..."
+                ],
+                "description": "13.黑暗饮品句式",
+                "items": {
+                    "type": "string"
+                },
+                "hint": "黑暗饮品惊恐文案",
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            }
+        }
+    },
+    "world5": {
+        "description": "🔧 【世界 5】配置 (自定义2)",
+        "items": {
+            "enable": {
+                "description": "🌟 启用该世界",
+                "default": false,
+                "type": "bool"
+            },
+            "1.世界名称": {
+                "default": "世界5",
+                "condition": {
+                    "enable": true
+                },
+                "type": "string"
+            },
+            "2.世界别称": {
+                "default": [],
+                "items": {
+                    "type": "string"
+                },
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "3.自称池": {
+                "default": [
+                    "向导5"
+                ],
+                "items": {
+                    "type": "string"
+                },
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "4.专属句式": {
+                "default": [],
+                "items": {
+                    "type": "string"
+                },
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "5.厨师句式": {
+                "default": [],
+                "items": {
+                    "type": "string"
+                },
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "6.打断句式": {
+                "default": [],
+                "items": {
+                    "type": "string"
+                },
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "7.文字食物": {
+                "default": [],
+                "items": {
+                    "type": "string"
+                },
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "8.文字饮品": {
+                "default": [],
+                "items": {
+                    "type": "string"
+                },
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "9.文字黑暗料理": {
+                "default": [],
+                "items": {
+                    "type": "string"
+                },
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "10.黑暗料理句式": {
+                "default": [],
+                "items": {
+                    "type": "string"
+                },
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "11.专属饮品句式": {
+                "default": [],
+                "items": {
+                    "type": "string"
+                },
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "12.厨师饮品句式": {
+                "default": [],
+                "items": {
+                    "type": "string"
+                },
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            },
+            "13.黑暗饮品句式": {
+                "default": [],
+                "items": {
+                    "type": "string"
+                },
+                "type": "list",
+                "condition": {
+                    "enable": true
+                }
+            }
         },
-        "default": [
-          "{bot}用防毒面具捂住脸，用夹子把{full_food_desc}推到了你面前",
-          "{bot}疯狂摇头，指了指桌上那盘散发着诡异紫光的{full_food_desc}",
-          "哇啊啊！这盘【{full_food_desc}】绝对是隐藏的深渊造物，快把它拿开",
-          "{bot}颤颤巍巍地递过一盘{full_food_desc}，并小声提醒你自备复活药水",
-          "旅行者……你确定真的要吃这盘焦黑如炭的{full_food_desc}吗"
-        ]
-      }
+        "type": "object"
     }
-  },
-  "world3": {
-    "description": "🔧 【世界 3】配置",
-    "hint": "自定义世界观卡槽",
-    "type": "object",
-    "items": {
-      "1.世界名称": {
-        "type": "string",
-        "default": "世界3"
-      },
-      "2.世界别称": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": []
-      },
-      "3.自称池": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": [
-          "向导3"
-        ]
-      },
-      "4.专属句式": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": [
-          "这是{bot}为你推荐的{food}",
-          "这是{bot}为你准备的{food}"
-        ]
-      },
-      "5.厨师句式": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": [
-          "【{chef}】特制了{food}哦"
-        ]
-      },
-      "6.打断句式": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": [
-          "别刷啦！"
-        ]
-      },
-      "7.文字食物": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": []
-      },
-      "8.文字饮品": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": []
-      },
-      "9.文字黑暗料理": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": []
-      },
-      "10.黑暗料理句式": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": [
-          "可怕的{full_food_desc}"
-        ]
-      }
-    }
-  },
-  "world4": {
-    "description": "🔧 【世界 4】配置",
-    "hint": "自定义世界观卡槽",
-    "type": "object",
-    "items": {
-      "1.世界名称": {
-        "type": "string",
-        "default": "世界4"
-      },
-      "2.世界别称": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": []
-      },
-      "3.自称池": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": [
-          "向导4"
-        ]
-      },
-      "4.专属句式": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": [
-          "这是{bot}为你推荐的{food}",
-          "这是{bot}为你准备的{food}"
-        ]
-      },
-      "5.厨师句式": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": [
-          "【{chef}】特制了{food}哦"
-        ]
-      },
-      "6.打断句式": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": [
-          "别刷啦！"
-        ]
-      },
-      "7.文字食物": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": []
-      },
-      "8.文字饮品": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": []
-      },
-      "9.文字黑暗料理": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": []
-      },
-      "10.黑暗料理句式": {
-        "type": "list",
-        "items": {
-          "type": "string"
-        },
-        "default": [
-          "可怕的{full_food_desc}"
-        ]
-      }
-    }
-  }
 }

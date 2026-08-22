@@ -1,4 +1,4 @@
-import os
+﻿import os
 import json
 import random
 from collections import deque
@@ -63,9 +63,38 @@ class FoodDataManager:
 
         fresh_items = [i for i in filtered_pool if i["raw_name"] not in history]
         final_pool = fresh_items if fresh_items else filtered_pool
-
-        picked = random.choice(final_pool)
         
+        # 按世界分组进行概率抽签
+        world_groups = {}
+        for item in final_pool:
+            wv = item["wv"]
+            if wv not in world_groups:
+                world_groups[wv] = []
+            world_groups[wv].append(item)
+            
+        available_worlds = list(world_groups.keys())
+        
+        # 权重映射
+        weight_config = {
+            "common": self.config.get("weight_3d", 70),
+            "world1": self.config.get("weight_w1", 20),
+            "world2": self.config.get("weight_w2", 5),
+            "world3": self.config.get("weight_w3", 5),
+            "world4": self.config.get("weight_w4", 0),
+            "world5": self.config.get("weight_w5", 0)
+        }
+        
+        # 计算有效权重
+        weights = [weight_config.get(w, 10) for w in available_worlds]
+        
+        # 若所有可选项权重全为 0 或非法，降级为均等概率
+        total_weight = sum(weights)
+        if total_weight <= 0:
+            weights = [1] * len(available_worlds)
+            
+        chosen_world = random.choices(available_worlds, weights=weights, k=1)[0]
+        picked = random.choice(world_groups[chosen_world])
+
         # 仅在长度限制大于 0 时记录记忆
         if self.history_limit > 0:
             history.append(picked["raw_name"])
@@ -81,3 +110,11 @@ class FoodDataManager:
         }
         pool = vault.get(char_name, [f"……但是被{char_name}吃光了。"])
         return random.choice(pool)
+
+
+
+
+
+
+
+

@@ -1,6 +1,7 @@
-import os
+﻿import os
 import re
 import random
+import shutil
 
 __version__ = "2.3.1"
 
@@ -15,8 +16,6 @@ class ImageManager:
         else:
             self.plugin_dir = os.path.dirname(os.path.abspath(__file__))
             
-        # 💡 默认的干饭人出厂目录（存放在插件源码中）
-        self.egg_dir = os.path.join(self.plugin_dir, "Still_eating_meme")
         
         # 物理分类目录结构
         self.categories = ["food", "drink", "darkfood"]
@@ -37,9 +36,37 @@ class ImageManager:
         # 厨师图鉴专属物理目录
         os.makedirs(os.path.join(self.data_dir, "chefs"), exist_ok=True)
         
-        # 确保出厂默认的这几个文件夹就算被误删也会重新建一个空壳，防止报错
-        for char in ["千咲", "派蒙", "达妮娅"]:
-            os.makedirs(os.path.join(self.egg_dir, char), exist_ok=True)
+
+    def _process_uploads(self, config_global: dict, wv_settings: dict):
+        """将 WebUI 上传的文件归档到对应物理文件夹"""
+        upload_map = {
+            "common": {"food": "upload_common_food", "drink": "upload_common_drink", "darkfood": "upload_common_dark"},
+            "world1": {"food": "14.上传食物图片", "drink": "15.上传饮品图片", "darkfood": "16.上传黑暗料理图片"},
+            "world2": {"food": "14.上传食物图片", "drink": "15.上传饮品图片", "darkfood": "16.上传黑暗料理图片"},
+            "world3": {"food": "14.上传食物图片", "drink": "15.上传饮品图片", "darkfood": "16.上传黑暗料理图片"},
+            "world4": {"food": "14.上传食物图片", "drink": "15.上传饮品图片", "darkfood": "16.上传黑暗料理图片"}
+        }
+
+        for w_key, maps in upload_map.items():
+            for cat, key in maps.items():
+                if w_key == "common":
+                    uploaded = config_global.get(key, [])
+                else:
+                    uploaded = wv_settings.get(w_key, {}).get(key, [])
+                
+                if isinstance(uploaded, str):
+                    uploaded = [uploaded] if uploaded else []
+                    
+                for file_path in uploaded:
+                    if file_path and os.path.exists(file_path):
+                        filename = os.path.basename(file_path)
+                        target_dir = os.path.join(self.data_dir, cat, w_key)
+                        target_path = os.path.join(target_dir, filename)
+                        if os.path.abspath(file_path) != os.path.abspath(target_path):
+                            try:
+                                shutil.copy2(file_path, target_path)
+                            except Exception:
+                                pass
 
     def parse_filename(self, filename: str):
         """解析文件名，提取厨师和食物名"""
@@ -56,6 +83,10 @@ class ImageManager:
 
         # 1. 扫描纯净的全局数据物理目录
         for w in self.worlds:
+            if w != "common":
+                w_conf = wv_settings.get(w, {})
+                if w_conf.get("enable", True) is False:
+                    continue
             target_dir = os.path.join(self.data_dir, folder_name, w)
             if not os.path.exists(target_dir): continue
             for file in os.listdir(target_dir):
@@ -70,6 +101,8 @@ class ImageManager:
 
         # 2. 混合 WebUI 纯文字池
         for w_key, conf in wv_settings.items():
+            if w_key != "common" and conf.get("enable", True) is False:
+                continue
             text_key_map = {"food": "7.文字食物", "drink": "8.文字饮品", "dark": "9.文字黑暗料理"}
             t_key = text_key_map.get(category, "7.文字食物")
             for text_item in conf.get(t_key, []):
@@ -110,9 +143,19 @@ class ImageManager:
         return None
 
     def get_egg_meme(self, char_name: str):
-        """专供千咲拦截防刷屏功能使用，读取插件源码自带的文件夹"""
-        char_dir = os.path.join(self.egg_dir, char_name)
+        """专供干饭人拦截防刷屏功能使用，读取全局数据文件夹"""
+        char_dir = os.path.join(self.data_dir, "ganfanren", char_name)
         if os.path.exists(char_dir):
             files = [f for f in os.listdir(char_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'))]
             if files: return os.path.join(char_dir, random.choice(files))
         return None
+
+
+
+
+
+
+
+
+
+

@@ -1,4 +1,8 @@
 import os
+import threading
+import requests
+import zipfile
+import shutil
 import random
 import re
 import logging
@@ -10,10 +14,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-# 版本号升级为 2.3.3
-__version__ = "2.3.3"
+__version__ = "3.1Beta"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "2.3.3", "跨次元美食与情绪沉浸系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.1Beta", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -28,6 +31,20 @@ class FlavorFusionUltimate(Star):
         self._refresh_world_cache()
         self._rebuild_alias_map()
         self._generate_help_file()
+        
+        self.is_downloading = False
+        self.download_msg = ""
+        
+        needs_download = False
+        if self.config.get("force_download_assets", False):
+            needs_download = True
+        else:
+            food_dir = os.path.join(self.image_mgr.data_dir, "food")
+            if not os.path.exists(food_dir) or not os.listdir(food_dir):
+                needs_download = True
+                
+        if needs_download:
+            threading.Thread(target=self._download_and_extract_assets, daemon=True).start()
 
         eat_keywords = self.config.get("trigger_eat", ["吃什么", "吃啥", "吃点儿啥"])
         drink_keywords = self.config.get("trigger_drink", ["喝什么", "喝啥", "喝点儿啥"])
@@ -47,14 +64,79 @@ class FlavorFusionUltimate(Star):
         self.common_eat_pattern = re.compile("|".join([re.escape(str(k)) for k in common_eat_keywords if k]))
         self.common_drink_pattern = re.compile("|".join([re.escape(str(k)) for k in common_drink_keywords if k]))
 
+
+    def _download_and_extract_assets(self):
+        self.is_downloading = True
+        self.download_msg = "正在从 GitHub 远程拉取基础图库资源 (约 160MB)，请耐心等待..."
+        logging.info("[ChisaEating] 开始自动下载基础图库资源...")
+        
+        urls = [
+            "https://mirror.ghproxy.com/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip",
+            "https://ghproxy.net/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip",
+            "https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip"
+        ]
+        
+        zip_path = os.path.join(self.image_mgr.data_dir, "assets_temp.zip")
+        os.makedirs(self.image_mgr.data_dir, exist_ok=True)
+        
+        success = False
+        for url in urls:
+            try:
+                logging.info(f"[ChisaEating] 尝试从 {url} 下载...")
+                response = requests.get(url, stream=True, timeout=120)
+                response.raise_for_status()
+                with open(zip_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk: f.write(chunk)
+                success = True
+                break
+            except Exception as e:
+                logging.warning(f"[ChisaEating] 下载节点失败 ({url}): {e}")
+                
+        if success:
+            self.download_msg = "图库下载完成，正在解压部署..."
+            logging.info("[ChisaEating] 下载完成，开始解压...")
+            try:
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    extract_tmp = os.path.join(self.image_mgr.data_dir, "extract_tmp")
+                    zip_ref.extractall(extract_tmp)
+                    
+                    src_dir = extract_tmp
+                    for root, dirs, files in os.walk(extract_tmp):
+                        if "food" in dirs or "drink" in dirs or "chefs" in dirs:
+                            src_dir = root
+                            break
+                    
+                    for item in os.listdir(src_dir):
+                        s = os.path.join(src_dir, item)
+                        d = os.path.join(self.image_mgr.data_dir, item)
+                        if os.path.isdir(s):
+                            if os.path.exists(d): shutil.rmtree(d)
+                            shutil.copytree(s, d)
+                        else:
+                            shutil.copy2(s, d)
+                            
+                logging.info("[ChisaEating] 基础图库解压部署完成！")
+            except Exception as e:
+                logging.error(f"[ChisaEating] 解压失败: {e}")
+            finally:
+                if os.path.exists(zip_path): os.remove(zip_path)
+                extract_tmp = os.path.join(self.image_mgr.data_dir, "extract_tmp")
+                if os.path.exists(extract_tmp): shutil.rmtree(extract_tmp, ignore_errors=True)
+        else:
+            logging.error("[ChisaEating] 基础图库所有下载节点均超时或失败！请前往后台取消勾选强制下载，并根据 Readme 手动下载安装。")
+            
+        if self.config.get("force_download_assets", False):
+            self.config["force_download_assets"] = False
+            
+        self.is_downloading = False
+
     def _get_ganfanren_data(self):
-        """【全新 MOD 引擎】扫描出厂目录和全局数据目录，动态挂载干饭人"""
         ganfanren_pool = {}
-        builtin_dir = os.path.join(self.plugin_dir, "Still_eating_meme")
         user_dir = os.path.join("data", "plugin_data", "astrbot_plugin_chisa_still_eating", "ganfanren")
         os.makedirs(user_dir, exist_ok=True)
 
-        for scan_dir in [builtin_dir, user_dir]:
+        for scan_dir in [user_dir]:
             if not os.path.exists(scan_dir): 
                 continue
             for folder_name in os.listdir(scan_dir):
@@ -142,40 +224,65 @@ class FlavorFusionUltimate(Star):
         msg_text = event.message_str
         if not msg_text: return
         msg_text = msg_text.strip()
+        
+        is_plugin_cmd = False
+        if ("/加菜" in msg_text or "加菜" in msg_text or "/上传厨师" in msg_text or "上传厨师" in msg_text or 
+            "帮助" in msg_text or "吃什么" in msg_text or "喝什么" in msg_text or "特产" in msg_text or 
+            "特饮" in msg_text or "吃饭" in msg_text or "料理" in msg_text or "召唤" in msg_text or "特供" in msg_text):
+            is_plugin_cmd = True
+            
+        if self.is_downloading and is_plugin_cmd:
+            yield event.make_result().message("【千小妹系统提示】\n" + self.download_msg)
+            event.stop_event()
+            return
 
-        # === 🛡️ [新增] 黑白名单防火墙逻辑 ===
+        if "/加菜 " in msg_text or "加菜 " in msg_text:
+            async for res in self.handle_add_food(event, msg_text):
+                yield res
+            event.stop_event()
+            return
+        if "/上传厨师" in msg_text or "上传厨师" in msg_text:
+            async for res in self.handle_upload_chef(event, msg_text):
+                yield res
+            event.stop_event()
+            return
+            
         msg_obj = event.message_obj
         group_id = str(msg_obj.group_id).strip() if msg_obj.group_id else None
         
         if group_id:
-            # 1. 黑名单校验（最高优先级：一票否决）
             if self.config.get("enable_blacklist", False):
                 blacklist = [str(x).strip() for x in self.config.get("blacklist_groups", []) if str(x).strip()]
                 if group_id in blacklist:
-                    return # 命中黑名单，直接无视并终止
-            
-            # 2. 白名单校验（次优先级：严格准入）
+                    return
             if self.config.get("enable_whitelist", False):
                 whitelist = [str(x).strip() for x in self.config.get("whitelist_groups", []) if str(x).strip()]
                 if group_id not in whitelist:
-                    return # 开启了白名单但当前群不在其中，直接终止
-        # =================================
+                    return
         
         if msg_text in ["千小妹还在吃帮助", "千咲吃什么帮助", "干饭帮助", "美食帮助"]:
-            help_text = (
-                "🍱 【千小妹还在吃 v2.3Beta】干饭指南\n\n"
-                "🍔 基础点餐：\n"
-                "· 吃什么 / 喝什么 (全宇宙随机摇号)\n"
-                "· 来点现实的食物 / 来点现实的饮品 (锁定三次元外卖)\n\n"
-                "✨ 异界特产：\n"
-                "· 鸣潮特产 / 原神特产 (指定世界点餐)\n"
-                "· 来点黑暗料理 (作死专用，请自备复活药)\n\n"
-                "🤖 MOD干饭人系统 (New!)：\n"
-                "· 支持无限添加自定义抢饭角色！前往\n"
-                "  data/plugin_data/astrbot_plugin_chisa_still_eating/ganfanren/\n"
-                "  新建文件夹放入表情包即可自动加载。\n\n"
-                "💡 提示：点菜太快的话，可是会被看板娘无情截胡的哦！"
-            )
+            help_text = """🍱 【千小妹还在吃 v3.1Beta】干饭指南
+━━━━━━━━━━━━━━━━
+🎲 盲盒摇号 (按后台出率跨界抽取)
+· 吃什么 / 喝什么
+· 来点黑暗料理 (作死警告)
+
+🌍 定向打卡 (锁定指定世界)
+· 来点现实的食物/饮品 (三次元外卖)
+· [世界别名]特产/吃 (例：鸣潮特产)
+· [世界别名]特饮/喝 (例：原神特饮)
+
+👩‍🍳 专属羁绊 (单独抽出对应厨师的作品)
+· 召唤[厨师名] / 想和[厨师名]吃饭
+· [厨师名]料理 / [厨师名]特供
+  (例如：召唤吟霖 / 达妮娅料理)
+
+👑 厨师长后台 (需管理员白名单)
+· /加菜 [世界] [分类] [菜名] [图]
+  (分类支持：食物、饮品、黑暗料理)
+· /上传厨师 [厨师名] [图]
+━━━━━━━━━━━━━━━━
+💡 小贴士：支持单次发多图批量加菜；加菜名若带【厨师名】前缀可自动绑定！点餐太快小心被神秘人截胡哦～"""
             yield event.make_result().message(help_text)
             event.stop_event()
             return
@@ -199,6 +306,15 @@ class FlavorFusionUltimate(Star):
         elif self.eat_pattern.search(msg_text): 
             category = "food"
 
+        forced_chef = None
+        chef_match = re.search(r"想和(.+?)吃饭|召唤(.+)|(.+?)料理|(.+?)特供", msg_text)
+        if chef_match:
+            extracted = next((g for g in chef_match.groups() if g), None)
+            if extracted and extracted != "黑暗":
+                forced_chef = extracted.strip()
+                if not category:
+                    category = "food"
+
         if not forced_world:
             for alias, w_key in self.alias_map.items():
                 if category and alias in msg_text:
@@ -208,14 +324,18 @@ class FlavorFusionUltimate(Star):
                     category = "food"
                     forced_world = w_key
                     break
+                if not category and (f"{alias}特饮" in msg_text or f"{alias}喝" in msg_text):
+                    category = "drink"
+                    forced_world = w_key
+                    break
 
         if not category:
             return 
             
-        async for res in self.execute_flow(event, category, forced_world):
+        async for res in self.execute_flow(event, category, forced_world, forced_chef):
             yield res
 
-    async def execute_flow(self, event: AstrMessageEvent, category: str, forced_world: str = None):
+    async def execute_flow(self, event: AstrMessageEvent, category: str, forced_world: str = None, forced_chef: str = None):
         event.should_call_llm(True)
         uid = event.get_sender_id()
         group_id = event.message_obj.group_id or uid
@@ -230,18 +350,22 @@ class FlavorFusionUltimate(Star):
         bot_pool = active_conf.get("3.自称池", [])
         bot_host = random.choice(bot_pool if bot_pool else ["推荐官"])
         
-        # 💡 [精华保留 1]：主世界名称池化 (world_a)
         world_host = active_conf.get("1.世界名称", "") or f"世界{active_key[-1]}"
         world_a_aliases = [a for a in active_conf.get("2.世界别称", []) if a]
         if world_a_aliases:
             world_host = random.choice([world_host] + world_a_aliases)
 
-        # 1. 🚨 防刷屏拦截引擎
         if self.limiter.is_spaming(uid, self.config.get("spam_threshold", 3)):
             if random.randint(1, 100) <= self.config.get("interception_egg_chance", 50):
-                egg_role = "千咲" 
-                inter_text = f"【拦截警报】你点得太快啦！{egg_role}怕你撑着，已经先你一步把厨房吃空了！"
-                meme_file = self.image_mgr.get_egg_meme(egg_role)
+                ganfanren_pool = self._get_ganfanren_data()
+                if ganfanren_pool:
+                    valid_names = list(ganfanren_pool.keys())
+                    egg_role = "千咲" if "千咲" in valid_names else random.choice(valid_names)
+                    inter_text = f"【拦截警报】你点得太快啦！{egg_role}怕你撑着，已经先你一步把厨房吃空了！"
+                    meme_file = self.image_mgr.get_egg_meme(egg_role)
+                else:
+                    inter_text = "【拦截警报】你点得太快啦！系统已开启防刷屏管制！"
+                    meme_file = None
             else:
                 inter_pool = active_conf.get("6.打断句式", [])
                 inter_text = random.choice(inter_pool if inter_pool else [f"{bot_host}觉得你点得太频繁了。"]).format(bot=bot_host)
@@ -253,7 +377,6 @@ class FlavorFusionUltimate(Star):
             event.stop_event()
             return
 
-        # 2. 🔁 摆烂复读判定
         cd_seconds = self.config.get("repeat_cooldown", 60)
         if not self.limiter.is_repeat_in_cooldown(group_id, cd_seconds) and (random.randint(1, 100) <= self.config.get("repeat_prob", 10)):
             self.limiter.record_repeat_trigger(group_id)
@@ -266,7 +389,6 @@ class FlavorFusionUltimate(Star):
             event.stop_event()
             return
 
-        # 3. 🥘 数据抽签
         pool = self.image_mgr.scan_all_items(self.config, self.wv_settings, category)
         
         common_texts = []
@@ -291,11 +413,24 @@ class FlavorFusionUltimate(Star):
             strict_pool = [item for item in pool if item["wv"] == forced_world]
             if strict_pool:
                 pool = strict_pool
+                
+        if forced_chef:
+            chef_pool = [item for item in pool if item.get("chef") == forced_chef]
+            if not chef_pool:
+                if category == "food":
+                    drink_pool = self.image_mgr.scan_all_items(self.config, self.wv_settings, "drink")
+                    chef_pool = [item for item in drink_pool if item.get("chef") == forced_chef]
+            
+            if not chef_pool:
+                yield event.make_result().message(f"【厨师下班】{forced_chef}今天不在厨房哦～（图库中未找到该厨师的作品）")
+                event.stop_event()
+                return
+            pool = chef_pool
 
         picked = self.data_mgr.filter_and_pick(group_id, pool, active_key)
         
         if not picked:
-            yield event.make_result().message(f"【卡池告急】未找到任何可用的食物/饮品数据！请检查文件夹或配置。")
+            yield event.make_result().message("【卡池告急】未找到任何可用的食物/饮品数据！请检查文件夹或配置。")
             event.stop_event()
             return
 
@@ -312,7 +447,6 @@ class FlavorFusionUltimate(Star):
         mood = "like"
         use_ai = False
 
-        # 5. AI 拟人接驳
         if self.config.get("enable_ai", False) and random.randint(1, 100) <= self.config.get("ai_probability", 5):
             is_crossover = (origin_key != "common" and origin_key != active_key)
             ai_text = await self.responder.generate_response(
@@ -323,7 +457,6 @@ class FlavorFusionUltimate(Star):
                 use_ai = True
                 mood = "scared" if category == "dark" else "like"
 
-        # 6. 传统叙事模板组装
         if not use_ai:
             fmt_args = {
                 "bot": bot_host, "bot_a": bot_host, "food": food_name, 
@@ -331,15 +464,15 @@ class FlavorFusionUltimate(Star):
                 "world_a": world_host
             }
             is_crossover = (origin_key != "common" and origin_key != active_key)
+            is_drink = (category == "drink")
             
             if category == "dark":
-                pool_text = self.config.get("dark_templates", [])
+                pool_text = self.config.get("dark_drink_templates" if is_drink else "dark_templates", [])
+                if not pool_text: pool_text = self.config.get("dark_templates", [])
                 final_text = random.choice(pool_text if pool_text else ["危险的{full_food_desc}！"]).format(**fmt_args)
                 mood = "scared"
             elif is_crossover:
                 cross_conf = self.wv_settings.get(origin_key, {})
-                
-                # 💡 [精华保留 2]：异世界名称池化 (world_b)
                 world_b_host = cross_conf.get("1.世界名称", "") or "异世界"
                 world_b_aliases = [a for a in cross_conf.get("2.世界别称", []) if a]
                 if world_b_aliases:
@@ -349,19 +482,31 @@ class FlavorFusionUltimate(Star):
                 bot_b_pool = cross_conf.get("3.自称池", ["异界人"])
                 fmt_args["bot_b"] = random.choice(bot_b_pool if bot_b_pool else ["异界人"])
 
-                pool_text = self.config.get("crossover_templates", [])
+                pool_text = self.config.get("crossover_drink_templates" if is_drink else "crossover_templates", [])
+                if not pool_text: pool_text = self.config.get("crossover_templates", [])
                 final_text = random.choice(pool_text if pool_text else ["{bot_a}遇到了{bot_b}，一起吃了{full_food_desc}"]).format(**fmt_args)
             elif chef_name != "none":
-                pool_text = active_conf.get("5.厨师句式", [])
+                pool_key = "12.厨师饮品句式" if is_drink else "5.厨师句式"
+                pool_text = active_conf.get(pool_key, [])
+                if not pool_text: pool_text = active_conf.get("5.厨师句式", [])
                 final_text = random.choice(pool_text if pool_text else ["【{chef}】特制了{food}"]).format(**fmt_args)
             elif origin_key == "common":
-                pool_text = self.config.get("generic_templates", [])
+                pool_key = "generic_drink_templates" if is_drink else "generic_templates"
+                pool_text = self.config.get(pool_key, [])
+                if not pool_text: pool_text = self.config.get("generic_templates", [])
                 final_text = random.choice(pool_text if pool_text else ["铛铛！为你抽中了美味的{food}！"]).format(**fmt_args)
             else:
-                pool_text = active_conf.get("4.专属句式", []) + self.config.get("generic_templates", [])
-                final_text = random.choice(pool_text if pool_text else ["推荐{food}"]).format(**fmt_args)
+                pool_key = "11.专属饮品句式" if is_drink else "4.专属句式"
+                pool_text = active_conf.get(pool_key, [])
+                if not pool_text: pool_text = active_conf.get("4.专属句式", [])
+                generic_pool = self.config.get("generic_drink_templates" if is_drink else "generic_templates", [])
+                if not generic_pool: generic_pool = self.config.get("generic_templates", [])
+                combined_pool = pool_text + generic_pool
+                final_text = random.choice(combined_pool if combined_pool else ["推荐{food}"]).format(**fmt_args)
+                
+            if any(word in food_name for word in ["冰", "冷", "冻", "雪糕"]):
+                final_text = final_text.replace("热腾腾的", "冰凉的").replace("趁热吃吧", "趁凉吃吧")
 
-        # 7. 📸 动态图配装引擎
         img_to_send = picked.get("path") if picked.get("has_image") else None
         meme_to_send = None
         
@@ -398,10 +543,223 @@ class FlavorFusionUltimate(Star):
             elif random.randint(1, 100) <= self.config.get("global_meme_prob", 30):
                 meme_to_send = self.image_mgr.get_bot_meme(active_key, mood)
 
-        # 8. 🚀 最终顺序落盘包
         result = event.make_result().message(final_text)
         if img_to_send: result.file_image(img_to_send)
         if meme_to_send: result.file_image(meme_to_send)
             
         yield result
         event.stop_event()
+
+    async def handle_add_food(self, event, msg_text: str):
+        uid = str(event.get_sender_id())
+        admin_users = [str(x).strip() for x in self.config.get("admin_users", []) if str(x).strip()]
+        
+        if not admin_users:
+            yield event.make_result().message("【加菜失败】未配置管理员！请前往 WebUI 的本插件配置中填写「管理员账号白名单」。")
+            return
+            
+        if uid not in admin_users:
+            yield event.make_result().message("【越权警告】只有厨师长（管理员）可以加菜哦！")
+            return
+
+        idx = msg_text.find("加菜 ")
+        if idx != -1:
+            pure_args = msg_text[idx + 3:].strip()
+        else:
+            pure_args = ""
+
+        text_parts = pure_args.split(maxsplit=2)
+        if len(text_parts) < 3:
+            yield event.make_result().message("""指令格式错误！
+正确格式：加菜 [世界] [分类] [菜名]
+示例：加菜 鸣潮 饮品 冰吸生椰拿铁 (请连带图片一起发送)""")
+            return
+
+        world_input = text_parts[0]
+        cat_input = text_parts[1]
+        food_name_input = text_parts[2]
+
+        target_world = None
+        if world_input in ["三次元", "现实", "common"]:
+            target_world = "common"
+        else:
+            self._refresh_world_cache()
+            self._rebuild_alias_map()
+            for alias, w_key in self.alias_map.items():
+                if world_input == alias or world_input == w_key:
+                    target_world = w_key
+                    break
+        
+        if not target_world:
+            yield event.make_result().message(f"加菜失败：未识别的世界 '{world_input}'。")
+            return
+            
+        cat_map = {"食物": "food", "饮品": "drink", "黑暗料理": "darkfood"}
+        target_cat = cat_map.get(cat_input)
+        if not target_cat:
+            yield event.make_result().message(f"加菜失败：未识别的分类 '{cat_input}'，只能是 食物、饮品 或 黑暗料理。")
+            return
+
+        invalid_chars = '<>:"/\\|?*'
+        for char in invalid_chars:
+            food_name_input = food_name_input.replace(char, "")
+        food_name_input = food_name_input.strip()
+        
+        if not food_name_input:
+            yield event.make_result().message("加菜失败：菜名不合法！")
+            return
+
+        from astrbot.api.message_components import Image
+        images = [comp for comp in event.message_obj.message if isinstance(comp, Image)]
+        
+        if not images:
+            yield event.make_result().message("加菜失败：没有检测到图片，请将图片和指令在同一条消息中发出。")
+            return
+
+        target_dir = os.path.join(self.image_mgr.data_dir, target_cat, target_world)
+        os.makedirs(target_dir, exist_ok=True)
+        
+        import aiohttp
+        saved_count = 0
+        
+        async with aiohttp.ClientSession() as session:
+            for img in images:
+                content = None
+                ext = ".jpg"
+                if hasattr(img, 'url') and img.url and img.url.startswith('http'):
+                    try:
+                        async with session.get(img.url) as resp:
+                            if resp.status == 200:
+                                content = await resp.read()
+                                if "png" in img.url.lower(): ext = ".png"
+                                elif "gif" in img.url.lower(): ext = ".gif"
+                    except Exception as e:
+                        logging.error(f"Download error: {e}")
+                elif hasattr(img, 'file') and img.file and os.path.exists(img.file):
+                    try:
+                        with open(img.file, 'rb') as f:
+                            content = f.read()
+                        if img.file.lower().endswith('.png'): ext = ".png"
+                        elif img.file.lower().endswith('.gif'): ext = ".gif"
+                    except Exception:
+                        pass
+                
+                if not content:
+                    continue
+                    
+                save_path = os.path.join(target_dir, f"{food_name_input}{ext}")
+                if os.path.exists(save_path):
+                    counter = 1
+                    while True:
+                        save_path = os.path.join(target_dir, f"{food_name_input}_{counter}{ext}")
+                        if not os.path.exists(save_path):
+                            break
+                        counter += 1
+                        
+                try:
+                    with open(save_path, "wb") as f:
+                        f.write(content)
+                    saved_count += 1
+                except Exception as e:
+                    logging.error(f"Save error: {e}")
+                    
+        if saved_count > 0:
+            yield event.make_result().message(f"✅ 加菜成功！\n共收录 {saved_count} 张【{food_name_input}】至 {world_input} 的 {cat_input} 库中！")
+        else:
+            yield event.make_result().message("加菜失败：图片下载失败或平台限制导致无法读取。")
+        return
+
+    async def handle_upload_chef(self, event, msg_text: str):
+        uid = str(event.get_sender_id())
+        admin_users = [str(x).strip() for x in self.config.get("admin_users", []) if str(x).strip()]
+        
+        if not admin_users:
+            yield event.make_result().message("【上传厨师失败】未配置管理员！请前往 WebUI 的本插件配置中填写「管理员账号白名单」。")
+            return
+            
+        if uid not in admin_users:
+            yield event.make_result().message("【越权警告】只有厨师长（管理员）可以上传厨师哦！")
+            return
+
+        idx = msg_text.find("上传厨师")
+        if idx != -1:
+            pure_args = msg_text[idx + 4:].strip()
+        else:
+            pure_args = ""
+
+        chef_name = pure_args
+
+        if not chef_name:
+            yield event.make_result().message("""指令格式错误！
+正确格式：上传厨师 [厨师名]
+示例：上传厨师 奥黛塔 (请连带图片一起发送)""")
+            return
+
+        invalid_chars = '<>:"/\\|?*'
+        for char in invalid_chars:
+            chef_name = chef_name.replace(char, "")
+        chef_name = chef_name.strip()
+        
+        if not chef_name:
+            yield event.make_result().message("上传失败：厨师名不合法！")
+            return
+
+        from astrbot.api.message_components import Image
+        images = [comp for comp in event.message_obj.message if isinstance(comp, Image)]
+        
+        if not images:
+            yield event.make_result().message("上传失败：没有检测到图片，请将图片和指令在同一条消息中发出。")
+            return
+
+        target_dir = os.path.join(self.image_mgr.data_dir, "chefs")
+        os.makedirs(target_dir, exist_ok=True)
+        
+        import aiohttp
+        saved_count = 0
+        
+        async with aiohttp.ClientSession() as session:
+            for img in images:
+                content = None
+                ext = ".jpg"
+                if hasattr(img, 'url') and img.url and img.url.startswith('http'):
+                    try:
+                        async with session.get(img.url) as resp:
+                            if resp.status == 200:
+                                content = await resp.read()
+                                if "png" in img.url.lower(): ext = ".png"
+                                elif "gif" in img.url.lower(): ext = ".gif"
+                    except Exception as e:
+                        logging.error(f"Download error: {e}")
+                elif hasattr(img, 'file') and img.file and os.path.exists(img.file):
+                    try:
+                        with open(img.file, 'rb') as f:
+                            content = f.read()
+                        if img.file.lower().endswith('.png'): ext = ".png"
+                        elif img.file.lower().endswith('.gif'): ext = ".gif"
+                    except Exception:
+                        pass
+                
+                if not content:
+                    continue
+                    
+                save_path = os.path.join(target_dir, f"{chef_name}{ext}")
+                if os.path.exists(save_path):
+                    counter = 2
+                    while True:
+                        save_path = os.path.join(target_dir, f"{chef_name}_{counter}{ext}")
+                        if not os.path.exists(save_path):
+                            break
+                        counter += 1
+                        
+                try:
+                    with open(save_path, "wb") as f:
+                        f.write(content)
+                    saved_count += 1
+                except Exception as e:
+                    logging.error(f"Save error: {e}")
+                    
+        if saved_count > 0:
+            yield event.make_result().message(f"✅ 上传厨师成功！\n共收录 {saved_count} 张【{chef_name}】至图库！")
+        else:
+            yield event.make_result().message("上传厨师失败：图片下载失败或平台限制导致无法读取。")
+        return
