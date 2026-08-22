@@ -9,7 +9,7 @@
 一个为 [AstrBot](https://github.com/Soulter/AstrBot) 深度定制的跨次元多世界干饭系统。
 每天都在纠结吃什么？那就让异次元的向导们来帮你随机摇号吧！把食物图片扔进对应的文件夹，它就会自动变成菜单里的美味！通过完美的分类引擎，为你的群聊带来极具情感连接和随机惊喜的沉浸式“吃什么”体验！
 
-当前版本：3.1 Beta | 作者：Rua432
+当前版本：3.1 Beta | 作者：Rua432
 
 ---
 
@@ -55,7 +55,7 @@
    - [夸克网盘下载](https://pan.quark.cn/s/301110d45a48)
    - [百度网盘下载](https://pan.baidu.com/s/1ZHfYz8vNL5JU0jyFtHiYqQ?pwd=erm9) 提取码：erm9
 2. 在 AstrBot 管理面板打开**插件配置 (WebUI)**，将最上方的 **“强制重新下载基础图库”** 取消勾选并保存。
-3. 将下载好的压缩包解压，把里面的 ood、drink、chefs 等文件夹，放入 data/plugin_data/astrbot_plugin_chisa_still_eating/ 目录下。
+3. 将下载好的压缩包解压，把里面的food、drink、chefs 等文件夹，放入 data/plugin_data/astrbot_plugin_chisa_still_eating/ 目录下。
 4. 重启 AstrBot 即可。
 
 ---
