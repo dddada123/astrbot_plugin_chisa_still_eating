@@ -100,7 +100,7 @@
 ## 🤝 跨平台迁移与开源协议
 本项目代码采用 [MIT License](LICENSE) 协议完全开源发布。
 **非常欢迎其他聊天机器人平台（如 NoneBot、Koishi 等）的开发者自行移植、迁移或二创使用本插件！** 为尊重开源心血，如果您进行了移植或公开发布，**请务必在衍生项目的主页显著位置（或机器人的帮助菜单中）包含并保留以下版权信息与原始链接**：
-1. 原项目 GitHub 仓库：[[Rua432/astrbot_plugin_chisa_still_eating](https://github.com/Rua432/astrbot_plugin_chisa_still_eating)](https://github.com/dddada123/astrbot_plugin_chisa_still_eating)
+1. 原项目 GitHub 仓库：[[[Rua432/astrbot_plugin_chisa_still_eating](https://github.com/Rua432/astrbot_plugin_chisa_still_eating)](https://github.com/dddada123/astrbot_plugin_chisa_still_eating)]
 2. 原作者 Bilibili 主页：[Rua432 的哔哩哔哩空间](https://space.bilibili.com/501751)
 
 ---
