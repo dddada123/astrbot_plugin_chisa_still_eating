@@ -127,6 +127,7 @@ data/plugin_data/astrbot_plugin_chisa_still_eating/
   <img src="assets/demo1.png" width="400" alt="效果演示1" style="margin: 10px;">
   <img src="assets/demo2.png" width="400" alt="效果演示2" style="margin: 10px;">
   <img src="https://s1.imagehub.cc/images/2026/08/22/57a907b92b92d68b0d79641c08a16ffc.jpg" width="400" alt="效果演示3" style="margin: 10px;">
+  <img src="https://s1.imagehub.cc/images/2026/08/22/da98c2c7b31409aa60210db1356d8313.png" width="400" alt="效果演示4" style="margin: 10px;">  
 </div>
 
 ---
