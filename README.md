@@ -51,7 +51,7 @@
 3. 这期间在群里发送指令，系统会温馨提示“正在下载解压中…”。等待部署完成即可立刻使用！
 
 **选项 B：手动极速部署（如果自动拉取失败/超时）**
-1. 前往本插件的 GitHub Releases 页面，或通过下方的网盘链接，下载 V3.astrbot_plugin_chisa_still_eating.zip (约 160MB)。
+1. 前往[本插件的 GitHub Releases ](https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/tag/v3.0-beta)页面，或通过下方的网盘链接，下载 V3.astrbot_plugin_chisa_still_eating.zip (约 160MB)。
    - [夸克网盘下载](https://pan.quark.cn/s/301110d45a48)
    - [百度网盘下载](https://pan.baidu.com/s/1ZHfYz8vNL5JU0jyFtHiYqQ?pwd=erm9) 提取码：erm9
 2. 在 AstrBot 管理面板打开**插件配置 (WebUI)**，将最上方的 **“强制重新下载基础图库”** 取消勾选并保存。
