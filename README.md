@@ -12,7 +12,7 @@
 当前版本：3.1 Beta | 作者：Rua432
 
 ## 特别鸣谢
-感谢 [MimoKit](https://github.com/MimoKit) 移植的 GsCore 版本 —— [ChisaEating](https://github.com/MimoKit/ChisaEating)（跨次元干饭插件）。
+感谢 [MimoKit](https://github.com/MimoKit) 移植的 GsCore 版本 —— [ChisaEating](https://github.com/MimoKit/ChisaEating)
 
 ---
 
