@@ -2,7 +2,7 @@
 display_name: 千小妹还在吃
 short_desc: 跨次元多世界随机干饭与专属厨师召唤系统。
 desc: 一个带有情绪记忆的跨次元干饭插件。无需繁琐配置，把图扔进文件夹即可生效。支持多世界美食大乱斗、群聊防重复菜单、专属厨师立绘展示，以及干饭人随机出没截胡抢饭！包含全自动资源部署引擎。
-version: "3.5.2"
+version: "3.5.3"
 author: Rua432
 repo: https://github.com/dddada123/astrbot_plugin_chisa_still_eating
 social_link: https://space.bilibili.com/501751
