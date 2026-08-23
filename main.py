@@ -6,6 +6,8 @@ import shutil
 import random
 import re
 import logging
+import aiohttp          # 修复：补充缺失的导入
+import hashlib          # 修复：提前导入，便于使用
 from astrbot.api.star import Context, Star, register
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.event.filter import EventMessageType
@@ -35,6 +37,7 @@ class FlavorFusionUltimate(Star):
         self.is_downloading = False
         self.download_msg = ""
         self.downloaded_bytes = 0
+        self._is_download_thread_active = False   # 修复：初始化标志
         
         needs_download = False
         if self.config.get("force_download_assets", False):
@@ -61,102 +64,109 @@ class FlavorFusionUltimate(Star):
         self.common_eat_pattern = re.compile("|".join([re.escape(str(k)) for k in common_eat_keywords if k]))
         self.common_drink_pattern = re.compile("|".join([re.escape(str(k)) for k in common_drink_keywords if k]))
 
-
+    # ================== 下载资源（修复后） ==================
     def _download_and_extract_assets(self):
-        if getattr(self, "_is_download_thread_active", False):
+        if self._is_download_thread_active:
             return
         self._is_download_thread_active = True
-        import hashlib
         self.is_downloading = True
         self.downloaded_bytes = 0
         self.download_msg = "正在从 GitHub 远程拉取基础图库资源 (约 160MB)，请耐心等待..."
         logging.info("[ChisaEating] 开始自动下载基础图库资源...")
         
-        urls = [
-            "https://mirror.ghproxy.com/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip",
-            "https://ghproxy.net/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip",
-            "https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip"
-        ]
-        
-        zip_path = os.path.join(self.image_mgr.data_dir, "assets_temp.zip")
-        os.makedirs(self.image_mgr.data_dir, exist_ok=True)
-        
-        TARGET_HASH = "239dda1a6de8ad4227f166eabe19db83c9ce4a15806e14fdbd7ecbbf98da30ae"
-        success = False
-        
-        for url in urls:
-            try:
-                logging.info(f"[ChisaEating] 尝试从 {url} 下载...")
-                self.downloaded_bytes = 0
-                response = requests.get(url, stream=True, timeout=120)
-                response.raise_for_status()
-                
-                sha256_hash = hashlib.sha256()
-                with open(zip_path, 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk: 
-                            f.write(chunk)
-                            sha256_hash.update(chunk)
-                            self.downloaded_bytes += len(chunk)
-                            
-                downloaded_hash = sha256_hash.hexdigest()
-                if downloaded_hash != TARGET_HASH:
-                    # 修复1：用括号包裹多行 f-string，用 \n 显式换行
-                    logging.warning(
-                        f"[ChisaEating] 安全告警：下载的资源包哈希值不匹配！\n"
-                        f"预期: {TARGET_HASH}\n"
-                        f"实际: {downloaded_hash}\n"
-                        "已自动删除危险文件，尝试下一个节点..."
-                    )
-                    if os.path.exists(zip_path): os.remove(zip_path)
-                    continue
+        try:
+            urls = [
+                "https://mirror.ghproxy.com/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip",
+                "https://ghproxy.net/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip",
+                "https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip"
+            ]
+            
+            zip_path = os.path.join(self.image_mgr.data_dir, "assets_temp.zip")
+            os.makedirs(self.image_mgr.data_dir, exist_ok=True)
+            
+            TARGET_HASH = "239dda1a6de8ad4227f166eabe19db83c9ce4a15806e14fdbd7ecbbf98da30ae"
+            success = False
+            
+            for url in urls:
+                try:
+                    logging.info(f"[ChisaEating] 尝试从 {url} 下载...")
+                    self.downloaded_bytes = 0
+                    response = requests.get(url, stream=True, timeout=120)
+                    response.raise_for_status()
                     
-                success = True
-                break
-            except Exception as e:
-                logging.warning(f"[ChisaEating] 下载节点失败 ({url}): {e}")
-                if os.path.exists(zip_path): os.remove(zip_path)
-                
-        if success:
-            self.download_msg = "图库下载完成并经过 SHA-256 安全校验，正在解压部署..."
-            logging.info("[ChisaEating] 下载完成且完整性校验通过，开始解压...")
-            try:
-                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    sha256_hash = hashlib.sha256()
+                    with open(zip_path, 'wb') as f:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if chunk:
+                                f.write(chunk)
+                                sha256_hash.update(chunk)
+                                self.downloaded_bytes += len(chunk)
+                                
+                    downloaded_hash = sha256_hash.hexdigest()
+                    if downloaded_hash != TARGET_HASH:
+                        logging.warning(
+                            f"[ChisaEating] 安全告警：下载的资源包哈希值不匹配！\n"
+                            f"预期: {TARGET_HASH}\n"
+                            f"实际: {downloaded_hash}\n"
+                            "已自动删除危险文件，尝试下一个节点..."
+                        )
+                        if os.path.exists(zip_path):
+                            os.remove(zip_path)
+                        continue
+                        
+                    success = True
+                    break
+                except Exception as e:
+                    logging.warning(f"[ChisaEating] 下载节点失败 ({url}): {e}")
+                    if os.path.exists(zip_path):
+                        os.remove(zip_path)
+                        
+            if success:
+                self.download_msg = "图库下载完成并经过 SHA-256 安全校验，正在解压部署..."
+                logging.info("[ChisaEating] 下载完成且完整性校验通过，开始解压...")
+                try:
+                    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                        extract_tmp = os.path.join(self.image_mgr.data_dir, "extract_tmp")
+                        zip_ref.extractall(extract_tmp)
+                        
+                        src_dir = extract_tmp
+                        for root, dirs, files in os.walk(extract_tmp):
+                            if "food" in dirs or "drink" in dirs or "chefs" in dirs:
+                                src_dir = root
+                                break
+                        
+                        for item in os.listdir(src_dir):
+                            s = os.path.join(src_dir, item)
+                            d = os.path.join(self.image_mgr.data_dir, item)
+                            if os.path.isdir(s):
+                                if os.path.exists(d):
+                                    shutil.rmtree(d)
+                                shutil.copytree(s, d)
+                            else:
+                                shutil.copy2(s, d)
+                                
+                    logging.info("[ChisaEating] 基础图库解压部署完成！")
+                except Exception as e:
+                    logging.error(f"[ChisaEating] 解压失败: {e}")
+                finally:
+                    if os.path.exists(zip_path):
+                        os.remove(zip_path)
                     extract_tmp = os.path.join(self.image_mgr.data_dir, "extract_tmp")
-                    zip_ref.extractall(extract_tmp)
-                    
-                    src_dir = extract_tmp
-                    for root, dirs, files in os.walk(extract_tmp):
-                        if "food" in dirs or "drink" in dirs or "chefs" in dirs:
-                            src_dir = root
-                            break
-                    
-                    for item in os.listdir(src_dir):
-                        s = os.path.join(src_dir, item)
-                        d = os.path.join(self.image_mgr.data_dir, item)
-                        if os.path.isdir(s):
-                            if os.path.exists(d): shutil.rmtree(d)
-                            shutil.copytree(s, d)
-                        else:
-                            shutil.copy2(s, d)
-                            
-                logging.info("[ChisaEating] 基础图库解压部署完成！")
-            except Exception as e:
-                logging.error(f"[ChisaEating] 解压失败: {e}")
-            finally:
-                if os.path.exists(zip_path): os.remove(zip_path)
-                extract_tmp = os.path.join(self.image_mgr.data_dir, "extract_tmp")
-                if os.path.exists(extract_tmp): shutil.rmtree(extract_tmp, ignore_errors=True)
-        else:
-            logging.error("[ChisaEating] 基础图库所有下载节点均超时或哈希校验失败！请前往后台取消勾选强制下载，并根据 Readme 手动下载安装。")
+                    if os.path.exists(extract_tmp):
+                        shutil.rmtree(extract_tmp, ignore_errors=True)
+            else:
+                logging.error("[ChisaEating] 基础图库所有下载节点均超时或哈希校验失败！请前往后台取消勾选强制下载，并根据 Readme 手动下载安装。")
             
-        if self.config.get("force_download_assets", False):
-            self.config["force_download_assets"] = False
-            
-        self.is_downloading = False
-        self.downloaded_bytes = 0
-        self._is_download_thread_active = False
+            # 修复：重置强制下载标志（无论成功与否，与原逻辑一致）
+            if self.config.get("force_download_assets", False):
+                self.config["force_download_assets"] = False
+                
+        finally:
+            self.is_downloading = False
+            self.downloaded_bytes = 0
+            self._is_download_thread_active = False
 
+    # ================== 辅助函数（原样保留） ==================
     def _get_ganfanren_data(self):
         ganfanren_pool = {}
         user_dir = os.path.join("data", "plugin_data", "astrbot_plugin_chisa_still_eating", "ganfanren")
@@ -245,6 +255,7 @@ class FlavorFusionUltimate(Star):
         if "世界4" in selection: return "world4"
         return "world1"
 
+    # ================== 消息拦截器（修复空指针） ==================
     @filter.event_message_type(EventMessageType.ALL)
     async def global_message_interceptor(self, event: AstrMessageEvent, *args, **kwargs):
         msg_text = event.message_str
@@ -298,8 +309,11 @@ class FlavorFusionUltimate(Star):
             event.stop_event()
             return
             
+        # 修复：安全获取 group_id（私聊时 msg_obj 可能为 None）
         msg_obj = event.message_obj
-        group_id = str(msg_obj.group_id).strip() if msg_obj.group_id else None
+        group_id = None
+        if msg_obj and hasattr(msg_obj, 'group_id'):
+            group_id = str(msg_obj.group_id).strip() if msg_obj.group_id else None
         
         if group_id:
             if self.config.get("enable_blacklist", False):
@@ -392,10 +406,13 @@ class FlavorFusionUltimate(Star):
         async for res in self.execute_flow(event, category, forced_world, forced_chef):
             yield res
 
+    # ================== 核心流程（修复 group_id 空指针） ==================
     async def execute_flow(self, event: AstrMessageEvent, category: str, forced_world: str = None, forced_chef: str = None):
         event.should_call_llm(True)
         uid = event.get_sender_id()
-        group_id = event.message_obj.group_id or uid
+        # 修复：安全获取 group_id
+        msg_obj = event.message_obj
+        group_id = str(msg_obj.group_id) if msg_obj and hasattr(msg_obj, 'group_id') and msg_obj.group_id else str(uid)
         
         if forced_world and forced_world != "common":
             active_key = forced_world
@@ -451,7 +468,6 @@ class FlavorFusionUltimate(Star):
 
         food_dir = os.path.join(self.image_mgr.data_dir, "food")
         if not os.path.exists(food_dir) or not os.listdir(food_dir):
-            # 修复2：用三引号包裹多行字符串
             yield event.make_result().message("""【千小妹系统提示】检测到基础图库为空！
 为了符合安全规范，需要BOT管理员手动确认基础资源包的拉取。
 
@@ -469,7 +485,6 @@ class FlavorFusionUltimate(Star):
         pool = self.image_mgr.scan_all_items(self.config, self.wv_settings, category)
         
         if not pool:
-            # 修复3：用三引号包裹多行字符串
             yield event.make_result().message("""【千小妹系统提示】检测到基础图库为空！
 为了符合安全规范，需要BOT管理员手动确认基础资源包的拉取。
 
@@ -643,6 +658,7 @@ class FlavorFusionUltimate(Star):
         yield result
         event.stop_event()
 
+    # ================== 加菜功能 ==================
     async def handle_add_food(self, event, msg_text: str):
         uid = str(event.get_sender_id())
         admin_users = [str(x).strip() for x in self.config.get("admin_users", []) if str(x).strip()]
@@ -712,7 +728,6 @@ class FlavorFusionUltimate(Star):
         target_dir = os.path.join(self.image_mgr.data_dir, target_cat, target_world)
         os.makedirs(target_dir, exist_ok=True)
         
-        import aiohttp
         saved_count = 0
         
         async with aiohttp.ClientSession() as session:
@@ -762,6 +777,7 @@ class FlavorFusionUltimate(Star):
             yield event.make_result().message("加菜失败：图片下载失败或平台限制导致无法读取。")
         return
 
+    # ================== 上传厨师 ==================
     async def handle_upload_chef(self, event, msg_text: str):
         uid = str(event.get_sender_id())
         admin_users = [str(x).strip() for x in self.config.get("admin_users", []) if str(x).strip()]
@@ -807,7 +823,6 @@ class FlavorFusionUltimate(Star):
         target_dir = os.path.join(self.image_mgr.data_dir, "chefs")
         os.makedirs(target_dir, exist_ok=True)
         
-        import aiohttp
         saved_count = 0
         
         async with aiohttp.ClientSession() as session:
