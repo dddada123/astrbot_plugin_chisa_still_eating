@@ -16,9 +16,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "3.5.1"
+__version__ = "3.5.2"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.5.1", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.5.2", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -338,7 +338,7 @@ class FlavorFusionUltimate(Star):
 💬 [别名]特产 / [别名]特饮：精准锁定某个世界的菜单（例如：鸣潮特产、原神特饮）。
 
 👑 羁绊召唤（吃老婆/老公做的饭）
-💬 召唤[厨师名] / [厨师名]料理 / [厨师名]特供：强行过滤奖池，只吃TA亲手做的菜，附赠专属立绘展示！（例如：召唤刻晴、吟霖特供）。
+💬 召唤[厨师名]下厨 / [厨师名]特供料理：强行过滤奖池，只吃TA亲手做的菜，附赠专属立绘展示！（例如：召唤爱弥斯下厨、弗洛洛特供料理）。
 
 ☠️ 娱乐整活
 💬 来点黑暗料理：导游的恶作剧，吃出人命概不负责！
@@ -377,8 +377,10 @@ class FlavorFusionUltimate(Star):
         elif self.eat_pattern.search(msg_text): 
             category = "food"
 
+        # ================== 修改厨师匹配逻辑 ==================
+        # 原：召唤(.+) 和 (.+?)料理 删除，改为召唤(.+?)下厨，特供改为特供料理
         forced_chef = None
-        chef_match = re.search(r"想和(.+?)吃饭|召唤(.+)|(.+?)料理|(.+?)特供", msg_text)
+        chef_match = re.search(r"想和(.+?)吃饭|(.+?)特供料理|召唤(.+?)下厨", msg_text)
         if chef_match:
             extracted = next((g for g in chef_match.groups() if g), None)
             if extracted and extracted != "黑暗":
