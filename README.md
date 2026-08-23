@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="[logo.png](https://s1.imagehub.cc/images/2026/08/23/5a5d98a8937cbdd780106c2f852e8a27.png)" width="300">
+  <img src="https://s1.imagehub.cc/images/2026/08/23/5a5d98a8937cbdd780106c2f852e8a27.png" width="300">
 </div>
 
 # 🚀 🍱 千小妹还在吃 (Chisa Still Eating)
