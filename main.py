@@ -14,9 +14,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "3.1Beta"
+__version__ = "3.5-beta"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.1Beta", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.5-beta", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -34,15 +34,12 @@ class FlavorFusionUltimate(Star):
         
         self.is_downloading = False
         self.download_msg = ""
+        self.downloaded_bytes = 0
         
         needs_download = False
         if self.config.get("force_download_assets", False):
             needs_download = True
-        else:
-            food_dir = os.path.join(self.image_mgr.data_dir, "food")
-            if not os.path.exists(food_dir) or not os.listdir(food_dir):
-                needs_download = True
-                
+            
         if needs_download:
             threading.Thread(target=self._download_and_extract_assets, daemon=True).start()
 
@@ -66,7 +63,12 @@ class FlavorFusionUltimate(Star):
 
 
     def _download_and_extract_assets(self):
+        if getattr(self, "_is_download_thread_active", False):
+            return
+        self._is_download_thread_active = True
+        import hashlib
         self.is_downloading = True
+        self.downloaded_bytes = 0
         self.download_msg = "正在从 GitHub 远程拉取基础图库资源 (约 160MB)，请耐心等待..."
         logging.info("[ChisaEating] 开始自动下载基础图库资源...")
         
@@ -79,23 +81,45 @@ class FlavorFusionUltimate(Star):
         zip_path = os.path.join(self.image_mgr.data_dir, "assets_temp.zip")
         os.makedirs(self.image_mgr.data_dir, exist_ok=True)
         
+        TARGET_HASH = "239dda1a6de8ad4227f166eabe19db83c9ce4a15806e14fdbd7ecbbf98da30ae"
         success = False
+        
         for url in urls:
             try:
                 logging.info(f"[ChisaEating] 尝试从 {url} 下载...")
+                self.downloaded_bytes = 0
                 response = requests.get(url, stream=True, timeout=120)
                 response.raise_for_status()
+                
+                sha256_hash = hashlib.sha256()
                 with open(zip_path, 'wb') as f:
                     for chunk in response.iter_content(chunk_size=8192):
-                        if chunk: f.write(chunk)
+                        if chunk: 
+                            f.write(chunk)
+                            sha256_hash.update(chunk)
+                            self.downloaded_bytes += len(chunk)
+                            
+                downloaded_hash = sha256_hash.hexdigest()
+                if downloaded_hash != TARGET_HASH:
+                    # 修复1：用括号包裹多行 f-string，用 \n 显式换行
+                    logging.warning(
+                        f"[ChisaEating] 安全告警：下载的资源包哈希值不匹配！\n"
+                        f"预期: {TARGET_HASH}\n"
+                        f"实际: {downloaded_hash}\n"
+                        "已自动删除危险文件，尝试下一个节点..."
+                    )
+                    if os.path.exists(zip_path): os.remove(zip_path)
+                    continue
+                    
                 success = True
                 break
             except Exception as e:
                 logging.warning(f"[ChisaEating] 下载节点失败 ({url}): {e}")
+                if os.path.exists(zip_path): os.remove(zip_path)
                 
         if success:
-            self.download_msg = "图库下载完成，正在解压部署..."
-            logging.info("[ChisaEating] 下载完成，开始解压...")
+            self.download_msg = "图库下载完成并经过 SHA-256 安全校验，正在解压部署..."
+            logging.info("[ChisaEating] 下载完成且完整性校验通过，开始解压...")
             try:
                 with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                     extract_tmp = os.path.join(self.image_mgr.data_dir, "extract_tmp")
@@ -124,12 +148,14 @@ class FlavorFusionUltimate(Star):
                 extract_tmp = os.path.join(self.image_mgr.data_dir, "extract_tmp")
                 if os.path.exists(extract_tmp): shutil.rmtree(extract_tmp, ignore_errors=True)
         else:
-            logging.error("[ChisaEating] 基础图库所有下载节点均超时或失败！请前往后台取消勾选强制下载，并根据 Readme 手动下载安装。")
+            logging.error("[ChisaEating] 基础图库所有下载节点均超时或哈希校验失败！请前往后台取消勾选强制下载，并根据 Readme 手动下载安装。")
             
         if self.config.get("force_download_assets", False):
             self.config["force_download_assets"] = False
             
         self.is_downloading = False
+        self.downloaded_bytes = 0
+        self._is_download_thread_active = False
 
     def _get_ganfanren_data(self):
         ganfanren_pool = {}
@@ -228,11 +254,13 @@ class FlavorFusionUltimate(Star):
         is_plugin_cmd = False
         if ("/加菜" in msg_text or "加菜" in msg_text or "/上传厨师" in msg_text or "上传厨师" in msg_text or 
             "帮助" in msg_text or "吃什么" in msg_text or "喝什么" in msg_text or "特产" in msg_text or 
-            "特饮" in msg_text or "吃饭" in msg_text or "料理" in msg_text or "召唤" in msg_text or "特供" in msg_text):
+            "特饮" in msg_text or "吃饭" in msg_text or "料理" in msg_text or "召唤" in msg_text or "特供" in msg_text) and "千小妹图库下载进度" not in msg_text:
             is_plugin_cmd = True
             
         if self.is_downloading and is_plugin_cmd:
-            yield event.make_result().message("【千小妹系统提示】\n" + self.download_msg)
+            mb = self.downloaded_bytes / (1024 * 1024)
+            progress_msg = f"【千小妹下载进度】\n正在为您搬运跨次元美食资源...下载完成后即可正常使用以及查看帮助\n当前已下载: {mb:.2f} MB / 160.46 MB"
+            yield event.make_result().message(progress_msg)
             event.stop_event()
             return
 
@@ -244,6 +272,29 @@ class FlavorFusionUltimate(Star):
         if "/上传厨师" in msg_text or "上传厨师" in msg_text:
             async for res in self.handle_upload_chef(event, msg_text):
                 yield res
+            event.stop_event()
+            return
+            
+        if msg_text == "/千小妹图库下载进度" or msg_text == "千小妹图库下载进度":
+            if self.is_downloading:
+                mb = self.downloaded_bytes / (1024 * 1024)
+                yield event.make_result().message(f"【千小妹下载进度】\n正在为您搬运跨次元美食资源...下载完成后即可正常使用以及查看帮助\n当前已下载: {mb:.2f} MB / 160.46 MB")
+            else:
+                yield event.make_result().message("【千小妹提示】当前没有正在进行的图库下载任务哦。")
+            event.stop_event()
+            return
+
+        if "/更新千小妹图库" in msg_text or "更新千小妹图库" in msg_text:
+            uid = str(event.get_sender_id())
+            admin_users = [str(x).strip() for x in self.config.get("admin_users", []) if str(x).strip()]
+            if not admin_users or uid not in admin_users:
+                yield event.make_result().message("【权限不足】只有管理员才能执行图库更新指令哦！")
+            else:
+                if self.is_downloading:
+                    yield event.make_result().message("【千小妹提示】图库正在下载中，请勿重复触发...")
+                else:
+                    threading.Thread(target=self._download_and_extract_assets, daemon=True).start()
+                    yield event.make_result().message("【千小妹提示】已收到显式确认！开始从 Github 拉取并更新图库 (约160MB)，请查看后台日志或稍后重试抽卡。")
             event.stop_event()
             return
             
@@ -260,29 +311,35 @@ class FlavorFusionUltimate(Star):
                 if group_id not in whitelist:
                     return
         
-        if msg_text in ["千小妹还在吃帮助", "千咲吃什么帮助", "干饭帮助", "美食帮助"]:
-            help_text = """🍱 【千小妹还在吃 v3.1Beta】干饭指南
-━━━━━━━━━━━━━━━━
-🎲 盲盒摇号 (按后台出率跨界抽取)
-· 吃什么 / 喝什么
-· 来点黑暗料理 (作死警告)
+        if msg_text in ["千小妹还在吃帮助", "千咲吃什么帮助", "干饭帮助", "美食帮助", "千小妹帮助", "千小妹吃什么帮助"]:
+            help_text = """🌸 【千小妹跨次元干饭指南 v3.3.5】 🌸
+不知道今天吃啥？让异次元的导游们为你随机摇号吧！
 
-🌍 定向打卡 (锁定指定世界)
-· 来点现实的食物/饮品 (三次元外卖)
-· [世界别名]特产/吃 (例：鸣潮特产)
-· [世界别名]特饮/喝 (例：原神特饮)
+🎲 基础盲盒（全宇宙随机）
+💬 吃什么 / 吃啥：全宇宙卡池随机抽选一道美食。
+💬 喝什么 / 喝啥：全宇宙卡池随机抽选一杯饮品。
 
-👩‍🍳 专属羁绊 (单独抽出对应厨师的作品)
-· 召唤[厨师名] / 想和[厨师名]吃饭
-· [厨师名]料理 / [厨师名]特供
-  (例如：召唤吟霖 / 达妮娅料理)
+🌍 定向打卡（想吃特定世界的？）
+💬 来点现实的食物 / 来点现实的饮品：只想吃地球上的普通外卖？用这个！
+💬 [别名]特产 / [别名]特饮：精准锁定某个世界的菜单（例如：鸣潮特产、原神特饮）。
 
-👑 厨师长后台 (需管理员白名单)
-· /加菜 [世界] [分类] [菜名] [图]
-  (分类支持：食物、饮品、黑暗料理)
-· /上传厨师 [厨师名] [图]
-━━━━━━━━━━━━━━━━
-💡 小贴士：支持单次发多图批量加菜；加菜名若带【厨师名】前缀可自动绑定！点餐太快小心被神秘人截胡哦～"""
+👑 羁绊召唤（吃老婆/老公做的饭）
+💬 召唤[厨师名] / [厨师名]料理 / [厨师名]特供：强行过滤奖池，只吃TA亲手做的菜，附赠专属立绘展示！（例如：召唤刻晴、吟霖特供）。
+
+☠️ 娱乐整活
+💬 来点黑暗料理：导游的恶作剧，吃出人命概不负责！
+💡 提示：频繁点菜不仅会被导游吐槽，饭还可能会被别的干饭人“截胡”抢走哦！
+---
+⚙️ 系统与图库管理 (注：需在AstrBot后台配置管理员)
+💬 千小妹图库下载进度：随时查看后台图库的拉取进度。
+💬 更新千小妹图库：强制进行160MB图包的安全拉取。
+💬 【加菜格式】：加菜 [世界] [分类] [菜名]
+⚠️ (参数之间必须打空格，且图片要和文字发在同一条消息里！)
+💡 举例：加菜 三次元 食物 肯德基肉霸堡 (带图)
+💬 【加大厨格式】：上传厨师 [厨师名]
+💡 举例：上传厨师 刻晴 (带图)
+
+(📝 注：以上所有指令均不受机器人名字影响。发“小爱吃什么”也能完美触发哦！)"""
             yield event.make_result().message(help_text)
             event.stop_event()
             return
@@ -380,8 +437,11 @@ class FlavorFusionUltimate(Star):
         cd_seconds = self.config.get("repeat_cooldown", 60)
         if not self.limiter.is_repeat_in_cooldown(group_id, cd_seconds) and (random.randint(1, 100) <= self.config.get("repeat_prob", 10)):
             self.limiter.record_repeat_trigger(group_id)
-            fallback_pool = self.config.get("repeat_templates", [])
-            text = random.choice(fallback_pool if fallback_pool else ["是啊，吃什么"]).format(bot=bot_host)
+            if category == "food":
+                fallback_pool = self.config.get("eat_fallback_words", ["是啊，吃什么"])
+            else:
+                fallback_pool = self.config.get("drink_fallback_words", ["是啊，喝什么"])
+            text = random.choice(fallback_pool if fallback_pool else ["是啊，吃/喝什么"]).format(bot=bot_host)
             chain = event.make_result().message(text)
             meme_file = self.image_mgr.get_bot_meme(active_key, "think")
             if meme_file: chain.file_image(meme_file)
@@ -389,8 +449,41 @@ class FlavorFusionUltimate(Star):
             event.stop_event()
             return
 
+        food_dir = os.path.join(self.image_mgr.data_dir, "food")
+        if not os.path.exists(food_dir) or not os.listdir(food_dir):
+            # 修复2：用三引号包裹多行字符串
+            yield event.make_result().message("""【千小妹系统提示】检测到基础图库为空！
+为了符合安全规范，需要BOT管理员手动确认基础资源包的拉取。
+
+🛠️ 【全自动拉取方案】：
+请先前往 AstrBot 后台 WebUI，在本插件配置的『管理员账号白名单』中填入您的 QQ 号。
+随后在群内发送 /更新千小妹图库 即可触发 160MB 图包的安全拉取。
+
+📦 【网盘手动兜底方案】（若拉取超时/失败）：
+夸克：https://pan.quark.cn/s/301110d45a48
+百度：https://pan.baidu.com/s/1ZHfYz8vNL5JU0jyFtHiYqQ?pwd=erm9
+（将解压出的food等文件夹放入 data/plugin_data/astrbot_plugin_chisa_still_eating 中即可）""")
+            event.stop_event()
+            return
+            
         pool = self.image_mgr.scan_all_items(self.config, self.wv_settings, category)
         
+        if not pool:
+            # 修复3：用三引号包裹多行字符串
+            yield event.make_result().message("""【千小妹系统提示】检测到基础图库为空！
+为了符合安全规范，需要BOT管理员手动确认基础资源包的拉取。
+
+🛠️ 【全自动拉取方案】：
+请先前往 AstrBot 后台 WebUI，在本插件配置的『管理员账号白名单』中填入您的 QQ 号。
+随后在群内发送 /更新千小妹图库 即可触发 160MB 图包的安全拉取。
+
+📦 【网盘手动兜底方案】（若拉取超时/失败）：
+夸克：https://pan.quark.cn/s/301110d45a48
+百度：https://pan.baidu.com/s/1ZHfYz8vNL5JU0jyFtHiYqQ?pwd=erm9
+（将解压出的food等文件夹放入 data/plugin_data/astrbot_plugin_chisa_still_eating 中即可）""")
+            event.stop_event()
+            return
+            
         common_texts = []
         if category == "food":
             common_texts = self.config.get("common_food_text", [])
