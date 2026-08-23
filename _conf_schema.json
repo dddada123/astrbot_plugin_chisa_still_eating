@@ -255,12 +255,7 @@
         "items": {
             "type": "string"
         },
-        "default": [
-            "黄焖鸡米饭",
-            "麻婆豆腐",
-            "猪脚饭",
-            "兰州牛肉面"
-        ]
+        "default": []
     },
     "common_drink_text": {
         "description": "🧋 三次元文字饮品卡池",
@@ -269,12 +264,7 @@
         "items": {
             "type": "string"
         },
-        "default": [
-            "冰可乐",
-            "乌龙茶",
-            "冰吸生椰拿铁",
-            "白开水"
-        ]
+        "default": []
     },
     "generic_templates": {
         "description": "💬 常规无联动普通推荐句式池",
@@ -537,12 +527,7 @@
                 "items": {
                     "type": "string"
                 },
-                "default": [
-                    "香柠切片",
-                    "冷调激浪",
-                    "今州排骨",
-                    "龙吐珠"
-                ],
+                "default": [],
                 "condition": {
                     "enable": true
                 }
@@ -554,10 +539,7 @@
                 "items": {
                     "type": "string"
                 },
-                "default": [
-                    "今州特调",
-                    "清神茶"
-                ],
+                "default": [],
                 "condition": {
                     "enable": true
                 }
@@ -751,12 +733,7 @@
                 "items": {
                     "type": "string"
                 },
-                "default": [
-                    "甜甜花酿鸡",
-                    "蜜酱胡萝卜煎肉",
-                    "水煮黑背鲈",
-                    "摩拉肉"
-                ],
+                "default": [],
                 "condition": {
                     "enable": true
                 }
@@ -768,11 +745,7 @@
                 "items": {
                     "type": "string"
                 },
-                "default": [
-                    "蒲公英酒",
-                    "苹果酿",
-                    "莓果味汽水"
-                ],
+                "default": [],
                 "condition": {
                     "enable": true
                 }
@@ -948,10 +921,7 @@
                 "items": {
                     "type": "string"
                 },
-                "default": [
-                    "营养膏",
-                    "合成凝胶"
-                ],
+                "default": [],
                 "condition": {
                     "enable": true
                 }
@@ -961,10 +931,7 @@
                 "items": {
                     "type": "string"
                 },
-                "default": [
-                    "能量饮料",
-                    "提神合剂"
-                ],
+                "default": [],
                 "condition": {
                     "enable": true
                 }
