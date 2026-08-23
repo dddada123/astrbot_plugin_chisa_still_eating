@@ -130,8 +130,8 @@ data/plugin_data/astrbot_plugin_chisa_still_eating/
 
 各模块之间完美协同，根据群友的指令和频率，提供完全不同的情绪反馈与跨次元互动！
 <div align="center">
-  <img src="assets/demo1.png" width="400" alt="效果演示1" style="margin: 10px;">
-  <img src="assets/demo2.png" width="400" alt="效果演示2" style="margin: 10px;">
+  <img src="https://s1.imagehub.cc/images/2026/08/23/2c88ad304e62a3bc9858bea39fdc0bcb.png" width="400" alt="效果演示1" style="margin: 10px;">
+  <img src="https://s1.imagehub.cc/images/2026/08/23/f993d02f83418dd872b0ce94b6daa56a.png" width="400" alt="效果演示2" style="margin: 10px;">
   <img src="https://s1.imagehub.cc/images/2026/08/22/57a907b92b92d68b0d79641c08a16ffc.jpg" width="400" alt="效果演示3" style="margin: 10px;">
   <img src="https://s1.imagehub.cc/images/2026/08/22/da98c2c7b31409aa60210db1356d8313.png" width="400" alt="效果演示4" style="margin: 10px;">  
 </div>
