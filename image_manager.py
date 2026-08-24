@@ -23,6 +23,35 @@ class ImageManager:
         self.moods = ["think", "like", "speechless", "scared"]
         
         self._ensure_infrastructure()
+        
+        self.cached_pools = {"food": [], "drink": [], "dark": []}
+        self.cached_chefs = {}
+        self.cached_memes = {}
+        
+    def reload_caches(self, config_global, wv_settings):
+        for cat in ["food", "drink", "dark"]:
+            self.cached_pools[cat] = self.scan_all_items(config_global, wv_settings, cat)
+            
+        self.cached_chefs.clear()
+        chef_dir = os.path.join(self.data_dir, "chefs")
+        if os.path.exists(chef_dir):
+            for file in os.listdir(chef_dir):
+                if file.startswith(".") or not file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')): continue
+                parsed_chef, parsed_name = self.parse_filename(file)
+                for k in [parsed_name, parsed_chef if parsed_chef else "", file.split('.')[0]]:
+                    if k and k != "none":
+                        if k not in self.cached_chefs: self.cached_chefs[k] = []
+                        self.cached_chefs[k].append(os.path.join(chef_dir, file))
+                        
+        self.cached_memes.clear()
+        for w in self.worlds:
+            self.cached_memes[w] = {}
+            for mood in self.moods:
+                self.cached_memes[w][mood] = []
+                t_dir = os.path.join(self.data_dir, "memes", w, mood)
+                if os.path.exists(t_dir):
+                    files = [f for f in os.listdir(t_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'))]
+                    if files: self.cached_memes[w][mood] = [os.path.join(t_dir, f) for f in files]
 
     def _ensure_infrastructure(self):
         """确保所有所需目录在全局数据文件夹中已就位"""
@@ -114,32 +143,19 @@ class ImageManager:
         return pool
 
     def get_chef_image(self, chef_name: str):
-        if not chef_name or chef_name == "none":
-            return None
-        chef_dir = os.path.join(self.data_dir, "chefs")
-        if not os.path.exists(chef_dir):
-            return None
-            
+        if not chef_name or chef_name == "none": return None
         matched_files = []
-        for file in os.listdir(chef_dir):
-            if file.startswith(".") or not file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')):
-                continue
-            parsed_chef, parsed_name = self.parse_filename(file)
-            if parsed_name == chef_name or parsed_chef == chef_name or file.startswith(chef_name):
-                matched_files.append(os.path.join(chef_dir, file))
-                
+        for k, v in self.cached_chefs.items():
+            if chef_name in k or k in chef_name: matched_files.extend(v)
         if matched_files:
             gifs = [f for f in matched_files if f.lower().endswith('.gif')]
-            if gifs:
-                return random.choice(gifs)
+            if gifs: return random.choice(gifs)
             return random.choice(matched_files)
         return None
 
     def get_bot_meme(self, world_key: str, mood: str):
-        target_dir = os.path.join(self.data_dir, "memes", world_key, mood)
-        if os.path.exists(target_dir):
-            files = [f for f in os.listdir(target_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'))]
-            if files: return os.path.join(target_dir, random.choice(files))
+        files = self.cached_memes.get(world_key, {}).get(mood, [])
+        if files: return random.choice(files)
         return None
 
     def get_egg_meme(self, char_name: str):

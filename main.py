@@ -16,9 +16,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "3.5.4"
+__version__ = "3.7-Beta"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.5.4", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.7-Beta", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -32,6 +32,7 @@ class FlavorFusionUltimate(Star):
         
         self._refresh_world_cache()
         self._rebuild_alias_map()
+        self._reload_all_caches()
         self._generate_help_file()
         
         self.is_downloading = False
@@ -48,7 +49,7 @@ class FlavorFusionUltimate(Star):
 
         eat_keywords = self.config.get("trigger_eat", ["吃什么", "吃啥", "吃点儿啥"])
         drink_keywords = self.config.get("trigger_drink", ["喝什么", "喝啥", "喝点儿啥"])
-        dark_keywords = self.config.get("trigger_dark", ["来点黑暗料理", "黑暗料理"])
+        dark_keywords = self.config.get("trigger_dark", ["来点黑暗料理"])
         common_eat_keywords = self.config.get("trigger_common_eat", ["来点现实的食物", "来点三次元食物"])
         common_drink_keywords = self.config.get("trigger_common_drink", ["来点现实的饮品", "来点三次元饮品"])
         
@@ -146,6 +147,7 @@ class FlavorFusionUltimate(Star):
                                 shutil.copy2(s, d)
                                 
                     logging.info("[ChisaEating] 基础图库解压部署完成！")
+                    self._reload_all_caches()
                 except Exception as e:
                     logging.error(f"[ChisaEating] 解压失败: {e}")
                 finally:
@@ -167,6 +169,10 @@ class FlavorFusionUltimate(Star):
             self._is_download_thread_active = False
 
     # ================== 辅助函数（原样保留） ==================
+    def _reload_all_caches(self):
+        self.image_mgr.reload_caches(self.config, self.wv_settings)
+        self.cached_ganfanren = self._get_ganfanren_data()
+
     def _get_ganfanren_data(self):
         ganfanren_pool = {}
         user_dir = os.path.join("data", "plugin_data", "astrbot_plugin_chisa_still_eating", "ganfanren")
@@ -207,19 +213,19 @@ class FlavorFusionUltimate(Star):
         return ganfanren_pool
 
     def _generate_help_file(self):
-        pool = self._get_ganfanren_data()
+        pool = getattr(self, "cached_ganfanren", {})
         names = list(pool.keys())
         help_path = os.path.join("data", "plugin_data", "astrbot_plugin_chisa_still_eating", "👉当前可用干饭人一览.txt")
         
         os.makedirs(os.path.dirname(help_path), exist_ok=True)
         with open(help_path, "w", encoding="utf-8") as f:
-            f.write("【系统扫描报告 - ChisaEating v3.5.4】\n")
+            f.write("【系统扫描报告 - ChisaEating v3.7-Beta】\n")
             f.write("当前已识别到以下干饭人：\n")
             for name in names:
                 f.write(f"- {name}\n")
             f.write("\n如需在 WebUI 指定卡池，请直接复制下方文本到【指定干饭人卡池】配置框：\n")
             f.write(";".join(names) + "\n")
-        logging.info(f"[ChisaEating v3.5.4] 📋 已更新可用干饭人清单到 plugin_data 目录，共 {len(names)} 名")
+        logging.info(f"[ChisaEating v3.7-Beta] 📋 已更新可用干饭人清单到 plugin_data 目录，共 {len(names)} 名")
 
     def _refresh_world_cache(self):
         raw_settings = {
@@ -305,7 +311,7 @@ class FlavorFusionUltimate(Star):
                     yield event.make_result().message("【千小妹提示】图库正在下载中，请勿重复触发...")
                 else:
                     threading.Thread(target=self._download_and_extract_assets, daemon=True).start()
-                    yield event.make_result().message("【千小妹提示】已收到显式确认！开始从 Github 拉取并更新图库 (约160MB)，请查看后台日志或稍后重试抽卡。")
+                    yield event.make_result().message("【千小妹提示】已收到显式确认！开始从 Github 拉取并更新图库 (约160MB)，请查看后台日志或稍后重试抽卡。回复/千小妹图库下载进度或任意吃什么命令可查看当前下载进度。")
             event.stop_event()
             return
             
@@ -326,7 +332,7 @@ class FlavorFusionUltimate(Star):
                     return
         
         if msg_text in ["千小妹还在吃帮助", "千咲吃什么帮助", "干饭帮助", "美食帮助", "千小妹帮助", "千小妹吃什么帮助"]:
-            help_text = """🌸 【千小妹跨次元干饭指南 v3.5.4】 🌸
+            help_text = """🌸 【千小妹跨次元干饭指南 v3.7-Beta】 🌸
 不知道今天吃啥？让异次元的导游们为你随机摇号吧！
 
 🎲 基础盲盒（全宇宙随机）
@@ -352,6 +358,7 @@ class FlavorFusionUltimate(Star):
 💡 举例：加菜 三次元 食物 肯德基肉霸堡 (带图)
 💬 【加大厨格式】：上传厨师 [厨师名]
 💡 举例：上传厨师 刻晴 (带图)
+⚠️ 若您是在服务器后台手动放入新图片或TXT，请务必在WebUI点击【重载插件】或群内发送 更新千小妹图库 刷新缓存。
 
 (📝 注：以上所有指令均不受机器人名字影响。发“小爱吃什么”也能完美触发哦！)"""
             yield event.make_result().message(help_text)
@@ -433,7 +440,7 @@ class FlavorFusionUltimate(Star):
 
         if self.limiter.is_spaming(uid, self.config.get("spam_threshold", 3)):
             if random.randint(1, 100) <= self.config.get("interception_egg_chance", 50):
-                ganfanren_pool = self._get_ganfanren_data()
+                ganfanren_pool = getattr(self, "cached_ganfanren", {})
                 if ganfanren_pool:
                     valid_names = list(ganfanren_pool.keys())
                     egg_role = "千咲" if "千咲" in valid_names else random.choice(valid_names)
@@ -453,8 +460,9 @@ class FlavorFusionUltimate(Star):
             event.stop_event()
             return
 
+        is_generic_query = not forced_world and not forced_chef and category != "dark"
         cd_seconds = self.config.get("repeat_cooldown", 60)
-        if not self.limiter.is_repeat_in_cooldown(group_id, cd_seconds) and (random.randint(1, 100) <= self.config.get("repeat_prob", 10)):
+        if is_generic_query and not self.limiter.is_repeat_in_cooldown(group_id, cd_seconds) and (random.randint(1, 100) <= self.config.get("repeat_prob", 10)):
             self.limiter.record_repeat_trigger(group_id)
             if category == "food":
                 fallback_pool = self.config.get("eat_fallback_words", ["是啊，吃什么"])
@@ -484,7 +492,7 @@ class FlavorFusionUltimate(Star):
             event.stop_event()
             return
             
-        pool = self.image_mgr.scan_all_items(self.config, self.wv_settings, category)
+        pool = self.image_mgr.cached_pools.get(category, [])
         
         if not pool:
             yield event.make_result().message("""【千小妹系统提示】检测到基础图库为空！
@@ -528,7 +536,7 @@ class FlavorFusionUltimate(Star):
             chef_pool = [item for item in pool if item.get("chef") == forced_chef]
             if not chef_pool:
                 if category == "food":
-                    drink_pool = self.image_mgr.scan_all_items(self.config, self.wv_settings, "drink")
+                    drink_pool = self.image_mgr.cached_pools.get("drink", [])
                     chef_pool = [item for item in drink_pool if item.get("chef") == forced_chef]
             
             if not chef_pool:
@@ -621,7 +629,7 @@ class FlavorFusionUltimate(Star):
         meme_to_send = None
         
         if random.randint(1, 100) <= self.config.get("egg_prob", 10):
-            ganfanren_pool = self._get_ganfanren_data()
+            ganfanren_pool = getattr(self, "cached_ganfanren", {})
             if ganfanren_pool:
                 pool_config = self.config.get("egg_pool", "")
                 allowed_pool = None
@@ -774,6 +782,7 @@ class FlavorFusionUltimate(Star):
                     logging.error(f"Save error: {e}")
                     
         if saved_count > 0:
+            self._reload_all_caches()
             yield event.make_result().message(f"✅ 加菜成功！\n共收录 {saved_count} 张【{food_name_input}】至 {world_input} 的 {cat_input} 库中！")
         else:
             yield event.make_result().message("加菜失败：图片下载失败或平台限制导致无法读取。")
@@ -869,6 +878,7 @@ class FlavorFusionUltimate(Star):
                     logging.error(f"Save error: {e}")
                     
         if saved_count > 0:
+            self._reload_all_caches()
             yield event.make_result().message(f"✅ 上传厨师成功！\n共收录 {saved_count} 张【{chef_name}】至图库！")
         else:
             yield event.make_result().message("上传厨师失败：图片下载失败或平台限制导致无法读取。")
