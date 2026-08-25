@@ -18,9 +18,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "3.8.4"
+__version__ = "3.8.5"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.8.4", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.8.5", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -326,7 +326,7 @@ class FlavorFusionUltimate(Star):
                 f.write(f"- {name}\n")
             f.write("\n如需在 WebUI 指定卡池，请直接复制下方文本到【指定干饭人卡池】配置框：\n")
             f.write(";".join(names) + "\n")
-        logging.info(f"[ChisaEating v3.8.4] 📋 已更新可用干饭人清单到 plugin_data 目录，共 {len(names)} 名")
+        logging.info(f"[ChisaEating v3.8.5] 📋 已更新可用干饭人清单到 plugin_data 目录，共 {len(names)} 名")
 
     def _refresh_world_cache(self):
         raw_settings = {
@@ -696,7 +696,7 @@ class FlavorFusionUltimate(Star):
                     return
         
         if msg_text in ["千小妹还在吃帮助", "千咲吃什么帮助", "干饭帮助", "美食帮助", "千小妹帮助", "千小妹吃什么帮助"]:
-            help_text = """🌸 【千小妹跨次元干饭指南 v3.8.4】 🌸
+            help_text = """🌸 【千小妹跨次元干饭指南 v3.8.5】 🌸
 不知道今天吃啥？让异次元的导游们为你随机摇号吧！
 
 🎲 基础盲盒（全宇宙随机）
