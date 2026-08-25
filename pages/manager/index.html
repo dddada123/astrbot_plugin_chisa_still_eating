@@ -226,6 +226,23 @@
       margin-bottom: 10px; font-family: inherit; resize: vertical; box-sizing: border-box;
     }
 
+
+    .mascot-bubble {
+      position: fixed; bottom: 220px; right: 50px; width: max-content; max-width: 220px;
+      background: rgba(255, 255, 255, 0.85); color: #000000; padding: 12px 16px;
+      border-radius: 16px; box-shadow: 0 0 15px rgba(211, 47, 47, 0.7);
+      font-size: 14px; font-weight: bold; z-index: 1001; opacity: 0;
+      transform: translateY(10px) scale(0.9); transform-origin: bottom right;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none;
+    }
+    .mascot-bubble.show { opacity: 1; transform: translateY(0) scale(1); }
+    .mascot-bubble::after {
+      content: ''; position: absolute; bottom: -10px; right: 40px;
+      border-width: 10px 10px 0 0; border-style: solid;
+      border-color: rgba(255, 255, 255, 0.85) transparent transparent transparent;
+    }
+    @media (max-width: 768px) { .mascot-bubble { bottom: 150px; right: 20px; } }
+
     .chisa-mascot {
       position: fixed; bottom: 20px; right: 30px; width: 180px; z-index: 1000;
       pointer-events: auto; cursor: pointer; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
@@ -272,7 +289,7 @@
     <header>
       <div>
         <h1>🔪 千小妹跨次元后厨</h1>
-        <div class="subtitle">v3.8.0 (Experimental) | 高性能流式数据大屏</div>
+        <div class="subtitle">v3.8.1 (Experimental) | 高性能流式数据大屏</div>
       </div>
       <button class="btn" onclick="fetchData()">🔄 刷新本地数据</button>
     </header>
@@ -342,13 +359,14 @@
   </main>
 
   <div id="batchActionBar" class="batch-action-bar">
-    <div>当前处于批量选择模式 | 已选定 <span id="batchCount" style="color:var(--primary); font-size:20px; font-weight:bold;">0</span> 张图片</div>
+    <div>当前处于批量选择模式 <span style="color:var(--muted); font-size:13px; margin:0 8px;">(💡 提示：按住鼠标滑动可快速多选)</span> | 已选定 <span id="batchCount" style="color:var(--primary); font-size:20px; font-weight:bold;">0</span> 张图片</div>
     <div>
         <button class="btn" style="background:#555; margin-right:10px;" onclick="toggleBatchMode()">取消</button>
         <button class="btn" onclick="executeBatchDelete()">🗑️ 删除选定项</button>
     </div>
   </div>
 
+  <div id="mascotBubble" class="mascot-bubble"></div>
   <img id="mascot" src="" class="chisa-mascot" alt="千咲监工" title="千小妹正在后厨监工！" style="display:none;" onclick="pokeMascot()" />
 
   <!-- Add Ganfanren Modal -->
@@ -433,6 +451,11 @@
     var currentUploadTarget = { category: '', world: '' };
     var isBatchMode = false;
     var selectedFiles = new Set();
+    var accordionState = {};
+    var isDragging = false;
+    var dragMode = true;
+    window.addEventListener("mouseup", function() { isDragging = false; });
+    window.addEventListener("mouseleave", function() { isDragging = false; });
 
     
     var mascotQuotes = [
@@ -448,6 +471,13 @@
         showToast(mascotQuotes[idx], 'success');
     }
 
+    
+    function pokeMascot() {
+        var idx = Math.floor(Math.random() * mascotQuotes.length);
+        var msg = mascotQuotes[idx];
+        showMascotBubble(msg);
+    }
+
     function getSdk() { return astrSdk || window.AstrBotPluginPage; }
 
 
@@ -461,6 +491,100 @@
         toast.style.opacity = "0";
         setTimeout(function() { toast.style.display = "none"; }, 300);
       }, 3000);
+    }
+
+    
+    var actionQuotes = {
+        'delete': [
+            "虚无，勘破！", "由此分裁！", "即刻…送往末路。", "生灭，已定。", "解弦之眼！"
+        ],
+        'add_ganfanren': [
+            "有新的饭搭子来了，千小妹这就去多准备一份餐具~",
+            "欢迎加入！一起干饭的话，食物也会变得更美味呢。",
+            "是新面孔哎，希望能和大家相处愉快呀。",
+            "干饭契约已送达，以后要按时来后厨报到哦。",
+            "小队又变热闹了，要为大家开发新菜品了呢。"
+        ],
+        'ganfanren': [
+            "哇哦，换上新立绘了呢！干饭的时候一定更有气势！",
+            "新的形象已记录，感觉食欲都变好了呢~",
+            "这张立绘真好看，千小妹已经妥善贴在小队花名册上啦。",
+            "形象更新完毕！下次出场一定会惊艳大家的。",
+            "好精神的样子！大家一起朝着干饭的目标努力吧~"
+        ],
+        'food': [
+            "唔...这道菜的香气，感觉会让大家胃口大开呢！",
+            "热腾腾的美食出炉啦，真想快点端给大家尝尝~",
+            "新菜谱已经认真记下了，下次干饭肯定很抢手。",
+            "看起来好好吃...千小妹会好好保管的。",
+            "食材很新鲜，这道料理绝对是满分之作哦！"
+        ],
+        'drink': [
+            "新饮品调好了，喝一杯会很放松吧~",
+            "这杯饮品的颜色真好看，大家肯定会喜欢的。",
+            "冰镇还是常温呢？千小妹都已经准备妥当啦。",
+            "饮品库更新了，饱餐一顿后来一杯正合适。",
+            "是新的配方呢，希望能给大家带来好心情。"
+        ],
+        'darkfood': [
+            "这、这个气味...大家吃了真的没关系吗？",
+            "唔...这道料理的颜色有些不可思议呢。",
+            "抽到这盘菜的话，大家大概会吓一跳吧...",
+            "料理已入库，千小妹会把它放在最角落的。",
+            "这种奇妙的搭配...千小妹绝对不要试吃呀。"
+        ],
+        'chefs': [
+            "有了大厨加入，后厨的大家就有口福了呢！",
+            "大厨好~千小妹会努力帮忙准备食材的。",
+            "是大厨的独家秘方吗？好期待呀。",
+            "后厨越来越专业了，千小妹也要跟着多学两手。",
+            "有了您在，大家一定能吃到更棒的料理！"
+        ],
+        'memes': [
+            "导游大人的新表情？嘿嘿，这下聊天不会无聊了。",
+            "情绪已收到，千小妹会在最合适的时机发出来的~",
+            "这张图好有趣，大家都看到了肯定会笑的。",
+            "图库又丰富啦，干饭的时候可以拿来活跃气氛了。",
+            "这可是一张好图，千小妹已经妥善收藏了哦。"
+        ],
+        'save_words': [
+            "专属语录已保存！千小妹会记在小本本上的。",
+            "哼哼，这句话很有干饭人的气势呢！",
+            "截胡台词更新啦，下次登场一定要大声喊出来哦~",
+            "收到！这段语录千小妹已经背下来了。",
+            "语录写得很棒！感觉已经能听到大家干饭的声音了。"
+        ]
+    };
+
+    var mascotQuotes = [
+        "唔...要不要一起来尝尝刚出炉的焦烤棉花糖？",
+        "后厨一切正常，大家都在乖乖等开饭呢。",
+        "戳一戳是会饿得更快的哦，要不要先吃点点心？",
+        "这本食谱千小妹可是背得很熟了呢！",
+        "今天后厨的香气很足，大家一定能吃饱的~",
+        "干饭人小队都准备好了，随时可以开动！",
+        "要给大厨们准备些什么食材好呢...唔，千小妹要想一想。",
+        "大家干饭的样子真的很开心，千小妹也很满足呢。",
+        "如果有特别想吃的，随时可以告诉千小妹哦！"
+    ];
+
+    var bubbleTimeout = null;
+    function showMascotBubble(msg) {
+        var bubble = document.getElementById("mascotBubble");
+        var mascot = document.getElementById("mascot");
+        if (!bubble || !mascot || mascot.style.display === "none") return;
+        bubble.innerText = msg;
+        bubble.classList.add("show");
+        if (bubbleTimeout) clearTimeout(bubbleTimeout);
+        bubbleTimeout = setTimeout(function() { bubble.classList.remove("show"); }, 4000);
+    }
+
+    function triggerMascotQuote(action) {
+        if (!actionQuotes[action]) return;
+        var list = actionQuotes[action];
+        var idx = Math.floor(Math.random() * list.length);
+        var msg = list[idx];
+        setTimeout(function() { showMascotBubble(msg); }, 500);
     }
 
     function customConfirm(msg) {
@@ -536,10 +660,18 @@
       for (var i = 0; i < acc.length; i++) {
         var clone = acc[i].cloneNode(true);
         acc[i].parentNode.replaceChild(clone, acc[i]);
+
+        if (clone.id && accordionState[clone.id]) {
+            clone.classList.add("expanded");
+            var panel = clone.nextElementSibling;
+            if(panel) panel.classList.add("open");
+        }
+
         clone.addEventListener("click", function() {
           this.classList.toggle("expanded");
           var panel = this.nextElementSibling;
-          panel.classList.toggle("open");
+          if (panel) panel.classList.toggle("open");
+          if (this.id) accordionState[this.id] = this.classList.contains("expanded");
         });
       }
     }
@@ -621,14 +753,26 @@
         });
     }
 
-    function handleCardClick(path, el) {
+    function startDragSelect(e, el, path) {
         if (!isBatchMode) return;
-        if (selectedFiles.has(path)) {
-            selectedFiles.delete(path);
-            el.classList.remove('selected');
-        } else {
+        e.preventDefault();
+        isDragging = true;
+        dragMode = !selectedFiles.has(path);
+        toggleCardSelection(el, path, dragMode);
+    }
+
+    function enterDragSelect(e, el, path) {
+        if (!isBatchMode || !isDragging) return;
+        toggleCardSelection(el, path, dragMode);
+    }
+
+    function toggleCardSelection(el, path, forceSelect) {
+        if (forceSelect) {
             selectedFiles.add(path);
             el.classList.add('selected');
+        } else {
+            selectedFiles.delete(path);
+            el.classList.remove('selected');
         }
         document.getElementById('batchCount').innerText = selectedFiles.size;
     }
@@ -643,7 +787,7 @@
             sdk.apiPost("delete_image", { paths: pathsArr }).then(function(res) {
                 var json = parseSdkResponse(res);
                 if (json && json.status === 'ok') {
-                    showToast(json.message || "批量删除成功", "success");
+                    showToast(json.message || "批量删除成功", "success"); triggerMascotQuote("delete");
                     isBatchMode = false;
                     selectedFiles.clear();
                     updateBatchUI();
@@ -666,6 +810,7 @@
               var json = parseSdkResponse(res);
               if (json && json.status === 'ok') {
                   showToast("删除成功", "success");
+                  triggerMascotQuote("delete");
                   fetchData();
               } else {
                   showToast("删除失败：" + (json ? json.message : ""), "error");
@@ -694,9 +839,9 @@
         if (isBatchMode) classes += ' batch-mode';
         if (selectedFiles.has(imgPath)) classes += ' selected';
         
-        htmlStr += '<div class="' + classes + '" onclick="handleCardClick(\'' + imgPath + '\', this)">';
+        htmlStr += '<div class="' + classes + '" onmousedown="startDragSelect(event, this, \'' + imgPath + '\')" onmouseenter="enterDragSelect(event, this, \'' + imgPath + '\')">';
         htmlStr += '<div class="img-skeleton"></div>';
-        htmlStr += '<img data-path="' + imgPath + '" class="lazy-img" />';
+        htmlStr += '<img data-path="' + imgPath + '" class="lazy-img" draggable="false" />';
         htmlStr += '<div class="img-name" title="' + displayFile + '">' + displayFile + '</div>';
         htmlStr += '<button class="delete-btn" onclick="deleteImage(\'' + imgPath + '\', event)">×</button>';
         htmlStr += '</div>';
@@ -739,6 +884,7 @@
         
         var btn = document.createElement('button');
         btn.className = 'accordion';
+        btn.id = 'acc-meme-' + w;
         btn.innerHTML = '<span class="accordion-title">' + worldLabels[w] + '</span>' + 
                         '<span class="accordion-actions"><button class="btn btn-small" onclick="openUploadModal(\'memes\', \'' + w + '\'); event.stopPropagation();">上传</button></span>';
         
@@ -766,6 +912,7 @@
             var title = moodLabels[m] || ('其他 (' + m + ')');
             var subBtn = document.createElement('button');
             subBtn.className = 'accordion sub-accordion';
+            subBtn.id = 'acc-meme-sub-' + w + '-' + m;
             subBtn.style.backgroundColor = 'rgba(60,60,60,0.5)';
             subBtn.style.borderLeft = '3px solid #ff9800';
             subBtn.style.fontSize = '14px';
@@ -807,6 +954,7 @@
         
         var btn = document.createElement('button');
         btn.className = 'accordion';
+        btn.id = 'acc-' + catName + '-' + w;
         btn.innerHTML = '<span class="accordion-title">' + worldLabels[w] + '</span>' + 
                         '<span class="accordion-actions"><button class="btn btn-small" onclick="openUploadModal(\'' + dirName + '\', \'' + w + '\'); event.stopPropagation();">上传</button></span>';
         
@@ -829,7 +977,7 @@
         showToast("保存中...", "");
         sdk.apiPost("update_ganfanren", { name: charName, words: words }).then(function(res) {
             var json = parseSdkResponse(res);
-            if (json && json.status === 'ok') showToast("语录保存成功！", "success");
+            if (json && json.status === 'ok') { showToast("语录保存成功！", "success"); triggerMascotQuote("save_words"); }
             else showToast("保存失败：" + (json ? json.message : ""), "error");
         }).catch(function() { showToast("请求失败", "error"); });
     }
@@ -844,6 +992,7 @@
                 var json = parseSdkResponse(res);
                 if (json && json.status === 'ok') {
                     showToast(json.message || "删除成功", "success");
+                    triggerMascotQuote("delete");
                     fetchData();
                 } else {
                     showToast("删除失败：" + (json ? json.message : ""), "error");
@@ -868,6 +1017,7 @@
         
         var btn = document.createElement('button');
         btn.className = 'accordion';
+        btn.id = 'acc-gf-' + charName;
         btn.innerHTML = '<span class="accordion-title">' + charName + '</span>' + 
                         '<span class="accordion-actions">' +
                         '<button class="btn btn-small" style="background:#555; margin-right:5px;" onclick="openUploadModal(\'ganfanren\', \'\', \'' + charName + '\'); event.stopPropagation();">上传立绘</button>' +
@@ -1001,6 +1151,7 @@
             var json = parseSdkResponse(res);
             if (json && json.status === 'ok') {
                 showToast("招募成功！", "success");
+                triggerMascotQuote("add_ganfanren");
                 closeAddGanfanrenModal();
                 fetchData();
             } else { showToast("招募失败", "error"); }
@@ -1045,6 +1196,7 @@
             var json = parseSdkResponse(res);
             if (json && json.status === 'ok') {
                 showToast("上传成功！", "success");
+                triggerMascotQuote(currentUploadTarget.category);
                 closeUploadModal();
                 fetchData();
             } else { showToast("上传失败", "error"); }
