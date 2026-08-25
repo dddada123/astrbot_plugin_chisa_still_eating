@@ -8,7 +8,12 @@ __version__ = "2.3.1"
 class ImageManager:
     def __init__(self, plugin_dir: str = None):
         # 💡 核心规范：所有用户的自定义图库（食物/饮品/厨师）必须走框架全局数据目录
-        self.data_dir = os.path.join("data", "plugin_data", "astrbot_plugin_chisa_still_eating")
+        try:
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            base_data_path = get_astrbot_data_path()
+        except ImportError:
+            base_data_path = "data"
+        self.data_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating"))
         
         # 获取插件源码自身目录
         if plugin_dir:

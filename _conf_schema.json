@@ -14,6 +14,12 @@
         "hint": "只有在这里配置了QQ号/账号ID的用户，才可以使用 /加菜 功能上传菜品。",
         "type": "list"
     },
+    "convert_meme_to_gif": {
+        "type": "bool",
+        "description": "表情包自动转GIF（防止霸屏）",
+        "hint": "开启后，干饭人、导游MEME等附加静态表情在发送前将被转换为GIF格式，使QQ以小尺寸贴图展示。主菜图片不受影响。",
+        "default": true
+    },
     "weight_3d": {
         "description": "🌎 三次元池权重",
         "hint": "出厂默认: 70。与开启了哪些世界无关，按数字大小进行概率分配",

@@ -6,7 +6,12 @@ from collections import deque
 class FoodDataManager:
     def __init__(self, config):
         self.config = config
-        self.data_dir = os.path.join("data", "plugin_data", "astrbot_plugin_chisa_still_eating")
+        try:
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            base_data_path = get_astrbot_data_path()
+        except ImportError:
+            base_data_path = "data"
+        self.data_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating"))
         self.history_path = os.path.join(self.data_dir, "group_history.json")
         self.history_limit = self.config.get("history_limit", 30)
         self.group_history = {}

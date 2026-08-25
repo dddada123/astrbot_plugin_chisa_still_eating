@@ -1,4 +1,6 @@
-import os
+﻿import os
+import asyncio          # 补充导入
+from quart import jsonify, request, send_file
 import threading
 import requests
 import zipfile
@@ -6,8 +8,8 @@ import shutil
 import random
 import re
 import logging
-import aiohttp          # 修复：补充缺失的导入
-import hashlib          # 修复：提前导入，便于使用
+import aiohttp
+import hashlib
 from astrbot.api.star import Context, Star, register
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.event.filter import EventMessageType
@@ -16,13 +18,15 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "3.7.2"
+__version__ = "3.7.3"
 
 @register("astrbot_plugin_chisa_still_eating", "Rua432", "3.7.2", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
         self.config = config
+        self.plugin_name = "astrbot_plugin_chisa_still_eating"
+        self._register_web_api()
         self.plugin_dir = os.path.dirname(os.path.abspath(__file__))
         
         self.image_mgr = ImageManager(self.plugin_dir)
@@ -38,7 +42,7 @@ class FlavorFusionUltimate(Star):
         self.is_downloading = False
         self.download_msg = ""
         self.downloaded_bytes = 0
-        self._is_download_thread_active = False   # 修复：初始化标志
+        self._is_download_thread_active = False
         
         needs_download = False
         if self.config.get("force_download_assets", False):
@@ -159,7 +163,6 @@ class FlavorFusionUltimate(Star):
             else:
                 logging.error("[ChisaEating] 基础图库所有下载节点均超时或哈希校验失败！请前往后台取消勾选强制下载，并根据 Readme 手动下载安装。")
             
-            # 修复：重置强制下载标志（无论成功与否，与原逻辑一致）
             if self.config.get("force_download_assets", False):
                 self.config["force_download_assets"] = False
                 
@@ -175,7 +178,7 @@ class FlavorFusionUltimate(Star):
 
     def _get_ganfanren_data(self):
         ganfanren_pool = {}
-        user_dir = os.path.join("data", "plugin_data", "astrbot_plugin_chisa_still_eating", "ganfanren")
+        user_dir = os.path.join(self.image_mgr.data_dir, "ganfanren")
         os.makedirs(user_dir, exist_ok=True)
 
         for scan_dir in [user_dir]:
@@ -193,7 +196,8 @@ class FlavorFusionUltimate(Star):
                     file_path = os.path.join(folder_path, file_name)
                     if file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
                         ganfanren_pool[folder_name]["images"].append(file_path)
-                    elif file_name.lower() == 'words.txt':
+                    # 修复：统一为 lines.txt
+                    elif file_name.lower() == 'lines.txt':
                         try:
                             with open(file_path, 'r', encoding='utf-8') as f:
                                 lines = f.readlines()
@@ -215,7 +219,7 @@ class FlavorFusionUltimate(Star):
     def _generate_help_file(self):
         pool = getattr(self, "cached_ganfanren", {})
         names = list(pool.keys())
-        help_path = os.path.join("data", "plugin_data", "astrbot_plugin_chisa_still_eating", "👉当前可用干饭人一览.txt")
+        help_path = os.path.join(self.image_mgr.data_dir, "👉当前可用干饭人一览.txt")
         
         os.makedirs(os.path.dirname(help_path), exist_ok=True)
         with open(help_path, "w", encoding="utf-8") as f:
@@ -261,7 +265,41 @@ class FlavorFusionUltimate(Star):
         if "世界4" in selection: return "world4"
         return "world1"
 
-    # ================== 消息拦截器（修复空指针） ==================
+    # ================== 消息拦截器（修复装饰器） ==================
+    @staticmethod
+    async def _make_gif_copy(path: str) -> str:
+        """后台内存转换：将静态图瞬间压成 GIF，借此欺骗 QQ 渲染为小表情气泡"""
+        if not path or not os.path.exists(path):
+            return path
+        if path.lower().endswith(".gif"):
+            return path
+            
+        import tempfile, random
+        temp_path = os.path.join(tempfile.gettempdir(), f"chisa_meme_{os.getpid()}_{random.randint(100000, 999999)}.gif")
+        try:
+            from PIL import Image
+            def _convert():
+                with Image.open(path) as img:
+                    if img.mode not in ('RGB', 'RGBA', 'P'):
+                        img = img.convert('RGBA')
+                    img.save(temp_path, format="GIF")
+            await asyncio.get_event_loop().run_in_executor(None, _convert)
+            return temp_path
+        except Exception as e:
+            logging.warning(f"[ChisaEating] 表情包降维GIF转换失败: {e}")
+            return path
+
+    async def _apply_meme_image(self, chain_obj, meme_path: str):
+        """定向发送配菜（导游/干饭人/厨师），不碰主菜"""
+        if not meme_path:
+            return
+        if self.config.get("convert_meme_to_gif", True):
+            gif_path = await self._make_gif_copy(meme_path)
+            chain_obj.file_image(gif_path)
+        else:
+            chain_obj.file_image(meme_path)
+
+    # 修复：将事件装饰器放在此方法上
     @filter.event_message_type(EventMessageType.ALL)
     async def global_message_interceptor(self, event: AstrMessageEvent, *args, **kwargs):
         msg_text = event.message_str
@@ -315,7 +353,6 @@ class FlavorFusionUltimate(Star):
             event.stop_event()
             return
             
-        # 修复：安全获取 group_id（私聊时 msg_obj 可能为 None）
         msg_obj = event.message_obj
         group_id = None
         if msg_obj and hasattr(msg_obj, 'group_id'):
@@ -384,8 +421,6 @@ class FlavorFusionUltimate(Star):
         elif self.eat_pattern.search(msg_text): 
             category = "food"
 
-        # ================== 修改厨师匹配逻辑 ==================
-        # 原：召唤(.+) 和 (.+?)料理 删除，改为召唤(.+?)下厨，特供改为特供料理
         forced_chef = None
         chef_match = re.search(r"想和(.+?)吃饭|(.+?)特供料理|召唤(.+?)下厨", msg_text)
         if chef_match:
@@ -415,11 +450,10 @@ class FlavorFusionUltimate(Star):
         async for res in self.execute_flow(event, category, forced_world, forced_chef):
             yield res
 
-    # ================== 核心流程（修复 group_id 空指针） ==================
+    # ================== 核心流程 ==================
     async def execute_flow(self, event: AstrMessageEvent, category: str, forced_world: str = None, forced_chef: str = None):
         event.should_call_llm(True)
         uid = event.get_sender_id()
-        # 修复：安全获取 group_id
         msg_obj = event.message_obj
         group_id = str(msg_obj.group_id) if msg_obj and hasattr(msg_obj, 'group_id') and msg_obj.group_id else str(uid)
         
@@ -455,7 +489,7 @@ class FlavorFusionUltimate(Star):
                 meme_file = self.image_mgr.get_bot_meme(active_key, "speechless")
                 
             chain = event.make_result().message(inter_text)
-            if meme_file: chain.file_image(meme_file)
+            await self._apply_meme_image(chain, meme_file)
             yield chain
             event.stop_event()
             return
@@ -471,7 +505,7 @@ class FlavorFusionUltimate(Star):
             text = random.choice(fallback_pool if fallback_pool else ["是啊，吃/喝什么"]).format(bot=bot_host)
             chain = event.make_result().message(text)
             meme_file = self.image_mgr.get_bot_meme(active_key, "think")
-            if meme_file: chain.file_image(meme_file)
+            await self._apply_meme_image(chain, meme_file)
             yield chain
             event.stop_event()
             return
@@ -663,7 +697,7 @@ class FlavorFusionUltimate(Star):
 
         result = event.make_result().message(final_text)
         if img_to_send: result.file_image(img_to_send)
-        if meme_to_send: result.file_image(meme_to_send)
+        await self._apply_meme_image(result, meme_to_send)
             
         yield result
         event.stop_event()
@@ -883,3 +917,93 @@ class FlavorFusionUltimate(Star):
         else:
             yield event.make_result().message("上传厨师失败：图片下载失败或平台限制导致无法读取。")
         return
+
+    def _register_web_api(self):
+        register_api = getattr(self.context, "register_web_api", None)
+        if not callable(register_api):
+            logging.warning("[ChisaEating] 当前 AstrBot 版本未提供 register_web_api，专属页面接口无法注册。")
+            return
+            
+        register_api(f"/{self.plugin_name}/list_images", self.page_list_images, ["GET"], "列出所有跨次元图库")
+        register_api(f"/{self.plugin_name}/image-data", self.page_image_data, ["GET"], "获取跨次元图库原图数据")
+
+    async def page_list_images(self):
+        """WebUI: 读取本地图库清单并返回分类数据"""
+        try:
+            import os
+            data_dir = self.image_mgr.data_dir
+            
+            result = {
+                "food": {"common": [], "world1": [], "world2": [], "world3": [], "world4": [], "world5": []},
+                "drink": {"common": [], "world1": [], "world2": [], "world3": [], "world4": [], "world5": []},
+                "darkfood": {"common": [], "world1": [], "world2": [], "world3": [], "world4": [], "world5": []},
+                "chefs": [],
+                "memes": [],
+                "ganfanren": {}
+            }
+            
+            for cat in ["food", "drink", "darkfood"]:
+                for world in result[cat].keys():
+                    target_path = os.path.join(data_dir, cat, world)
+                    if os.path.exists(target_path):
+                        for file in os.listdir(target_path):
+                            if file.startswith('.') or not os.path.isfile(os.path.join(target_path, file)): continue
+                            result[cat][world].append(file)
+                            
+            chef_path = os.path.join(data_dir, "chefs")
+            if os.path.exists(chef_path):
+                for file in os.listdir(chef_path):
+                    if not file.startswith('.') and os.path.isfile(os.path.join(chef_path, file)):
+                        result["chefs"].append(file)
+                        
+            meme_path = os.path.join(data_dir, "memes")
+            if os.path.exists(meme_path):
+                for root, _, files in os.walk(meme_path):
+                    for file in files:
+                        if not file.startswith('.'):
+                            rel_path = os.path.relpath(os.path.join(root, file), meme_path).replace("\\", "/")
+                            result["memes"].append(rel_path)
+                            
+            gf_path = os.path.join(data_dir, "ganfanren")
+            if os.path.exists(gf_path):
+                for char in os.listdir(gf_path):
+                    char_dir = os.path.join(gf_path, char)
+                    if os.path.isdir(char_dir):
+                        result["ganfanren"][char] = {"lines": "", "images": []}
+                        
+                        lines_file = os.path.join(char_dir, "lines.txt")
+                        if os.path.exists(lines_file):
+                            try:
+                                with open(lines_file, 'r', encoding='utf-8') as lf:
+                                    result["ganfanren"][char]["lines"] = lf.read()
+                            except Exception:
+                                pass
+                                
+                        for file in os.listdir(char_dir):
+                            if not file.startswith('.') and file != "lines.txt" and os.path.isfile(os.path.join(char_dir, file)):
+                                result["ganfanren"][char]["images"].append(file)
+                                
+            return jsonify({"status": "ok", "data": result}), 200
+        except Exception as e:
+            logging.error(f"[ChisaEating] page_list_images error: {e}")
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_image_data(self):
+        """WebUI: 读取硬盘里的原始图片二进制流，发送给前端显示"""
+        try:
+            import os
+            path = request.args.get("path", "")
+            if not path:
+                return jsonify({"status": "error", "message": "No path provided"}), 400
+                
+            if ".." in path:
+                return jsonify({"status": "error", "message": "Invalid path"}), 400
+                
+            full_path = os.path.join(self.image_mgr.data_dir, path)
+            if not os.path.exists(full_path) or not os.path.isfile(full_path):
+                return jsonify({"status": "error", "message": "File not found"}), 404
+                
+            return await send_file(full_path)
+        except Exception as e:
+            logging.error(f"[ChisaEating] page_image_data error: {e}")
+            return jsonify({"status": "error", "message": str(e)}), 500

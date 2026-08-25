@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>千小妹还在吃 - 后厨仪表盘</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --panel: rgba(30, 30, 30, 0.85);
+      --card: rgba(45, 45, 45, 0.75);
+      --text: #ffffff;
+      --muted: #a0a0a0;
+      --primary: #d32f2f;
+      --primary-hover: #f44336;
+      --line: #333333;
+      --shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
+      --blur: blur(12px);
+    }
+    
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .bg-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(18, 18, 18, 0.7);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      z-index: -1;
+    }
+
+    main {
+      width: min(1200px, calc(100vw - 32px));
+      margin: 30px auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 25px;
+      background: var(--panel);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border-left: 5px solid var(--primary);
+      margin-bottom: 25px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      background: rgba(80, 80, 80, 0.8);
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      border-color: var(--primary-hover);
+    }
+
+    .section {
+      display: none;
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .accordion {
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      padding: 15px;
+      width: 100%;
+      text-align: left;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      font-weight: bold;
+      transition: 0.3s;
+      border-radius: 8px;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      border-left: 3px solid transparent;
+    }
+
+    .accordion:hover, .accordion.expanded {
+      background: rgba(60, 60, 60, 0.8);
+      border-left-color: var(--primary);
+    }
+
+    .accordion::after {
+      content: '▼';
+      font-size: 12px;
+    }
+
+    .accordion.expanded::after {
+      content: '▲';
+    }
+
+    .panel {
+      padding: 0 15px;
+      background-color: transparent;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      margin-bottom: 10px;
+    }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 15px;
+      padding: 15px 0;
+    }
+
+    .img-card {
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      position: relative;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .img-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .img-card .img-name {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(0, 0, 0, 0.8);
+      font-size: 12px;
+      padding: 4px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    button.btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    button.btn:hover {
+      background: var(--primary-hover);
+    }
+    
+    .coming-soon {
+      text-align: center;
+      padding: 20px;
+      color: var(--muted);
+      font-style: italic;
+    }
+    
+    .char-block {
+      background: var(--card);
+      margin-bottom: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .char-block h3 { margin-top: 0; margin-bottom: 10px; }
+    .char-lines {
+      width: 100%;
+      height: 80px;
+      background: #1e1e1e;
+      color: #fff;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 8px;
+      margin-bottom: 10px;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    .chisa-mascot {
+      position: fixed;
+      bottom: 20px;
+      right: 30px;
+      width: 180px;
+      z-index: 1000;
+      pointer-events: auto;
+      cursor: pointer;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .chisa-mascot:hover {
+      transform: scale(1.15) rotate(-5deg);
+      filter: drop-shadow(0 15px 25px rgba(211, 47, 47, 0.6));
+    }
+    
+    @media (max-width: 768px) {
+      .chisa-mascot { width: 120px; bottom: 15px; right: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-overlay"></div>
+  <main>
+    <header>
+      <div>
+        <h1>🔪 千小妹跨次元后厨</h1>
+        <div class="subtitle">v3.7.3-Web (Experimental) | 全景可视化数据中枢</div>
+      </div>
+      <button class="btn" onclick="fetchData()">🔄 刷新本地数据</button>
+    </header>
+
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('tab-companions', this)">🏃 干饭人小队</button>
+      <button class="tab-btn" onclick="switchTab('tab-chefs', this)">👨‍🍳 专属大厨</button>
+      <button class="tab-btn" onclick="switchTab('tab-meme', this)">🌸 导游图库</button>
+      <button class="tab-btn" onclick="switchTab('tab-food', this)">🍔 食物总仓</button>
+      <button class="tab-btn" onclick="switchTab('tab-drink', this)">🧋 饮品冷库</button>
+      <button class="tab-btn" onclick="switchTab('tab-dark', this)">☠️ 黑暗料理</button>
+    </div>
+
+    <!-- 干饭人 -->
+    <div id="tab-companions" class="section active">
+      <div class="controls">
+        <button class="btn" disabled style="opacity: 0.5">+ 新增干饭人 (开发中)</button>
+      </div>
+      <p style="color:var(--muted)">管理会截胡美食的异界旅伴，支持编写独立语录与立绘。</p>
+      <div id="companions-container"><div class="coming-soon">正在加载数据...</div></div>
+    </div>
+
+    <!-- 厨师 -->
+    <div id="tab-chefs" class="section">
+      <div class="image-grid" id="chefs-grid"><div class="coming-soon">正在加载数据...</div></div>
+    </div>
+
+    <!-- 导游 MEME -->
+    <div id="tab-meme" class="section">
+      <div class="image-grid" id="meme-grid"><div class="coming-soon">正在加载数据...</div></div>
+    </div>
+
+    <!-- 食物 -->
+    <div id="tab-food" class="section">
+      <button class="accordion">🌍 地球外卖 (common)</button>
+      <div class="panel"><div class="image-grid" id="food-common-grid"></div></div>
+      
+      <button class="accordion">🌊 鸣潮特产 (world1)</button>
+      <div class="panel"><div class="image-grid" id="food-world1-grid"></div></div>
+      
+      <button class="accordion">✨ 原神特产 (world2)</button>
+      <div class="panel"><div class="image-grid" id="food-world2-grid"></div></div>
+      
+      <button class="accordion">🏭 终末地特产 (world3)</button>
+      <div class="panel"><div class="image-grid" id="food-world3-grid"></div></div>
+
+      <button class="accordion">🌌 自定义世界 (world4)</button>
+      <div class="panel"><div class="image-grid" id="food-world4-grid"></div></div>
+      
+      <button class="accordion">🌌 自定义世界 (world5)</button>
+      <div class="panel"><div class="image-grid" id="food-world5-grid"></div></div>
+    </div>
+    
+    <!-- 饮品 -->
+    <div id="tab-drink" class="section">
+      <button class="accordion">🌍 地球饮品 (common)</button>
+      <div class="panel"><div class="image-grid" id="drink-common-grid"></div></div>
+      
+      <button class="accordion">🌊 鸣潮特饮 (world1)</button>
+      <div class="panel"><div class="image-grid" id="drink-world1-grid"></div></div>
+      
+      <button class="accordion">✨ 原神特饮 (world2)</button>
+      <div class="panel"><div class="image-grid" id="drink-world2-grid"></div></div>
+      
+      <button class="accordion">🏭 终末地特饮 (world3)</button>
+      <div class="panel"><div class="image-grid" id="drink-world3-grid"></div></div>
+
+      <button class="accordion">🌌 自定义世界 (world4)</button>
+      <div class="panel"><div class="image-grid" id="drink-world4-grid"></div></div>
+      
+      <button class="accordion">🌌 自定义世界 (world5)</button>
+      <div class="panel"><div class="image-grid" id="drink-world5-grid"></div></div>
+    </div>
+    
+    <!-- 黑暗料理 -->
+    <div id="tab-dark" class="section">
+      <button class="accordion">🌍 地球生化库 (common)</button>
+      <div class="panel"><div class="image-grid" id="dark-common-grid"></div></div>
+      
+      <button class="accordion">🌊 鸣潮生化库 (world1)</button>
+      <div class="panel"><div class="image-grid" id="dark-world1-grid"></div></div>
+      
+      <button class="accordion">✨ 原神生化库 (world2)</button>
+      <div class="panel"><div class="image-grid" id="dark-world2-grid"></div></div>
+      
+      <button class="accordion">🏭 终末地生化库 (world3)</button>
+      <div class="panel"><div class="image-grid" id="dark-world3-grid"></div></div>
+
+      <button class="accordion">🌌 自定义世界 (world4)</button>
+      <div class="panel"><div class="image-grid" id="dark-world4-grid"></div></div>
+      
+      <button class="accordion">🌌 自定义世界 (world5)</button>
+      <div class="panel"><div class="image-grid" id="dark-world5-grid"></div></div>
+    </div>
+
+  </main>
+
+  <img id="mascot" src="" class="chisa-mascot" alt="千咲监工" title="千小妹正在后厨监工！" onclick="alert('千小妹：好好干活！别偷吃！')" style="display:none;" />
+
+  <script>
+    var sdk = window.AstrBotPluginPage;
+
+    function switchTab(tabId, btnElement) {
+      var sections = document.getElementsByClassName('section');
+      for (var i = 0; i < sections.length; i++) sections[i].classList.remove('active');
+      var btns = document.getElementsByClassName('tab-btn');
+      for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+      
+      document.getElementById(tabId).classList.add('active');
+      if (btnElement) {
+          btnElement.classList.add('active');
+      }
+    }
+
+    function initAccordions() {
+      var acc = document.getElementsByClassName("accordion");
+      for (var i = 0; i < acc.length; i++) {
+        var clone = acc[i].cloneNode(true);
+        acc[i].parentNode.replaceChild(clone, acc[i]);
+        clone.addEventListener("click", function() {
+          this.classList.toggle("expanded");
+          var panel = this.nextElementSibling;
+          if (panel.style.maxHeight) {
+            panel.style.maxHeight = null;
+          } else {
+            panel.style.maxHeight = panel.scrollHeight + "px";
+          }
+        });
+      }
+    }
+
+    function loadMascot() {
+      var mascot = document.getElementById("mascot");
+      if (!sdk) return;
+      sdk.apiGet("image-data", { path: "N05_刷刷_1.gif" }).then(function(data) {
+        if (data.data_url) {
+          mascot.src = data.data_url;
+          mascot.style.display = "block";
+        }
+      }).catch(function() {
+        // Fallback to absolute PluginData if it was stored in Webui-PIC
+        sdk.apiGet("image-data", { path: "Webui-PIC/N05_刷刷_1.gif" }).then(function(data2) {
+            if (data2.data_url) {
+                mascot.src = data2.data_url;
+                mascot.style.display = "block";
+            }
+        }).catch(function(e) { console.log("Mascot load failed", e); });
+      });
+    }
+
+    function loadDynamicImage(imgElement, relativePath) {
+      if (!sdk) return;
+      sdk.apiGet("image-data", { path: relativePath }).then(function(data) {
+        if (data.data_url) {
+          imgElement.src = data.data_url;
+        } else {
+          imgElement.alt = "图片失效";
+        }
+      }).catch(function() {
+        imgElement.alt = "加载失败";
+      });
+    }
+
+    function renderGrid(containerId, items, basePath) {
+      var container = document.getElementById(containerId);
+      if(!container) return;
+      container.innerHTML = '';
+      if(!items || items.length === 0) {
+        container.innerHTML = '<div class="coming-soon">空空如也...</div>';
+        return;
+      }
+      
+      var htmlStr = '';
+      for (var i = 0; i < items.length; i++) {
+        var file = items[i];
+        var imgPath = basePath + '/' + file;
+        htmlStr += '<div class="img-card"><img data-path="' + imgPath + '" loading="lazy" /><div class="img-name" title="' + file + '">' + file + '</div></div>';
+      }
+      container.innerHTML = htmlStr;
+
+      // Now trigger async loading of images via base64 JSON
+      var imgs = container.getElementsByTagName('img');
+      for(var i=0; i<imgs.length; i++) {
+          loadDynamicImage(imgs[i], imgs[i].getAttribute('data-path'));
+      }
+    }
+
+    function renderCategory(tabPrefix, catData, internalDirName) {
+      var worlds = ['common', 'world1', 'world2', 'world3', 'world4', 'world5'];
+      for (var i = 0; i < worlds.length; i++) {
+        var w = worlds[i];
+        var gridId = tabPrefix + '-' + w + '-grid';
+        var items = catData[w] || [];
+        var basePath = internalDirName + '/' + w;
+        renderGrid(gridId, items, basePath);
+      }
+    }
+
+    function renderData(data) {
+      renderGrid('chefs-grid', data.chefs, 'chefs');
+      renderGrid('meme-grid', data.memes, 'memes');
+      
+      renderCategory('food', data.food, 'food');
+      renderCategory('drink', data.drink, 'drink');
+      renderCategory('dark', data.darkfood, 'darkfood');
+      
+      var gfContainer = document.getElementById('companions-container');
+      gfContainer.innerHTML = '';
+      
+      var keys = Object.keys(data.ganfanren);
+      if (keys.length === 0) {
+          gfContainer.innerHTML = '<div class="coming-soon">还没招募干饭人...</div>';
+          return;
+      }
+      
+      for (var i = 0; i < keys.length; i++) {
+        var charName = keys[i];
+        var charData = data.ganfanren[charName];
+        var charLines = charData.lines ? charData.lines : '';
+        
+        var block = document.createElement('div');
+        block.className = 'char-block';
+        
+        var h3 = document.createElement('h3');
+        h3.innerText = charName;
+        block.appendChild(h3);
+        
+        var ta = document.createElement('textarea');
+        ta.className = 'char-lines';
+        ta.placeholder = '在这里编写语录，一行一句... (仅查看，暂未开放保存)';
+        ta.value = charLines;
+        block.appendChild(ta);
+        
+        var igrid = document.createElement('div');
+        igrid.className = 'image-grid';
+        
+        for (var j = 0; j < charData.images.length; j++) {
+            var img = charData.images[j];
+            var imgPath = 'ganfanren/' + charName + '/' + img;
+            
+            var card = document.createElement('div');
+            card.className = 'img-card';
+            
+            var imgEl = document.createElement('img');
+            imgEl.setAttribute('data-path', imgPath);
+            imgEl.loading = "lazy";
+            card.appendChild(imgEl);
+            
+            var nameEl = document.createElement('div');
+            nameEl.className = 'img-name';
+            nameEl.title = img;
+            nameEl.innerText = img;
+            card.appendChild(nameEl);
+            
+            igrid.appendChild(card);
+            
+            // fetch async base64 data url
+            loadDynamicImage(imgEl, imgPath);
+        }
+        
+        block.appendChild(igrid);
+        gfContainer.appendChild(block);
+      }
+    }
+
+    function fetchData() {
+      if (!sdk) {
+          alert("无法访问 AstrBot SDK！请确保在官方后台面板打开此页面。");
+          return;
+      }
+      
+      sdk.apiGet("list_images").then(function(json) {
+        if (json.status === 'ok') {
+          renderData(json.data);
+          setTimeout(function() {
+             var accordions = document.querySelectorAll('.accordion');
+             for (var i = 0; i < accordions.length; i++) {
+                 var acc = accordions[i];
+                 if(acc.nextElementSibling.innerHTML.indexOf('img-card') !== -1 && !acc.classList.contains('expanded')) {
+                     acc.click();
+                 }
+             }
+          }, 100);
+        } else {
+          alert("后台返回了错误：" + json.message);
+        }
+      }).catch(function(e) {
+        console.error("加载数据失败", e);
+        alert("网络请求失败，请查看控制台日志。");
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+        initAccordions();
+        
+        if (sdk) {
+            sdk.ready().then(function() {
+                loadMascot();
+                fetchData();
+            }).catch(function(e) {
+                console.error("SDK Ready failed", e);
+            });
+        } else {
+            alert("环境错误：未检测到 AstrBot 插件 SDK！");
+        }
+    });
+  </script>
+</body>
+</html>
