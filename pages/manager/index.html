@@ -728,6 +728,9 @@
         isBatchMode = !isBatchMode;
         selectedFiles.clear();
         updateBatchUI();
+        if (isBatchMode) {
+            showMascotBubble("那个...如果有很多记录要处理，按住鼠标滑动就可以快速多选哦，不用一个个点啦~");
+        }
     }
 
     function updateBatchUI() {
