@@ -566,6 +566,8 @@ class FlavorFusionUltimate(Star):
             mode = payload.get("mode", "batch")
             single_chef = payload.get("single_chef", "").strip()
             single_dish = payload.get("single_dish", "").strip()
+            if ".." in single_chef or "/" in single_chef or "\\" in single_chef: single_chef = ""
+            if ".." in single_dish or "/" in single_dish or "\\" in single_dish: single_dish = ""
             mood = payload.get("mood", "think")
             files = payload.get("files", [])
             
@@ -614,7 +616,8 @@ class FlavorFusionUltimate(Star):
                     fname = final_name
                     
                 if b64.startswith("data:"): b64 = b64.split(",")[1]
-                img_path = os.path.join(target_dir, fname)
+                img_path = os.path.abspath(os.path.join(target_dir, fname))
+                if not img_path.startswith(os.path.abspath(target_dir)): continue
                 with open(img_path, "wb") as imgf:
                     imgf.write(base64.b64decode(b64))
                     
@@ -1421,12 +1424,14 @@ class FlavorFusionUltimate(Star):
                 f.write(words)
                 
             for img in images:
-                fname = img.get("filename")
+                fname = img.get("filename", "")
+                if ".." in fname or "/" in fname or "\\" in fname: continue
                 b64 = img.get("data", "")
                 if fname and b64:
                     if b64.startswith("data:"):
                         b64 = b64.split(",")[1]
-                    img_path = os.path.join(gf_dir, fname)
+                    img_path = os.path.abspath(os.path.join(gf_dir, fname))
+                    if not img_path.startswith(os.path.abspath(gf_dir)): continue
                     with open(img_path, "wb") as f:
                         f.write(base64.b64decode(b64))
                         
