@@ -1,9 +1,7 @@
 <div align="center">
   <img src="https://s1.imagehub.cc/images/2026/08/23/5a5d98a8937cbdd780106c2f852e8a27.png" width="300">
 </div>
-<div align="center">
-  <img src="https://count.getloli.com/@chisa_still_eating?name=chisa_still_eating&theme=asoul&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" >
-</div>
+
 # 🚀 🍱 千小妹还在吃 (Chisa Still Eating)
 [![AstrBot](https://img.shields.io/badge/Framework-AstrBot-🚀_purple.svg)](https://github.com/Soulter/AstrBot)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
