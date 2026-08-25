@@ -11,6 +11,8 @@
 
 当前版本：3.7.2 | 作者：Rua432
 
+https://count.getloli.com/@chisa_still_eating?name=chisa_still_eating&theme=asoul&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto
+
 ## 特别鸣谢
 感谢 [MimoKit](https://github.com/MimoKit) 移植的 GsCore 版本 —— [ChisaEating](https://github.com/MimoKit/ChisaEating)
 
