@@ -18,9 +18,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "3.7.3"
+__version__ = "3.8.0"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.7.3", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.8.0", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -196,8 +196,8 @@ class FlavorFusionUltimate(Star):
                     file_path = os.path.join(folder_path, file_name)
                     if file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
                         ganfanren_pool[folder_name]["images"].append(file_path)
-                    # 修复：统一为 lines.txt
-                    elif file_name.lower() == 'lines.txt':
+                    # 修复：恢复读取 words.txt
+                    elif file_name.lower() == 'words.txt':
                         try:
                             with open(file_path, 'r', encoding='utf-8') as f:
                                 lines = f.readlines()
@@ -300,6 +300,167 @@ class FlavorFusionUltimate(Star):
             chain_obj.file_image(meme_path)
 
     # 修复：将事件装饰器放在此方法上
+
+    async def page_update_ganfanren(self):
+        try:
+            import os
+            import json
+            from quart import jsonify, request
+            payload = await request.get_json(silent=True) or {}
+            name = payload.get("name", "").strip()
+            words = payload.get("words", "").strip()
+            if not name: return jsonify({"status":"error"}), 400
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            try: base_data_path = get_astrbot_data_path()
+            except: base_data_path = "data"
+            gf_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "ganfanren", name))
+            if os.path.exists(gf_dir):
+                with open(os.path.join(gf_dir, "words.txt"), "w", encoding="utf-8") as f:
+                    f.write(words)
+                self._reload_all_caches()
+                return jsonify({"status":"ok"}), 200
+            return jsonify({"status":"error", "message":"Not found"}), 404
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status":"error", "message":str(e)}), 500
+
+    
+    async def page_delete_ganfanren(self):
+        """WebUI: 彻底删除干饭人及其所有数据"""
+        try:
+            import os
+            import shutil
+            from quart import jsonify, request
+            payload = await request.get_json(silent=True)
+            if not payload:
+                raw_data = await request.get_data(as_text=True)
+                import json
+                try: payload = json.loads(raw_data)
+                except: payload = {}
+                
+            name = payload.get("name", "").strip()
+            if not name:
+                return jsonify({"status": "error", "message": "名字不能为空"}), 400
+                
+            try:
+                from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+                base_data_path = get_astrbot_data_path()
+            except ImportError:
+                base_data_path = "data"
+                
+            gf_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "ganfanren", name))
+            if os.path.exists(gf_dir) and os.path.isdir(gf_dir):
+                shutil.rmtree(gf_dir)
+                return jsonify({"status": "ok", "message": f"已成功删除干饭人 {name}"})
+            else:
+                return jsonify({"status": "error", "message": "该干饭人不存在"}), 404
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_delete_image(self):
+        try:
+            import os
+            from quart import jsonify, request
+            payload = await request.get_json(silent=True) or {}
+            
+            paths = payload.get("paths", [])
+            # Fallback single path to array
+            if "path" in payload and payload["path"] not in paths:
+                paths.append(payload["path"])
+                
+            if not paths:
+                return jsonify({"status":"error", "message": "No path provided"}), 400
+                
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            try: base_data_path = get_astrbot_data_path()
+            except: base_data_path = "data"
+            base_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating"))
+            
+            deleted = 0
+            for path in paths:
+                if ".." in path: continue
+                full_path = os.path.abspath(os.path.join(base_dir, path))
+                if not full_path.startswith(base_dir): continue
+                
+                if os.path.exists(full_path) and os.path.isfile(full_path):
+                    os.remove(full_path)
+                    deleted += 1
+                    
+            if deleted > 0:
+                self._reload_all_caches()
+                return jsonify({"status":"ok", "message": f"成功删除 {deleted} 张图片"}), 200
+            return jsonify({"status":"error", "message": "File not found"}), 404
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status":"error", "message": str(e)}), 500
+
+    async def page_upload_image(self):
+        try:
+            import os
+            import base64
+            from quart import jsonify, request
+            payload = await request.get_json(silent=True) or {}
+            category = payload.get("category")
+            world = payload.get("world", "")
+            mode = payload.get("mode", "batch")
+            single_chef = payload.get("single_chef", "").strip()
+            single_dish = payload.get("single_dish", "").strip()
+            mood = payload.get("mood", "think")
+            files = payload.get("files", [])
+            
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            try: base_data_path = get_astrbot_data_path()
+            except: base_data_path = "data"
+            base_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating"))
+            
+            if category in ["food", "drink", "darkfood"]:
+                if not world: world = "common"
+                target_dir = os.path.join(base_dir, category, world)
+            elif category == "chefs":
+                target_dir = os.path.join(base_dir, "chefs")
+            elif category == "memes":
+                if not world: world = "common"
+                target_dir = os.path.join(base_dir, "memes", world, mood)
+            elif category == "ganfanren":
+                target_dir = os.path.join(base_dir, "ganfanren", payload.get("char_name"))
+            else:
+                return jsonify({"status":"error", "message": "Invalid category"}), 400
+                
+            os.makedirs(target_dir, exist_ok=True)
+            
+            for f in files:
+                fname = f.get("filename")
+                b64 = f.get("data", "")
+                if not fname or not b64: continue
+                
+                ext = os.path.splitext(fname)[1]
+                if mode == "single" and category in ["food", "drink", "darkfood", "chefs"]:
+                    if category == "chefs":
+                        base_name = f"{single_dish}"
+                    else:
+                        base_name = f"【{single_chef}】{single_dish}" if single_chef else single_dish
+                        
+                    final_name = base_name + ext
+                    counter = 1
+                    while os.path.exists(os.path.join(target_dir, final_name)):
+                        final_name = f"{base_name}_{counter}{ext}"
+                        counter += 1
+                    fname = final_name
+                    
+                if b64.startswith("data:"): b64 = b64.split(",")[1]
+                img_path = os.path.join(target_dir, fname)
+                with open(img_path, "wb") as imgf:
+                    imgf.write(base64.b64decode(b64))
+                    
+            self._reload_all_caches()
+            return jsonify({"status":"ok"}), 200
+        except Exception as e:
+            import traceback
+            import logging
+            logging.error(f"[ChisaEating] upload error: {traceback.format_exc()}")
+            from quart import jsonify
+            return jsonify({"status":"error", "message": str(e)}), 500
+
     @filter.event_message_type(EventMessageType.ALL)
     async def global_message_interceptor(self, event: AstrMessageEvent, *args, **kwargs):
         msg_text = event.message_str
@@ -921,24 +1082,37 @@ class FlavorFusionUltimate(Star):
     def _register_web_api(self):
         register_api = getattr(self.context, "register_web_api", None)
         if not callable(register_api):
-            logging.warning("[ChisaEating] 当前 AstrBot 版本未提供 register_web_api，专属页面接口无法注册。")
+            logging.warning("[ChisaEating] 当前 AstrBot 版本未提供 register_web_api。")
             return
             
         register_api(f"/{self.plugin_name}/list_images", self.page_list_images, ["GET"], "列出所有跨次元图库")
         register_api(f"/{self.plugin_name}/image-data", self.page_image_data, ["GET"], "获取跨次元图库原图数据")
+        register_api(f"/{self.plugin_name}/add_ganfanren", self.page_add_ganfanren, ["POST"], "新增干饭人")
+        register_api(f"/{self.plugin_name}/update_ganfanren", self.page_update_ganfanren, ["POST"], "更新干饭人语录")
+        register_api(f"/{self.plugin_name}/upload_image", self.page_upload_image, ["POST"], "上传图片")
+        register_api(f"/{self.plugin_name}/delete_image", self.page_delete_image, ["POST"], "删除图片")
+        register_api(f"/{self.plugin_name}/delete_ganfanren", self.page_delete_ganfanren, ["POST"], "删除干饭人")
+
+
 
     async def page_list_images(self):
-        """WebUI: 读取本地图库清单并返回分类数据"""
+        """WebUI: 获取本地图库清单"""
         try:
             import os
-            data_dir = self.image_mgr.data_dir
+            try:
+                from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+                base_data_path = get_astrbot_data_path()
+            except ImportError:
+                base_data_path = "data"
+                
+            data_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating"))
             
             result = {
                 "food": {"common": [], "world1": [], "world2": [], "world3": [], "world4": [], "world5": []},
                 "drink": {"common": [], "world1": [], "world2": [], "world3": [], "world4": [], "world5": []},
                 "darkfood": {"common": [], "world1": [], "world2": [], "world3": [], "world4": [], "world5": []},
                 "chefs": [],
-                "memes": [],
+                "memes": {"common": [], "world1": [], "world2": [], "world3": [], "world4": [], "world5": []},
                 "ganfanren": {}
             }
             
@@ -958,52 +1132,139 @@ class FlavorFusionUltimate(Star):
                         
             meme_path = os.path.join(data_dir, "memes")
             if os.path.exists(meme_path):
-                for root, _, files in os.walk(meme_path):
-                    for file in files:
-                        if not file.startswith('.'):
-                            rel_path = os.path.relpath(os.path.join(root, file), meme_path).replace("\\", "/")
-                            result["memes"].append(rel_path)
+                for w in result["memes"].keys():
+                    w_dir = os.path.join(meme_path, w)
+                    if os.path.exists(w_dir):
+                        for mood in os.listdir(w_dir):
+                            m_dir = os.path.join(w_dir, mood)
+                            if os.path.isdir(m_dir):
+                                for file in os.listdir(m_dir):
+                                    if not file.startswith('.') and os.path.isfile(os.path.join(m_dir, file)):
+                                        result["memes"][w].append(f"{mood}/{file}")
                             
             gf_path = os.path.join(data_dir, "ganfanren")
             if os.path.exists(gf_path):
                 for char in os.listdir(gf_path):
                     char_dir = os.path.join(gf_path, char)
                     if os.path.isdir(char_dir):
-                        result["ganfanren"][char] = {"lines": "", "images": []}
-                        
-                        lines_file = os.path.join(char_dir, "lines.txt")
-                        if os.path.exists(lines_file):
+                        result["ganfanren"][char] = {"words": "", "images": []}
+                        words_file = os.path.join(char_dir, "words.txt")
+                        if os.path.exists(words_file):
                             try:
-                                with open(lines_file, 'r', encoding='utf-8') as lf:
-                                    result["ganfanren"][char]["lines"] = lf.read()
+                                with open(words_file, 'r', encoding='utf-8') as lf:
+                                    result["ganfanren"][char]["words"] = lf.read()
                             except Exception:
                                 pass
-                                
                         for file in os.listdir(char_dir):
-                            if not file.startswith('.') and file != "lines.txt" and os.path.isfile(os.path.join(char_dir, file)):
+                            if not file.startswith('.') and file not in ("words.txt", "lines.txt") and os.path.isfile(os.path.join(char_dir, file)):
                                 result["ganfanren"][char]["images"].append(file)
                                 
+            from quart import jsonify
             return jsonify({"status": "ok", "data": result}), 200
         except Exception as e:
-            logging.error(f"[ChisaEating] page_list_images error: {e}")
+            import traceback
+            import logging
+            from quart import jsonify
+            logging.error(f"[ChisaEating] page_list_images error: {traceback.format_exc()}")
             return jsonify({"status": "error", "message": str(e)}), 500
 
     async def page_image_data(self):
-        """WebUI: 读取硬盘里的原始图片二进制流，发送给前端显示"""
+        """WebUI: 发送真实图片 Base64 数据"""
         try:
             import os
+            import base64
+            import mimetypes
+            
             path = request.args.get("path", "")
             if not path:
                 return jsonify({"status": "error", "message": "No path provided"}), 400
                 
-            if ".." in path:
-                return jsonify({"status": "error", "message": "Invalid path"}), 400
+            try:
+                from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+                base_data_path = get_astrbot_data_path()
+            except ImportError:
+                base_data_path = "data"
                 
-            full_path = os.path.join(self.image_mgr.data_dir, path)
+            base_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating"))
+            full_path = os.path.abspath(os.path.join(base_dir, path))
+            
+            if not full_path.startswith(base_dir):
+                return jsonify({"status": "error", "message": "Access denied"}), 403
+                
             if not os.path.exists(full_path) or not os.path.isfile(full_path):
-                return jsonify({"status": "error", "message": "File not found"}), 404
+                if path == "Webui-PIC/Chisa.gif":
+                    fallback_path = os.path.join(self.plugin_dir, "pages", "manager", "Chisa.gif")
+                    if os.path.exists(fallback_path):
+                        full_path = fallback_path
+                    else:
+                        return jsonify({"status": "error", "message": "File not found"}), 404
+                else:
+                    return jsonify({"status": "error", "message": "File not found"}), 404
                 
-            return await send_file(full_path)
+            file_size = os.path.getsize(full_path)
+            if file_size > 8 * 1024 * 1024:
+                return jsonify({"status": "error", "message": "Image too large for preview"}), 413
+                
+            media_type = mimetypes.guess_type(full_path)[0] or "image/png"
+            with open(full_path, "rb") as image_file:
+                raw_bytes = image_file.read()
+                data_url = f"data:{media_type};base64,{base64.b64encode(raw_bytes).decode('ascii')}"
+                
+            return jsonify({"status": "ok", "data_url": data_url}), 200
         except Exception as e:
-            logging.error(f"[ChisaEating] page_image_data error: {e}")
+            import traceback
+            logging.error(f"[ChisaEating] page_image_data error: {traceback.format_exc()}")
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_add_ganfanren(self):
+        """WebUI: 新增干饭人"""
+        try:
+            import os
+            import base64
+            import json
+            
+            payload = await request.get_json(silent=True)
+            if not payload:
+                raw_data = await request.get_data(as_text=True)
+                try:
+                    payload = json.loads(raw_data)
+                except:
+                    payload = {}
+
+            name = payload.get("name", "").strip()
+            words = payload.get("words", "").strip()
+            images = payload.get("images", [])
+            
+            if not name:
+                return jsonify({"status": "error", "message": "干饭人名字不能为空"}), 400
+                
+            try:
+                from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+                base_data_path = get_astrbot_data_path()
+            except ImportError:
+                base_data_path = "data"
+                
+            base_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating"))
+            gf_dir = os.path.join(base_dir, "ganfanren", name)
+            os.makedirs(gf_dir, exist_ok=True)
+            
+            words_path = os.path.join(gf_dir, "words.txt")
+            with open(words_path, "w", encoding="utf-8") as f:
+                f.write(words)
+                
+            for img in images:
+                fname = img.get("filename")
+                b64 = img.get("data", "")
+                if fname and b64:
+                    if b64.startswith("data:"):
+                        b64 = b64.split(",")[1]
+                    img_path = os.path.join(gf_dir, fname)
+                    with open(img_path, "wb") as f:
+                        f.write(base64.b64decode(b64))
+                        
+            self._reload_all_caches()
+            return jsonify({"status": "ok", "message": f"成功招募干饭人 {name}！"}), 200
+        except Exception as e:
+            import traceback
+            logging.error(f"[ChisaEating] page_add_ganfanren error: {traceback.format_exc()}")
             return jsonify({"status": "error", "message": str(e)}), 500

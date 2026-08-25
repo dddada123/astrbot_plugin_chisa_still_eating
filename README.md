@@ -47,6 +47,35 @@
 
 ---
 
+
+## 🌐 高级 WebUI 可视化大屏 (v3.8.0 史诗级升级)
+经过精心打磨，千小妹现在拥有了独家的跨次元后厨管理中枢！通过 AstrBot 控制台进入插件设置页面，即可体验前所未有的丝滑管理：
+
+### 🍔 高性能流式食品库
+支持数百张表情包、菜品图同时懒加载与淡入，告别卡顿黑屏。分类清晰，尽在掌握。
+<div align="center">
+  <img src="https://s1.imagehub.cc/images/2026/08/25/ac141dc770d67a865c51e01c22526f43.png" alt="食品库管理" width="800">
+</div>
+
+### 🏃 自定义干饭人中枢
+在线招募干饭人，一键上传专属立绘，独立编辑截胡语录；支持手风琴折叠面板与一键物理开除。
+<div align="center">
+  <img src="https://s1.imagehub.cc/images/2026/08/25/7f3952a36aafaa1a0014a4ae709b9e52.png" alt="自定义干饭人管理界面" width="800">
+</div>
+
+### 🌸 导游专属 MEME 与 极速批量管理
+导游表情包依据情绪（美味/惊恐/思考/防刷屏）精细化分组；多选模式全量实装，一键批量秒杀黑历史废图！
+<div align="center">
+  <img src="https://s1.imagehub.cc/images/2026/08/25/b5c1d9484a4d7d36d1b487d273e83203.png" alt="导游MEME管理" width="800">
+</div>
+
+### 👨‍🍳 大厨管理站：让专属料理更有味
+支持厨师与菜品独立归档，单张上传自动按照标准格式重命名，再也不用担心文件名错乱，轻松打造厨师专属风味。
+<div align="center">
+  <img src="https://s1.imagehub.cc/images/2026/08/25/0665468bbafca4b26a703815a7d46dd3.png" alt="厨师管理" width="800">
+</div>
+
+
 ## 🚀 安装与部署指南
 
 ### 第一步：安装插件本体
@@ -70,7 +99,7 @@
 
 ---
 
-## 🛠️ MOD 与高阶自定义玩法（物理免配指南）
+## 🛠️ MOD 与高阶自定义玩法（不过现在基本都可以通过WEBUI管理咯）
 
 本插件致力于“物理级免配置”的优雅体验：所有资源的扩充、修改、干饭人的添加，**完全不需要修改任何 JSON 文件**，直接将文件拖入对应的目录即可生效！
 
@@ -154,9 +183,9 @@ data/plugin_data/astrbot_plugin_chisa_still_eating/
 ## 📢 素材鸣谢与出处声明
 本插件能够拥有如此生动的沉浸感，离不开以下优秀创作者的二创表情包与官方素材。在此向各位用爱发电的作者致以最诚挚的感谢（排名不分先后）：
 
-* **爱弥斯表情包**：感谢 B站 Up主 [凉梦喵啦啦啦](https://www.bilibili.com/video/BV1jN5z6VEYU/) 及 Up主 [Stephen槿](https://www.bilibili.com/video/BV1GHfUBzEZd/) 的制作分享。
-* **千咲表情包**：感谢 B站 Up主 [好好和w](https://www.bilibili.com/video/BV1Fz5q6GEVA/) 的制作分享。
-* **达妮娅表情包**：感谢 B站 Up主 [好好和ww](https://www.bilibili.com/video/BV1drAHzyEGY/) 的制作分享。
+* **爱弥斯表情包**：感谢 B站 Up主 [凉梦喵啦啦啦](https://www.bilibili.com/video/BV1jN5z6VEYU/) 及 Up主 [Stephen樽](https://www.bilibili.com/video/BV1GHfUBzEZd/) 的制作分享。
+* **千咲表情包**：感谢 B站 Up主 [好好咲w](https://www.bilibili.com/video/BV1Fz5q6GEVA/) 的制作分享。
+* **达妮娅表情包**：感谢 B站 Up主 [好好咲w](https://www.bilibili.com/video/BV1drAHzyEGY/) 的制作分享。
 * **小小爱表情包**：感谢 B站 Up主 [铃兰花酱](https://www.bilibili.com/video/BV1PGDqBqEMD/) 的制作分享。
 * **派蒙表情包**：素材源自 **《原神》官方 HOYOLAB制作分享**。（我说原神牛逼有没有懂的）
 *(注：以上部分表情包素材仅供开源娱乐与学习交流使用，美术版权归原画师或官方所有。)*

@@ -1,0 +1,1074 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>千小妹还在吃 - 后厨仪表盘</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --panel: rgba(30, 30, 30, 0.85);
+      --card: rgba(45, 45, 45, 0.75);
+      --text: #ffffff;
+      --muted: #a0a0a0;
+      --primary: #d32f2f;
+      --primary-hover: #f44336;
+      --line: #333333;
+      --shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
+      --blur: blur(12px);
+    }
+    
+    body {
+      margin: 0;
+      background: var(--bg) url('https://raw.githubusercontent.com/dddada123/astrbot_plugin_chisa_still_eating_photo/main/assets/demo1.png') no-repeat center center fixed;
+      background-size: cover;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .bg-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(18, 18, 18, 0.7);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      z-index: -1;
+    }
+
+    main {
+      width: min(1200px, calc(100vw - 32px));
+      margin: 30px auto;
+      position: relative;
+      z-index: 1;
+      padding-bottom: 100px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 25px;
+      background: var(--panel);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border-left: 5px solid var(--primary);
+      margin-bottom: 25px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover { background: rgba(80, 80, 80, 0.8); }
+    .tab-btn.active { background: var(--primary); border-color: var(--primary-hover); }
+
+    .section {
+      display: none;
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+    }
+
+    .section.active { display: block; }
+
+    .accordion {
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      padding: 15px;
+      width: 100%;
+      text-align: left;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      font-weight: bold;
+      transition: 0.3s;
+      border-radius: 8px;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 3px solid transparent;
+    }
+
+    .accordion:hover, .accordion.expanded {
+      background: rgba(60, 60, 60, 0.8);
+      border-left-color: var(--primary);
+    }
+
+    .accordion-title { flex: 1; }
+    .accordion-actions { margin-right: 15px; }
+    .accordion::after { content: '▼'; font-size: 12px; }
+    .accordion.expanded::after { content: '▲'; }
+
+    .panel {
+      padding: 0 15px;
+      background-color: transparent;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out;
+      margin-bottom: 10px;
+    }
+    .panel.open { max-height: 10000px; }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 15px;
+      padding: 15px 0;
+    }
+
+    .img-card {
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      position: relative;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: default;
+    }
+
+    /* Skeleton & Lazy load */
+    .img-skeleton {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff;
+      border-radius: 50%; animation: spin 1s linear infinite; z-index: 1;
+    }
+    @keyframes spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+
+    .lazy-img {
+      width: 100%; height: 100%; object-fit: contain; display: block; position: relative;
+      z-index: 2; opacity: 0; transition: opacity 0.4s ease-in;
+    }
+    .lazy-img.loaded { opacity: 1; }
+
+    .img-card .img-name {
+      position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0, 0, 0, 0.8);
+      font-size: 12px; padding: 4px; text-align: center; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; z-index: 3; pointer-events: none;
+    }
+
+    /* Delete Button */
+    .img-card .delete-btn {
+      position: absolute; top: 5px; right: 5px; background: rgba(214, 40, 40, 0.9);
+      color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s; z-index: 4;
+    }
+    .img-card:hover .delete-btn { opacity: 1; }
+
+    /* Batch Selection Modes */
+    .img-card.batch-mode { cursor: pointer; }
+    .img-card.batch-mode .delete-btn { display: none !important; }
+    .img-card.batch-mode::after {
+      content: ''; position: absolute; top: 5px; right: 5px; width: 18px; height: 18px;
+      border: 2px solid white; border-radius: 4px; background: rgba(0,0,0,0.4); z-index: 5; pointer-events: none;
+    }
+    .img-card.selected::after {
+      background: var(--primary); content: '✓'; display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 12px; font-weight: bold;
+    }
+    .img-card.selected .lazy-img { opacity: 0.6; }
+
+    .batch-toggle-btn.active-batch { background: #f4a261; color: #000; }
+
+    .batch-action-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20, 20, 20, 0.95);
+      border-top: 2px solid var(--primary); padding: 15px 30px; display: none; justify-content: space-between;
+      align-items: center; z-index: 1001; backdrop-filter: blur(10px); box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+    }
+
+    .controls { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px; }
+    button.btn { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+    button.btn:hover { background: var(--primary-hover); }
+    button.btn-small { padding: 4px 10px; font-size: 12px; }
+    
+    .coming-soon { text-align: center; padding: 20px; color: var(--muted); font-style: italic; }
+    
+    .char-block { background: var(--card); margin-bottom: 15px; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary); }
+    .char-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .char-block-header h3 { margin: 0; }
+    .char-lines {
+      width: 100%; height: 80px; background: #1e1e1e; color: #fff;
+      border: 1px solid var(--line); border-radius: 4px; padding: 8px;
+      margin-bottom: 10px; font-family: inherit; resize: vertical; box-sizing: border-box;
+    }
+
+    .chisa-mascot {
+      position: fixed; bottom: 20px; right: 30px; width: 180px; z-index: 1000;
+      pointer-events: auto; cursor: pointer; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .chisa-mascot:hover { transform: scale(1.15) rotate(-5deg); filter: drop-shadow(0 15px 25px rgba(211, 47, 47, 0.6)); }
+    @media (max-width: 768px) { .chisa-mascot { width: 120px; bottom: 15px; right: 15px; } }
+
+    /* Modals */
+    .modal {
+      display: none; position: fixed; z-index: 2000; left: 0; top: 0;
+      width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+    }
+    .modal-content {
+      background-color: var(--card); margin: 10% auto; padding: 20px;
+      border: 1px solid var(--line); border-radius: 12px; width: 80%; max-width: 600px; box-shadow: var(--shadow);
+    }
+    .close { color: var(--muted); float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+    .close:hover, .close:focus { color: #fff; text-decoration: none; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+    .form-group input[type="text"], .form-group textarea, .form-group select {
+      width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid var(--line);
+      color: white; border-radius: 4px; box-sizing: border-box;
+    }
+    .form-group input[type="file"] { color: white; }
+
+    .status-toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--primary); color: white; padding: 10px 20px;
+      border-radius: 8px; z-index: 3000; font-weight: bold; box-shadow: var(--shadow);
+      display: none; transition: opacity 0.3s;
+    }
+    .status-toast.success { background: #388e3c; }
+    .status-toast.error { background: var(--primary); }
+    .modal-buttons { display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="bg-overlay"></div>
+  <div id="statusToast" class="status-toast"></div>
+
+  <main>
+    <header>
+      <div>
+        <h1>🔪 千小妹跨次元后厨</h1>
+        <div class="subtitle">v3.8.0 (Experimental) | 高性能流式数据大屏</div>
+      </div>
+      <button class="btn" onclick="fetchData()">🔄 刷新本地数据</button>
+    </header>
+
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('tab-companions', this)">🏃 干饭人小队</button>
+      <button class="tab-btn" onclick="switchTab('tab-chefs', this)">👨‍🍳 专属大厨</button>
+      <button class="tab-btn" onclick="switchTab('tab-meme', this)">🌸 导游图库</button>
+      <button class="tab-btn" onclick="switchTab('tab-food', this)">🍔 食物总仓</button>
+      <button class="tab-btn" onclick="switchTab('tab-drink', this)">🧋 饮品仓库</button>
+      <button class="tab-btn" onclick="switchTab('tab-dark', this)">☠️ 黑暗料理</button>
+      <button class="tab-btn" onclick="switchTab('tab-dlc', this)">🛒 DLC 商店</button>
+    </div>
+
+    <!-- Sections -->
+    <div id="tab-companions" class="section active">
+      <div class="controls">
+        <button class="btn btn-small batch-toggle-btn" onclick="toggleBatchMode()">批量管理</button>
+        <button class="btn btn-small" onclick="openAddGanfanrenModal()">+ 新增干饭人</button>
+      </div>
+      
+      <div style="background: rgba(33, 150, 243, 0.1); border-left: 4px solid #2196F3; padding: 12px 15px; margin-bottom: 20px; border-radius: 4px; font-size: 14px;">
+        💡 <strong>出场调度指南：</strong>若要指定让哪几位干饭人出场抢饭，请前往 AstrBot 控制台左侧的 <b>[插件配置 -> astrbot_plugin_chisa_still_eating]</b> 基础设置页面中填写干饭人的名字。（不填则默认全员随机抽取）
+      </div>
+
+      <p style="color:var(--muted)">管理会截胡美食的异界旅伴，支持编写独立语录与立绘。</p>
+      <div id="companions-container"><div class="coming-soon">正在加载数据...</div></div>
+    </div>
+
+    <div id="tab-chefs" class="section">
+      <div class="controls">
+        <button class="btn btn-small batch-toggle-btn" onclick="toggleBatchMode()">批量管理</button>
+        <button class="btn btn-small" onclick="openUploadModal('chefs')">+ 上传厨师</button>
+      </div>
+      <div class="image-grid" id="chefs-grid"><div class="coming-soon">正在加载数据...</div></div>
+    </div>
+
+    
+    <div id="tab-dlc" class="section">
+      <div class="coming-soon" style="padding: 50px 20px; font-size: 18px;">
+        <h2>🛒 跨次元美食 DLC 商店</h2>
+        <p style="color: var(--muted); margin-bottom: 20px;">这里未来将提供一键下载精选整合包、导游拓展包功能。</p>
+        <button class="btn" style="background:#555; cursor:not-allowed;" onclick="showToast('暂未上线此功能，敬请期待！', 'error')">暂未上线此功能</button>
+      </div>
+    </div>
+
+    <!-- Container divs that will be populated by renderCategory -->
+    <div id="tab-meme" class="section">
+      <div class="controls"><button class="btn btn-small batch-toggle-btn" onclick="toggleBatchMode()">批量管理</button></div>
+      <div id="meme-container"></div>
+    </div>
+    
+    <div id="tab-food" class="section">
+      <div class="controls"><button class="btn btn-small batch-toggle-btn" onclick="toggleBatchMode()">批量管理</button></div>
+      <div id="food-container"></div>
+    </div>
+    
+    <div id="tab-drink" class="section">
+      <div class="controls"><button class="btn btn-small batch-toggle-btn" onclick="toggleBatchMode()">批量管理</button></div>
+      <div id="drink-container"></div>
+    </div>
+    
+    <div id="tab-dark" class="section">
+      <div class="controls"><button class="btn btn-small batch-toggle-btn" onclick="toggleBatchMode()">批量管理</button></div>
+      <div id="dark-container"></div>
+    </div>
+  </main>
+
+  <div id="batchActionBar" class="batch-action-bar">
+    <div>当前处于批量选择模式 | 已选定 <span id="batchCount" style="color:var(--primary); font-size:20px; font-weight:bold;">0</span> 张图片</div>
+    <div>
+        <button class="btn" style="background:#555; margin-right:10px;" onclick="toggleBatchMode()">取消</button>
+        <button class="btn" onclick="executeBatchDelete()">🗑️ 删除选定项</button>
+    </div>
+  </div>
+
+  <img id="mascot" src="" class="chisa-mascot" alt="千咲监工" title="千小妹正在后厨监工！" style="display:none;" onclick="pokeMascot()" />
+
+  <!-- Add Ganfanren Modal -->
+  <div id="addGanfanrenModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeAddGanfanrenModal()">&times;</span>
+      <h2>招募新干饭人</h2>
+      <div class="form-group">
+        <label for="gfName">角色名字</label>
+        <input type="text" id="gfName" placeholder="例如：可可萝">
+      </div>
+      <div class="form-group">
+        <label for="gfLines">专属截胡语录 (一行一句)</label>
+        <textarea id="gfLines" rows="5" placeholder="啊呜啊呜好吃！\n主人谢谢款待！"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="gfFiles">上传立绘/表情包 (可多选)</label>
+        <input type="file" id="gfFiles" multiple accept="image/*">
+      </div>
+      <button class="btn" onclick="submitAddGanfanren()">确认招募</button>
+    </div>
+  </div>
+
+  <!-- Universal Upload Modal -->
+  <div id="uploadModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeUploadModal()">&times;</span>
+      <h2 id="uploadTitle">上传图片</h2>
+      
+      <div class="form-group" id="uploadModeGroup">
+        <label>上传模式</label>
+        <select id="uploadMode" onchange="toggleUploadMode()">
+            <option value="single">单张上传 (自动规范命名)</option>
+            <option value="batch">批量上传 (保持文件原名)</option>
+        </select>
+        <small style="color:var(--muted); display:none; margin-top:5px;" id="batchHint">批量上传时，请务必提前修改好本地文件名，如“【厨师名】菜名_1.jpg”，否则读取报错。</small>
+      </div>
+
+      <div class="form-group" id="chefNameGroup">
+        <label for="upChef">厨师名称 (选填)</label>
+        <input type="text" id="upChef" placeholder="例如：流萤">
+      </div>
+      
+      <div class="form-group" id="dishNameGroup">
+        <label for="upDish">菜品/素材/上传大厨时这里填厨师名</label>
+        <input type="text" id="upDish" placeholder="例如：焦烤棉花糖">
+      </div>
+      
+      <div class="form-group" id="moodGroup" style="display:none;">
+        <label for="upMood">导游表情情绪</label>
+        <select id="upMood">
+            <option value="think">思考/疑惑 (think)</option>
+            <option value="like">喜欢/开心 (like)</option>
+            <option value="speechless">无语/打断 (speechless)</option>
+            <option value="scared">害怕/惊吓 (scared)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label id="fileUploadLabel" for="upFiles">选择图片 (仅限单张)</label>
+        <input type="file" id="upFiles" accept="image/*">
+      </div>
+      <button class="btn" onclick="submitUpload()">确认上传</button>
+    </div>
+  </div>
+
+  <!-- Safe Confirm Modal -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <h2 style="color:var(--primary); margin-top:0;">⚠️ 危险操作</h2>
+      <p id="confirmMsg" style="font-size: 16px; margin: 20px 0;"></p>
+      <div class="modal-buttons">
+        <button class="btn" style="background:#555;" id="confirmNo">手滑了</button>
+        <button class="btn" id="confirmYes">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/api/plugin/page/bridge-sdk.js"></script>
+  <script>
+    var astrSdk = null;
+    var currentUploadTarget = { category: '', world: '' };
+    var isBatchMode = false;
+    var selectedFiles = new Set();
+
+    
+    var mascotQuotes = [
+        "千小妹：好好干活！别偷吃！",
+        "千小妹：唔...那个看起来很好吃！",
+        "千小妹：你是不是又把焦烤棉花糖烤糊了？",
+        "千小妹：不要捏我的脸啦！",
+        "千小妹：今天后厨的香气很足哦~",
+        "千小妹：快点干活！干饭人小队都饿得咕咕叫了！"
+    ];
+    function pokeMascot() {
+        var idx = Math.floor(Math.random() * mascotQuotes.length);
+        showToast(mascotQuotes[idx], 'success');
+    }
+
+    function getSdk() { return astrSdk || window.AstrBotPluginPage; }
+
+
+    function showToast(msg, type) {
+      var toast = document.getElementById("statusToast");
+      toast.innerText = msg;
+      toast.className = "status-toast " + (type || "");
+      toast.style.display = "block";
+      toast.style.opacity = "1";
+      setTimeout(function() {
+        toast.style.opacity = "0";
+        setTimeout(function() { toast.style.display = "none"; }, 300);
+      }, 3000);
+    }
+
+    function customConfirm(msg) {
+        return new Promise(function(resolve) {
+            var modal = document.getElementById('confirmModal');
+            document.getElementById('confirmMsg').innerText = msg;
+            modal.style.display = 'block';
+            
+            var btnYes = document.getElementById('confirmYes');
+            var btnNo = document.getElementById('confirmNo');
+            
+            function cleanup() {
+                modal.style.display = 'none';
+                btnYes.onclick = null;
+                btnNo.onclick = null;
+            }
+            
+            btnYes.onclick = function() { cleanup(); resolve(true); };
+            btnNo.onclick = function() { cleanup(); resolve(false); };
+        });
+    }
+
+    function handleImgError(imgElement) {
+        imgElement.alt = "加载失败";
+        imgElement.style.opacity = "0"; // keep hidden
+        var skel = imgElement.previousElementSibling;
+        if(skel && skel.classList.contains('img-skeleton')) {
+            skel.className = 'img-error';
+            skel.innerHTML = '图片<br/>丢失';
+            skel.style.animation = 'none';
+            skel.style.border = 'none';
+            skel.style.width = 'auto';
+            skel.style.height = 'auto';
+            skel.style.color = '#ff5252';
+            skel.style.fontSize = '12px';
+            skel.style.textAlign = 'center';
+        }
+    }
+
+    // IntersectionObserver for Lazy Loading
+    var lazyObserver = new IntersectionObserver(function(entries, observer) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                var img = entry.target;
+                var path = img.getAttribute('data-path');
+                if (path && !img.dataset.fetching) {
+                    img.dataset.fetching = "true";
+                    loadDynamicImage(img, path);
+                }
+                observer.unobserve(img);
+            }
+        });
+    }, { rootMargin: "250px" });
+
+    function parseSdkResponse(res) {
+        var data = res;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch (e) {} }
+        if (data && data.status === "ok" && Object.prototype.hasOwnProperty.call(data, "data")) data = data.data; 
+        return data;
+    }
+
+    function switchTab(tabId, btnElement) {
+      var sections = document.getElementsByClassName('section');
+      for (var i = 0; i < sections.length; i++) sections[i].classList.remove('active');
+      var btns = document.getElementsByClassName('tab-btn');
+      for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+      document.getElementById(tabId).classList.add('active');
+      if (btnElement) btnElement.classList.add('active');
+    }
+
+    function initAccordions() {
+      var acc = document.getElementsByClassName("accordion");
+      for (var i = 0; i < acc.length; i++) {
+        var clone = acc[i].cloneNode(true);
+        acc[i].parentNode.replaceChild(clone, acc[i]);
+        clone.addEventListener("click", function() {
+          this.classList.toggle("expanded");
+          var panel = this.nextElementSibling;
+          panel.classList.toggle("open");
+        });
+      }
+    }
+
+    // Mascot Fallback Logic
+    function loadMascot() {
+      var mascot = document.getElementById("mascot");
+      var sdk = getSdk();
+      
+      function useFallback() {
+          mascot.onload = function() { mascot.style.display = "block"; mascot.onload = null; mascot.onerror = null; };
+          mascot.onerror = null; 
+          mascot.src = "./Chisa.gif";
+      }
+
+      if (!sdk) {
+          useFallback();
+          return;
+      }
+
+      // 1. First priority: PluginData (API load)
+      sdk.apiGet("image-data", { path: "Webui-PIC/Chisa.gif" }).then(function(res) {
+          var data = parseSdkResponse(res);
+          if (data && data.data_url) {
+              mascot.onload = function() { mascot.style.display = "block"; mascot.onload = null; mascot.onerror = null; };
+              mascot.onerror = useFallback;
+              mascot.src = data.data_url;
+          } else {
+              useFallback();
+          }
+      }).catch(function() {
+          useFallback();
+      });
+    }
+
+    function loadDynamicImage(imgElement, relativePath) {
+      var sdk = getSdk();
+      if (!sdk) { handleImgError(imgElement); return; }
+      sdk.apiGet("image-data", { path: relativePath }).then(function(res) {
+        var data = parseSdkResponse(res);
+        if (data && data.data_url) {
+          imgElement.src = data.data_url;
+          imgElement.classList.add('loaded'); // CSS Fade In
+          var skel = imgElement.previousElementSibling;
+          if(skel && skel.classList.contains('img-skeleton')) skel.style.display = 'none';
+        } else {
+          handleImgError(imgElement);
+        }
+      }).catch(function() { handleImgError(imgElement); });
+    }
+
+    // Batch UI Update
+    function toggleBatchMode() {
+        isBatchMode = !isBatchMode;
+        selectedFiles.clear();
+        updateBatchUI();
+    }
+
+    function updateBatchUI() {
+        var bar = document.getElementById('batchActionBar');
+        if (isBatchMode) {
+            bar.style.display = 'flex';
+            document.getElementById('batchCount').innerText = selectedFiles.size;
+        } else {
+            bar.style.display = 'none';
+        }
+        
+        var btns = document.querySelectorAll('.batch-toggle-btn');
+        btns.forEach(function(b) {
+            b.innerText = isBatchMode ? '退出批量' : '批量管理';
+            if (isBatchMode) b.classList.add('active-batch');
+            else b.classList.remove('active-batch');
+        });
+        
+        var cards = document.querySelectorAll('.img-card');
+        cards.forEach(function(c) {
+            if (isBatchMode) c.classList.add('batch-mode');
+            else { c.classList.remove('batch-mode'); c.classList.remove('selected'); }
+        });
+    }
+
+    function handleCardClick(path, el) {
+        if (!isBatchMode) return;
+        if (selectedFiles.has(path)) {
+            selectedFiles.delete(path);
+            el.classList.remove('selected');
+        } else {
+            selectedFiles.add(path);
+            el.classList.add('selected');
+        }
+        document.getElementById('batchCount').innerText = selectedFiles.size;
+    }
+
+    function executeBatchDelete() {
+        if (selectedFiles.size === 0) { showToast("请先选择图片", "error"); return; }
+        customConfirm("确定要批量永久删除这 " + selectedFiles.size + " 张图片吗？").then(function(yes) {
+            if (!yes) return;
+            var pathsArr = Array.from(selectedFiles);
+            showToast("正在删除...", "");
+            var sdk = getSdk();
+            sdk.apiPost("delete_image", { paths: pathsArr }).then(function(res) {
+                var json = parseSdkResponse(res);
+                if (json && json.status === 'ok') {
+                    showToast(json.message || "批量删除成功", "success");
+                    isBatchMode = false;
+                    selectedFiles.clear();
+                    updateBatchUI();
+                    fetchData();
+                } else {
+                    showToast("删除失败：" + (json ? json.message : ""), "error");
+                }
+            }).catch(function() { showToast("网络错误", "error"); });
+        });
+    }
+
+    function deleteImage(path, event) {
+      if (event) event.stopPropagation();
+      var sdk = getSdk();
+      if (!sdk) return;
+      customConfirm("确定要永久删除这张图片吗？").then(function(yes) {
+          if (!yes) return;
+          showToast("正在删除...", "");
+          sdk.apiPost("delete_image", { paths: [path] }).then(function(res) {
+              var json = parseSdkResponse(res);
+              if (json && json.status === 'ok') {
+                  showToast("删除成功", "success");
+                  fetchData();
+              } else {
+                  showToast("删除失败：" + (json ? json.message : ""), "error");
+              }
+          }).catch(function() { showToast("请求失败", "error"); });
+      });
+    }
+
+    function renderGrid(containerId, items, basePath) {
+      var container = document.getElementById(containerId);
+      if(!container) return;
+      container.innerHTML = '';
+      if(!items || items.length === 0) {
+        container.innerHTML = '<div class="coming-soon">空空如也...</div>';
+        return;
+      }
+      
+      var htmlStr = '';
+      for (var i = 0; i < items.length; i++) {
+        var file = items[i];
+        var imgPath = basePath + '/' + file;
+        var displayFile = file;
+        if (file.indexOf('/') !== -1) displayFile = file.split('/').pop();
+        
+        var classes = 'img-card';
+        if (isBatchMode) classes += ' batch-mode';
+        if (selectedFiles.has(imgPath)) classes += ' selected';
+        
+        htmlStr += '<div class="' + classes + '" onclick="handleCardClick(\'' + imgPath + '\', this)">';
+        htmlStr += '<div class="img-skeleton"></div>';
+        htmlStr += '<img data-path="' + imgPath + '" class="lazy-img" />';
+        htmlStr += '<div class="img-name" title="' + displayFile + '">' + displayFile + '</div>';
+        htmlStr += '<button class="delete-btn" onclick="deleteImage(\'' + imgPath + '\', event)">×</button>';
+        htmlStr += '</div>';
+      }
+      container.innerHTML = htmlStr;
+
+      // Observe images for lazy load
+      var imgs = container.getElementsByTagName('img');
+      for(var i=0; i<imgs.length; i++) {
+          lazyObserver.observe(imgs[i]);
+      }
+    }
+
+    var worldLabels = {
+        'common': '🌍 地球 (common)',
+        'world1': '🌊 鸣潮 (world1)',
+        'world2': '✨ 原神 (world2)',
+        'world3': '🏭 终末地 (world3)',
+        'world4': '🌌 自定义 (world4)',
+        'world5': '🌌 自定义 (world5)'
+    };
+
+    
+    var moodLabels = {
+        'like': '🥰 美味 (like)',
+        'scared': '😱 惊恐 (scared)',
+        'speechless': '😓 防刷屏 (speechless)',
+        'think': '🤔 思考 (think)'
+    };
+
+    function renderMemeCategory(catData) {
+      var container = document.getElementById('meme-container');
+      if (!container) return;
+      container.innerHTML = '';
+      
+      var worlds = ['common', 'world1', 'world2', 'world3', 'world4', 'world5'];
+      for (var i = 0; i < worlds.length; i++) {
+        var w = worlds[i];
+        var items = catData[w] || [];
+        
+        var btn = document.createElement('button');
+        btn.className = 'accordion';
+        btn.innerHTML = '<span class="accordion-title">' + worldLabels[w] + '</span>' + 
+                        '<span class="accordion-actions"><button class="btn btn-small" onclick="openUploadModal(\'memes\', \'' + w + '\'); event.stopPropagation();">上传</button></span>';
+        
+        var panel = document.createElement('div');
+        panel.className = 'panel';
+        
+        var grouped = { 'like': [], 'scared': [], 'speechless': [], 'think': [], 'other': [] };
+        for (var j = 0; j < items.length; j++) {
+            var file = items[j];
+            var parts = file.split('/');
+            if (parts.length > 1) {
+                var mood = parts[0];
+                if (grouped[mood]) grouped[mood].push(file);
+                else grouped['other'].push(file);
+            } else {
+                grouped['other'].push(file);
+            }
+        }
+        
+        var moods = ['like', 'scared', 'speechless', 'think', 'other'];
+        for(var k = 0; k < moods.length; k++) {
+            var m = moods[k];
+            if(m === 'other' && grouped[m].length === 0) continue;
+
+            var title = moodLabels[m] || ('其他 (' + m + ')');
+            var subBtn = document.createElement('button');
+            subBtn.className = 'accordion sub-accordion';
+            subBtn.style.backgroundColor = 'rgba(60,60,60,0.5)';
+            subBtn.style.borderLeft = '3px solid #ff9800';
+            subBtn.style.fontSize = '14px';
+            subBtn.style.padding = '10px 15px';
+            subBtn.innerHTML = '<span class="accordion-title">' + title + ' (' + grouped[m].length + ')</span>';
+            
+            var subPanel = document.createElement('div');
+            subPanel.className = 'panel';
+            var gridId = 'meme-' + w + '-' + m + '-grid';
+            subPanel.innerHTML = '<div class="image-grid" id="' + gridId + '"></div>';
+            
+            panel.appendChild(subBtn);
+            panel.appendChild(subPanel);
+        }
+        
+        container.appendChild(btn);
+        container.appendChild(panel);
+        
+        for(var k = 0; k < moods.length; k++) {
+            var m = moods[k];
+            if(m === 'other' && grouped[m].length === 0) continue;
+            renderGrid('meme-' + w + '-' + m + '-grid', grouped[m], 'memes/' + w);
+        }
+      }
+    }
+
+    function renderCategory(catName, catData, dirName) {
+
+      var container = document.getElementById(catName + '-container');
+      if (!container) return;
+      container.innerHTML = '';
+      
+      var worlds = ['common', 'world1', 'world2', 'world3', 'world4', 'world5'];
+      for (var i = 0; i < worlds.length; i++) {
+        var w = worlds[i];
+        var items = catData[w] || [];
+        var basePath = dirName + '/' + w;
+        var gridId = catName + '-' + w + '-grid';
+        
+        var btn = document.createElement('button');
+        btn.className = 'accordion';
+        btn.innerHTML = '<span class="accordion-title">' + worldLabels[w] + '</span>' + 
+                        '<span class="accordion-actions"><button class="btn btn-small" onclick="openUploadModal(\'' + dirName + '\', \'' + w + '\'); event.stopPropagation();">上传</button></span>';
+        
+        var panel = document.createElement('div');
+        panel.className = 'panel';
+        panel.innerHTML = '<div class="image-grid" id="' + gridId + '"></div>';
+        
+        container.appendChild(btn);
+        container.appendChild(panel);
+        
+        renderGrid(gridId, items, basePath);
+      }
+    }
+
+    function saveGanfanrenWords(charName) {
+        var sdk = getSdk();
+        if (!sdk) return;
+        var ta = document.getElementById('words-' + charName);
+        var words = ta ? ta.value : "";
+        showToast("保存中...", "");
+        sdk.apiPost("update_ganfanren", { name: charName, words: words }).then(function(res) {
+            var json = parseSdkResponse(res);
+            if (json && json.status === 'ok') showToast("语录保存成功！", "success");
+            else showToast("保存失败：" + (json ? json.message : ""), "error");
+        }).catch(function() { showToast("请求失败", "error"); });
+    }
+
+        function deleteGanfanren(charName) {
+        var sdk = getSdk();
+        if (!sdk) return;
+        customConfirm("⚠️ 确定要彻底开除【" + charName + "】吗？TA的专属语录和所有立绘将被永久物理删除，不可恢复！").then(function(yes) {
+            if (!yes) return;
+            showToast("正在执行物理抹除...", "");
+            sdk.apiPost("delete_ganfanren", { name: charName }).then(function(res) {
+                var json = parseSdkResponse(res);
+                if (json && json.status === 'ok') {
+                    showToast(json.message || "删除成功", "success");
+                    fetchData();
+                } else {
+                    showToast("删除失败：" + (json ? json.message : ""), "error");
+                }
+            }).catch(function() { showToast("请求失败", "error"); });
+        });
+    }
+
+    function renderGanfanren(data) {
+      var gfContainer = document.getElementById('companions-container');
+      gfContainer.innerHTML = '';
+      var keys = Object.keys(data);
+      if (keys.length === 0) {
+          gfContainer.innerHTML = '<div class="coming-soon">还没招募干饭人...</div>';
+          return;
+      }
+      
+      for (var i = 0; i < keys.length; i++) {
+        var charName = keys[i];
+        var charData = data[charName];
+        var charLines = charData.words ? charData.words : '';
+        
+        var btn = document.createElement('button');
+        btn.className = 'accordion';
+        btn.innerHTML = '<span class="accordion-title">' + charName + '</span>' + 
+                        '<span class="accordion-actions">' +
+                        '<button class="btn btn-small" style="background:#555; margin-right:5px;" onclick="openUploadModal(\'ganfanren\', \'\', \'' + charName + '\'); event.stopPropagation();">上传立绘</button>' +
+                        '<button class="btn btn-small" style="background:#d62828;" onclick="deleteGanfanren(\'' + charName + '\'); event.stopPropagation();">🗑️ 删除角色</button>' +
+                        '</span>';
+        
+        var panel = document.createElement('div');
+        panel.className = 'panel';
+        panel.style.paddingTop = '15px';
+        
+        var taContainer = document.createElement('div');
+        taContainer.style.marginBottom = '10px';
+        taContainer.innerHTML = '<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>专属截胡语录：</span><button class="btn btn-small" onclick="saveGanfanrenWords(\'' + charName + '\')">保存语录</button></div>';
+        
+        var ta = document.createElement('textarea');
+        ta.className = 'char-lines';
+        ta.id = 'words-' + charName;
+        ta.placeholder = '在这里编写语录，一行一句...';
+        ta.value = charLines;
+        taContainer.appendChild(ta);
+        
+        panel.appendChild(taContainer);
+        
+        var igrid = document.createElement('div');
+        igrid.className = 'image-grid';
+        igrid.id = 'gf-grid-' + charName;
+        panel.appendChild(igrid);
+        
+        gfContainer.appendChild(btn);
+        gfContainer.appendChild(panel);
+        
+        renderGrid(igrid.id, charData.images, 'ganfanren/' + charName);
+      }
+    }
+
+    function renderData(data) {
+      renderGrid('chefs-grid', data.chefs, 'chefs');
+      renderMemeCategory(data.memes);
+      renderCategory('food', data.food, 'food');
+      renderCategory('drink', data.drink, 'drink');
+      renderCategory('dark', data.darkfood, 'darkfood');
+      renderGanfanren(data.ganfanren);
+      initAccordions();
+    }
+
+    function fetchData() {
+      var sdk = getSdk();
+      if (!sdk) { showToast("环境错误：未检测到 AstrBot SDK", "error"); return; }
+      showToast("正在拉取数据列表...", "");
+      
+      sdk.apiGet("list_images").then(function(res) {
+        var json = parseSdkResponse(res);
+        if (json && (json.status === 'ok' || json.food)) {
+          var realData = json.data || json; 
+          renderData(realData);
+          showToast("列表拉取完毕！下滑加载图片。", "success");
+        } else {
+          showToast("后台返回了错误", "error");
+        }
+      }).catch(function(e) {
+        showToast("网络请求失败，请查看控制台日志。", "error");
+      });
+    }
+
+    function openAddGanfanrenModal() { document.getElementById('addGanfanrenModal').style.display = 'block'; }
+    function closeAddGanfanrenModal() { document.getElementById('addGanfanrenModal').style.display = 'none'; }
+
+    function openUploadModal(category, world, charName) {
+        currentUploadTarget = { category: category, world: world || '', charName: charName || '' };
+        document.getElementById('uploadTitle').innerText = '上传到: ' + category + (world ? ' (' + world + ')' : '') + (charName ? ' [' + charName + ']' : '');
+        
+        document.getElementById('chefNameGroup').style.display = (category === 'chefs' || category === 'ganfanren' || category === 'memes') ? 'none' : 'block';
+        document.getElementById('dishNameGroup').style.display = (category === 'ganfanren' || category === 'memes') ? 'none' : 'block';
+        document.getElementById('moodGroup').style.display = (category === 'memes') ? 'block' : 'none';
+        
+        document.getElementById('uploadMode').value = 'single';
+        toggleUploadMode();
+        document.getElementById('uploadModal').style.display = 'block';
+    }
+    function closeUploadModal() { document.getElementById('uploadModal').style.display = 'none'; }
+
+    function toggleUploadMode() {
+        var mode = document.getElementById('uploadMode').value;
+        var cat = currentUploadTarget.category;
+        var isSingle = (mode === 'single');
+        document.getElementById('batchHint').style.display = isSingle ? 'none' : 'block';
+        
+        var fileLabel = document.getElementById('fileUploadLabel');
+        var fileInput = document.getElementById('upFiles');
+        if (isSingle) {
+            fileLabel.innerText = "选择图片 (仅限单张)";
+            fileInput.removeAttribute('multiple');
+        } else {
+            fileLabel.innerText = "选择图片 (支持多选)";
+            fileInput.setAttribute('multiple', 'multiple');
+        }
+        
+        if (cat !== 'ganfanren' && cat !== 'memes') {
+            document.getElementById('chefNameGroup').style.display = (isSingle && cat !== 'chefs') ? 'block' : 'none';
+            document.getElementById('dishNameGroup').style.display = isSingle ? 'block' : 'none';
+        }
+    }
+
+    function readFileAsDataURL(file) {
+        return new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function(e) { resolve(e.target.result); };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function submitAddGanfanren() {
+        var sdk = getSdk();
+        if (!sdk) return;
+        var name = document.getElementById('gfName').value.trim();
+        var words = document.getElementById('gfLines').value.trim();
+        var fileInput = document.getElementById('gfFiles');
+        if (!name) { showToast("干饭人名字不能为空！", "error"); return; }
+
+        var filesData = [];
+        if (fileInput.files.length > 0) {
+            for (var i = 0; i < fileInput.files.length; i++) {
+                var file = fileInput.files[i];
+                var base64 = await readFileAsDataURL(file);
+                filesData.push({ filename: file.name, data: base64 });
+            }
+        }
+        showToast("正在提交招募信息...", "");
+        sdk.apiPost("add_ganfanren", { name: name, words: words, images: filesData }).then(function(res) {
+            var json = parseSdkResponse(res);
+            if (json && json.status === 'ok') {
+                showToast("招募成功！", "success");
+                closeAddGanfanrenModal();
+                fetchData();
+            } else { showToast("招募失败", "error"); }
+        }).catch(function() { showToast("网络错误", "error"); });
+    }
+
+    async function submitUpload() {
+        var sdk = getSdk();
+        if (!sdk) return;
+        var mode = document.getElementById('uploadMode').value;
+        var chef = document.getElementById('upChef').value.trim();
+        var dish = document.getElementById('upDish').value.trim();
+        var mood = document.getElementById('upMood').value;
+        var fileInput = document.getElementById('upFiles');
+        
+        var cat = currentUploadTarget.category;
+        if (mode === 'single' && cat !== 'ganfanren' && cat !== 'memes') {
+            if (!dish && cat !== 'chefs') { showToast("请填写菜品名称！", "error"); return; }
+        }
+        if (fileInput.files.length === 0) { showToast("请选择图片", "error"); return; }
+
+        var filesData = [];
+        for (var i = 0; i < fileInput.files.length; i++) {
+            var file = fileInput.files[i];
+            var base64 = await readFileAsDataURL(file);
+            filesData.push({ filename: file.name, data: base64 });
+        }
+
+        showToast("上传中...", "");
+        var payload = {
+            category: currentUploadTarget.category,
+            world: currentUploadTarget.world,
+            char_name: currentUploadTarget.charName,
+            mode: mode,
+            single_chef: chef,
+            single_dish: dish,
+            mood: mood,
+            files: filesData
+        };
+
+        sdk.apiPost("upload_image", payload).then(function(res) {
+            var json = parseSdkResponse(res);
+            if (json && json.status === 'ok') {
+                showToast("上传成功！", "success");
+                closeUploadModal();
+                fetchData();
+            } else { showToast("上传失败", "error"); }
+        }).catch(function() { showToast("网络错误", "error"); });
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+        var attempts = 0;
+        function waitForSdk() {
+            var sdk = window.AstrBotPluginPage;
+            if (sdk) {
+                astrSdk = sdk;
+                sdk.ready().then(function() {
+                    loadMascot();
+                    fetchData();
+                }).catch(function(e) { console.error("SDK Ready failed", e); });
+            } else {
+                attempts++;
+                if (attempts < 20) setTimeout(waitForSdk, 100);
+                else showToast("环境错误：未检测到 AstrBot SDK", "error");
+            }
+        }
+        waitForSdk();
+    });
+  </script>
+</body>
+</html>
