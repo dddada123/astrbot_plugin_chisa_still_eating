@@ -1,4 +1,4 @@
-import os
+﻿import os
 import asyncio          # 补充导入
 from quart import jsonify, request, send_file
 import threading
@@ -18,9 +18,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "3.8.2"
+__version__ = "3.8.3"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.8.2", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.8.3", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -69,50 +69,123 @@ class FlavorFusionUltimate(Star):
         self.common_eat_pattern = re.compile("|".join([re.escape(str(k)) for k in common_eat_keywords if k]))
         self.common_drink_pattern = re.compile("|".join([re.escape(str(k)) for k in common_drink_keywords if k]))
 
-    # ================== 下载资源（优化后） ==================
+    # ================== 下载资源（修复后） ==================
     def _download_and_extract_assets(self):
         if self._is_download_thread_active:
             return
         self._is_download_thread_active = True
         self.is_downloading = True
         self.downloaded_bytes = 0
-        self.download_msg = "正在从 GitHub 远程拉取基础图库资源 (约 160MB)，请耐心等待..."
-        logging.info("[ChisaEating] 开始自动下载基础图库资源...")
+        self.download_msg = "正在从远程拉取图库源文件 (约 160MB)，请耐心等待..."
         
-        try:
-            # 资源包下载地址列表 (url, 是否使用系统代理)
-            # 镜像站禁用代理，直连保留代理
-            urls = [
-                # 首选镜像站（国内加速，禁用代理）
-                ("https://gh-proxy.com/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip", False),
-                # 备选镜像站（禁用代理）
-                ("https://edgeone.gh-proxy.com/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip", False),
-                ("https://hk.gh-proxy.com/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip", False),
-                ("https://gh.dpik.top/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip", False),
-                # 原备用镜像（也禁用代理）
-                ("https://ghproxy.net/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip", False),
-                # 最后直连 GitHub（保留系统代理，适用于需要代理的环境）
-                ("https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip", True)
-            ]
+        import concurrent.futures
+        import time
+        import requests
+        import hashlib
+        import zipfile
+        import shutil
+
+        logging.info("[ChisaEating] 🚀 开始图库部署准备...检测到国内网络环境，启动多线程智能测速引擎。")
+        logging.info("[ChisaEating] 📡 正在并发探测 4 个 Github 加速节点 (Timeout=10s)...")
+
+        base_url = "https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip"
+        mirrors = [
+            f"https://gh-proxy.com/{base_url}",
+            f"https://hk.gh-proxy.com/{base_url}",
+            f"https://edgeone.gh-proxy.com/{base_url}",
+            f"https://gh.dpik.top/{base_url}"
+        ]
+
+        def test_speed(url):
+            start = time.time()
+            try:
+                r = requests.get(url, stream=True, timeout=30, proxies={"http": None, "https": None})
+                r.raise_for_status()
+                latency = int((time.time() - start) * 1000)
+                r.close()
+                return url, latency
+            except:
+                return url, float('inf')
+
+        results = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+            future_to_url = {executor.submit(test_speed, url): url for url in mirrors}
             
+            # 第一阶段：只等 10 秒
+            done, not_done = concurrent.futures.wait(future_to_url.keys(), timeout=10)
+            
+            valid_results = {}
+            for future in done:
+                url = future_to_url[future]
+                try:
+                    _, lat = future.result()
+                    results[url] = lat
+                    if lat != float('inf'):
+                        valid_results[url] = lat
+                except:
+                    results[url] = float('inf')
+                    
+            if not valid_results and not_done:
+                logging.info("[ChisaEating] ⏳ 10秒内未捕获到极速节点，自动进入最高 30 秒深度探测模式...")
+                done2, not_done2 = concurrent.futures.wait(not_done, timeout=20)
+                for future in done2:
+                    url = future_to_url[future]
+                    try:
+                        _, lat = future.result()
+                        results[url] = lat
+                        if lat != float('inf'):
+                            valid_results[url] = lat
+                    except:
+                        results[url] = float('inf')
+                for future in not_done2:
+                    url = future_to_url[future]
+                    results[url] = float('inf')
+            else:
+                for future in not_done:
+                    url = future_to_url[future]
+                    results[url] = float('inf')
+
+        logging.info("[ChisaEating] 📊 节点测速报告 (TTFB):")
+        best_url = None
+        best_latency = float('inf')
+        for url in mirrors:
+            lat = results.get(url, float('inf'))
+            hostname = url.split('/')[2]
+            if lat != float('inf'):
+                logging.info(f"    👉 [{hostname}] 响应延迟: {lat}ms")
+                if lat < best_latency:
+                    best_latency = lat
+                    best_url = url
+            else:
+                logging.info(f"    👉 [{hostname}] 状态: 🔴 超时/连通失败/过慢被弃用")
+
+        urls_to_try = []
+        if best_url:
+            hostname = best_url.split('/')[2]
+            logging.info(f"[ChisaEating] 👑 测速决议：最优节点锁定为 [{hostname}] ({best_latency}ms)。")
+            logging.info("[ChisaEating] ⚡ 强制屏蔽全局代理 (Proxies disabled)，使用物理宽带直连开始高速下载！")
+            urls_to_try.append({"url": best_url, "proxies": {"http": None, "https": None}, "desc": f"节点 [{hostname}]"})
+        else:
+            logging.warning("[ChisaEating] ❌ 警告：所有国内加速镜像均无法连通（全部超时）！")
+
+        logging.info("[ChisaEating] 🔄 加入 Github 官方直连节点作为兜底...")
+        urls_to_try.append({"url": base_url, "proxies": None, "desc": "Github 官方节点 (遵循全局代理)"})
+
+        try:
             zip_path = os.path.join(self.image_mgr.data_dir, "assets_temp.zip")
             os.makedirs(self.image_mgr.data_dir, exist_ok=True)
-            
             TARGET_HASH = "239dda1a6de8ad4227f166eabe19db83c9ce4a15806e14fdbd7ecbbf98da30ae"
             success = False
-            
-            for url, use_proxy in urls:
+
+            for item in urls_to_try:
+                url = item["url"]
+                proxies = item["proxies"]
+                desc = item["desc"]
+                
                 try:
-                    logging.info(f"[ChisaEating] 尝试从 {url} 下载...")
+                    logging.info(f"[ChisaEating] ⬇️ 正在通过 {desc} 下载资源包 (160MB)...")
                     self.downloaded_bytes = 0
-                    # 根据是否使用代理决定请求参数
-                    if use_proxy:
-                        # 使用系统代理（默认行为）
-                        response = requests.get(url, stream=True, timeout=120)
-                    else:
-                        # 显式禁用代理（镜像站直连）
-                        proxies = {"http": None, "https": None}
-                        response = requests.get(url, stream=True, timeout=120, proxies=proxies)
+                    response = requests.get(url, stream=True, timeout=120, proxies=proxies)
                     response.raise_for_status()
                     
                     sha256_hash = hashlib.sha256()
@@ -126,10 +199,10 @@ class FlavorFusionUltimate(Star):
                     downloaded_hash = sha256_hash.hexdigest()
                     if downloaded_hash != TARGET_HASH:
                         logging.warning(
-                            f"[ChisaEating] 安全告警：下载的资源包哈希值不匹配！\n"
+                            f"[ChisaEating] ⚠️ 安全警告：下载的资源包哈希值不匹配！\n"
                             f"预期: {TARGET_HASH}\n"
                             f"实际: {downloaded_hash}\n"
-                            "已自动删除危险文件，尝试下一个节点..."
+                            "将自动删除危险文件，尝试下一个节点..."
                         )
                         if os.path.exists(zip_path):
                             os.remove(zip_path)
@@ -138,13 +211,16 @@ class FlavorFusionUltimate(Star):
                     success = True
                     break
                 except Exception as e:
-                    logging.warning(f"[ChisaEating] 下载节点失败 ({url}): {e}")
+                    logging.warning(f"[ChisaEating] ⚠️ 节点 {desc} 下载异常中断: {e}")
                     if os.path.exists(zip_path):
                         os.remove(zip_path)
-                        
+                    if url != base_url:
+                        logging.info("[ChisaEating] 🔄 正在启动终极兜底方案：切换至 Github 官方直连节点...")
+                        logging.info("[ChisaEating] 🌐 已恢复系统代理继承 (遵循 AstrBot 代理配置)，继续下载！")
+
             if success:
-                self.download_msg = "图库下载完成并经过 SHA-256 安全校验，正在解压部署..."
-                logging.info("[ChisaEating] 下载完成且完整性校验通过，开始解压...")
+                self.download_msg = "图库包拉取完成并经过 SHA-256 安全校验，正在解压部署..."
+                logging.info("[ChisaEating] ✅ 资源包下载并校验通过，开始解压...")
                 try:
                     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                         extract_tmp = os.path.join(self.image_mgr.data_dir, "extract_tmp")
@@ -166,7 +242,7 @@ class FlavorFusionUltimate(Star):
                             else:
                                 shutil.copy2(s, d)
                                 
-                    logging.info("[ChisaEating] 基础图库解压部署完成！")
+                    logging.info("[ChisaEating] 🎉 默认图库解压部署完成！")
                     self._reload_all_caches()
                 except Exception as e:
                     logging.error(f"[ChisaEating] 解压失败: {e}")
@@ -177,7 +253,7 @@ class FlavorFusionUltimate(Star):
                     if os.path.exists(extract_tmp):
                         shutil.rmtree(extract_tmp, ignore_errors=True)
             else:
-                logging.error("[ChisaEating] 基础图库所有下载节点均超时或哈希校验失败！请前往后台取消勾选强制下载，并根据 Readme 手动下载安装。")
+                logging.error("[ChisaEating] ❌ 所有图库加速节点均拉取超时或哈希校验失败，当前后台取消下载，请通过 Readme 手动下载安装。")
             
             if self.config.get("force_download_assets", False):
                 self.config["force_download_assets"] = False
@@ -187,7 +263,6 @@ class FlavorFusionUltimate(Star):
             self.downloaded_bytes = 0
             self._is_download_thread_active = False
 
-    # ================== 辅助函数（原样保留） ==================
     def _reload_all_caches(self):
         self.image_mgr.reload_caches(self.config, self.wv_settings)
         self.cached_ganfanren = self._get_ganfanren_data()
@@ -245,7 +320,7 @@ class FlavorFusionUltimate(Star):
                 f.write(f"- {name}\n")
             f.write("\n如需在 WebUI 指定卡池，请直接复制下方文本到【指定干饭人卡池】配置框：\n")
             f.write(";".join(names) + "\n")
-        logging.info(f"[ChisaEating v3.8.2] 📋 已更新可用干饭人清单到 plugin_data 目录，共 {len(names)} 名")
+        logging.info(f"[ChisaEating v3.8.3] 📋 已更新可用干饭人清单到 plugin_data 目录，共 {len(names)} 名")
 
     def _refresh_world_cache(self):
         raw_settings = {
@@ -599,7 +674,7 @@ class FlavorFusionUltimate(Star):
                     return
         
         if msg_text in ["千小妹还在吃帮助", "千咲吃什么帮助", "干饭帮助", "美食帮助", "千小妹帮助", "千小妹吃什么帮助"]:
-            help_text = """🌸 【千小妹跨次元干饭指南 v3.8.2】 🌸
+            help_text = """🌸 【千小妹跨次元干饭指南 v3.8.3】 🌸
 不知道今天吃啥？让异次元的导游们为你随机摇号吧！
 
 🎲 基础盲盒（全宇宙随机）
