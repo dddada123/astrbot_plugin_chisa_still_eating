@@ -289,7 +289,7 @@
     <header>
       <div>
         <h1>🔪 千小妹跨次元后厨</h1>
-        <div class="subtitle">v3.8.1 (Experimental) | 高性能流式数据大屏</div>
+        <div class="subtitle">v3.8.2 (Experimental) | 高性能流式数据大屏</div>
       </div>
       <button class="btn" onclick="fetchData()">🔄 刷新本地数据</button>
     </header>
@@ -433,6 +433,24 @@
     </div>
   </div>
 
+  
+  <!-- Rename Modal -->
+  <div id="renameModal" class="modal">
+    <div class="modal-content" style="max-width: 450px;">
+      <span class="close" onclick="closeRenameModal()">&times;</span>
+      <h2>重命名图片</h2>
+      <p style="color:var(--muted); font-size:14px;">请输入新文件名，会直接修改本地文件。</p>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <input type="text" id="rnName" style="flex: 3; padding: 10px; background: #1e1e1e; border: 1px solid var(--line); color: white; border-radius: 4px;" placeholder="新文件名">
+        <input type="text" id="rnExt" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid var(--line); color: white; border-radius: 4px;" placeholder=".jpg">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn" style="background:#555;" onclick="closeRenameModal()">取消</button>
+        <button class="btn" onclick="submitRename()">重命名</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Safe Confirm Modal -->
   <div id="confirmModal" class="modal">
     <div class="modal-content" style="max-width: 400px; text-align: center;">
@@ -547,6 +565,13 @@
             "图库又丰富啦，干饭的时候可以拿来活跃气氛了。",
             "这可是一张好图，千小妹已经妥善收藏了哦。"
         ],
+                'rename': [
+            "新名字记下了！千小妹的账本更新完毕~",
+            "换个名字换个心情，记录妥当啦！",
+            "改名成功！千小妹不会认错的~",
+            "新的代号已经生效，大家以后就叫它这个啦。",
+            "账本修改完成，千小妹做事可是很严谨的哦！"
+        ],
         'save_words': [
             "专属语录已保存！千小妹会记在小本本上的。",
             "哼哼，这句话很有干饭人的气势呢！",
@@ -585,6 +610,45 @@
         var idx = Math.floor(Math.random() * list.length);
         var msg = list[idx];
         setTimeout(function() { showMascotBubble(msg); }, 500);
+    }
+
+    
+    var currentRenamePath = "";
+    function openRenameModal(path, filename) {
+        if (isBatchMode) return;
+        currentRenamePath = path;
+        var dotIdx = filename.lastIndexOf(".");
+        var name = filename;
+        var ext = "";
+        if (dotIdx !== -1 && dotIdx !== 0) {
+            name = filename.substring(0, dotIdx);
+            ext = filename.substring(dotIdx);
+        }
+        document.getElementById("rnName").value = name;
+        document.getElementById("rnExt").value = ext;
+        document.getElementById("renameModal").style.display = 'block';
+    }
+    function closeRenameModal() { document.getElementById("renameModal").style.display = 'none'; }
+
+    function submitRename() {
+        var sdk = getSdk();
+        if (!sdk) return;
+        var newName = document.getElementById("rnName").value.trim();
+        var newExt = document.getElementById("rnExt").value.trim();
+        if (!newName) { showToast("文件名不能为空", "error"); return; }
+        
+        showToast("正在重命名...", "");
+        sdk.apiPost("rename_image", { old_path: currentRenamePath, new_name: newName, new_ext: newExt }).then(function(res) {
+            var json = parseSdkResponse(res);
+            if (json && json.status === 'ok') {
+                showToast("重命名成功！", "success");
+                triggerMascotQuote('rename');
+                closeRenameModal();
+                fetchData();
+            } else {
+                showToast("重命名失败：" + (json ? json.message : ""), "error");
+            }
+        }).catch(function() { showToast("请求失败", "error"); });
     }
 
     function customConfirm(msg) {
@@ -842,7 +906,7 @@
         if (isBatchMode) classes += ' batch-mode';
         if (selectedFiles.has(imgPath)) classes += ' selected';
         
-        htmlStr += '<div class="' + classes + '" onmousedown="startDragSelect(event, this, \'' + imgPath + '\')" onmouseenter="enterDragSelect(event, this, \'' + imgPath + '\')">';
+        htmlStr += '<div class="' + classes + '" onmousedown="startDragSelect(event, this, \'' + imgPath + '\')" onmouseenter="enterDragSelect(event, this, \'' + imgPath + '\')" onclick="openRenameModal(\'' + imgPath + '\', \'' + displayFile + '\')">';
         htmlStr += '<div class="img-skeleton"></div>';
         htmlStr += '<img data-path="' + imgPath + '" class="lazy-img" draggable="false" />';
         htmlStr += '<div class="img-name" title="' + displayFile + '">' + displayFile + '</div>';

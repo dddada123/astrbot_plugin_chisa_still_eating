@@ -18,9 +18,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "3.8.1"
+__version__ = "3.8.2"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.8.1", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.8.2", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -229,7 +229,7 @@ class FlavorFusionUltimate(Star):
                 f.write(f"- {name}\n")
             f.write("\n如需在 WebUI 指定卡池，请直接复制下方文本到【指定干饭人卡池】配置框：\n")
             f.write(";".join(names) + "\n")
-        logging.info(f"[ChisaEating v3.7.2] 📋 已更新可用干饭人清单到 plugin_data 目录，共 {len(names)} 名")
+        logging.info(f"[ChisaEating v3.8.2] 📋 已更新可用干饭人清单到 plugin_data 目录，共 {len(names)} 名")
 
     def _refresh_world_cache(self):
         raw_settings = {
@@ -354,6 +354,59 @@ class FlavorFusionUltimate(Star):
                 return jsonify({"status": "ok", "message": f"已成功删除干饭人 {name}"})
             else:
                 return jsonify({"status": "error", "message": "该干饭人不存在"}), 404
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    
+    async def page_rename_image(self):
+        """WebUI: 重命名本地图片"""
+        try:
+            import os
+            from quart import jsonify, request
+            payload = await request.get_json(silent=True)
+            if not payload:
+                raw_data = await request.get_data(as_text=True)
+                import json
+                try: payload = json.loads(raw_data)
+                except: payload = {}
+                
+            old_path = payload.get("old_path", "").strip()
+            new_name = payload.get("new_name", "").strip()
+            new_ext = payload.get("new_ext", "").strip()
+
+            if not old_path or not new_name:
+                return jsonify({"status": "error", "message": "参数缺失"}), 400
+
+            if new_ext and not new_ext.startswith("."): 
+                new_ext = "." + new_ext
+
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            try: base_data_path = get_astrbot_data_path()
+            except: base_data_path = "data"
+            base_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating"))
+
+            full_old_path = os.path.abspath(os.path.join(base_dir, old_path))
+            if not full_old_path.startswith(base_dir) or not os.path.exists(full_old_path):
+                return jsonify({"status": "error", "message": "原文件不存在或无权限"}), 404
+
+            parent_dir = os.path.dirname(full_old_path)
+            final_name = new_name + new_ext
+            full_new_path = os.path.abspath(os.path.join(parent_dir, final_name))
+
+            if not full_new_path.startswith(base_dir):
+                return jsonify({"status": "error", "message": "非法的新文件名"}), 400
+
+            if full_new_path != full_old_path:
+                counter = 1
+                base_new_name = new_name
+                while os.path.exists(full_new_path):
+                    final_name = f"{base_new_name}_{counter}{new_ext}"
+                    full_new_path = os.path.abspath(os.path.join(parent_dir, final_name))
+                    counter += 1
+                os.rename(full_old_path, full_new_path)
+
+            self._reload_all_caches()
+            return jsonify({"status": "ok", "message": "重命名成功"})
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -530,7 +583,7 @@ class FlavorFusionUltimate(Star):
                     return
         
         if msg_text in ["千小妹还在吃帮助", "千咲吃什么帮助", "干饭帮助", "美食帮助", "千小妹帮助", "千小妹吃什么帮助"]:
-            help_text = """🌸 【千小妹跨次元干饭指南 v3.7.2】 🌸
+            help_text = """🌸 【千小妹跨次元干饭指南 v3.8.2】 🌸
 不知道今天吃啥？让异次元的导游们为你随机摇号吧！
 
 🎲 基础盲盒（全宇宙随机）
@@ -1092,6 +1145,7 @@ class FlavorFusionUltimate(Star):
         register_api(f"/{self.plugin_name}/upload_image", self.page_upload_image, ["POST"], "上传图片")
         register_api(f"/{self.plugin_name}/delete_image", self.page_delete_image, ["POST"], "删除图片")
         register_api(f"/{self.plugin_name}/delete_ganfanren", self.page_delete_ganfanren, ["POST"], "删除干饭人")
+        register_api(f"/{self.plugin_name}/rename_image", self.page_rename_image, ["POST"], "重命名图片")
 
 
 
