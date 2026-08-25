@@ -1,5 +1,5 @@
 # 更新日志 (CHANGELOG)
-## [3.8.4] - 2026-08-26
+## [3.8.5] - 2026-08-26
 ### 🛡️ 安全更新 (Security Update)
 - **Zip-Slip 漏洞修复**：彻底重构了图库包下载引擎的解压逻辑，弃用原生的 extractall。新增了安全的逐文件提取校验机制，强制比对绝对路径锚点，彻底封堵因解压伪造 ZIP 包导致的跨目录写入风险。
 - **Web API 防逃逸加固**：针对 page_upload_image、page_delete_ganfanren、page_add_ganfanren 和 page_update_ganfanren 四大文件操作接口，实装了“非法字符拉黑”与“绝对路径边界锚定”的双重安全校验网，彻底解决了基于 ../ 字符串的目录逃逸和任意文件读写漏洞。
