@@ -18,9 +18,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "3.8.3"
+__version__ = "3.8.4"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.8.3", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.8.4", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -224,7 +224,13 @@ class FlavorFusionUltimate(Star):
                 try:
                     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                         extract_tmp = os.path.join(self.image_mgr.data_dir, "extract_tmp")
-                        zip_ref.extractall(extract_tmp)
+                        extract_tmp_abs = os.path.abspath(extract_tmp)
+                        for member in zip_ref.infolist():
+                            target_path = os.path.abspath(os.path.join(extract_tmp_abs, member.filename))
+                            if not target_path.startswith(extract_tmp_abs):
+                                logging.warning(f"[ChisaEating] ⚠️ 检测到 Zip-Slip 路径穿越试图: {member.filename}，已拦截！")
+                                continue
+                            zip_ref.extract(member, extract_tmp_abs)
                         
                         src_dir = extract_tmp
                         for root, dirs, files in os.walk(extract_tmp):
@@ -320,7 +326,7 @@ class FlavorFusionUltimate(Star):
                 f.write(f"- {name}\n")
             f.write("\n如需在 WebUI 指定卡池，请直接复制下方文本到【指定干饭人卡池】配置框：\n")
             f.write(";".join(names) + "\n")
-        logging.info(f"[ChisaEating v3.8.3] 📋 已更新可用干饭人清单到 plugin_data 目录，共 {len(names)} 名")
+        logging.info(f"[ChisaEating v3.8.4] 📋 已更新可用干饭人清单到 plugin_data 目录，共 {len(names)} 名")
 
     def _refresh_world_cache(self):
         raw_settings = {
@@ -400,11 +406,16 @@ class FlavorFusionUltimate(Star):
             payload = await request.get_json(silent=True) or {}
             name = payload.get("name", "").strip()
             words = payload.get("words", "").strip()
-            if not name: return jsonify({"status":"error"}), 400
+            if not name or ".." in name or "/" in name or "\\" in name: return jsonify({"status":"error"}), 400
             from astrbot.core.utils.astrbot_path import get_astrbot_data_path
             try: base_data_path = get_astrbot_data_path()
             except: base_data_path = "data"
+            if ".." in name or "/" in name or "\\" in name: return jsonify({"status": "error", "message": "非法名称"}), 400
             gf_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "ganfanren", name))
+            base_gf_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "ganfanren"))
+            if not gf_dir.startswith(base_gf_dir): return jsonify({"status": "error", "message": "非法越权访问"}), 403
+            base_gf_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "ganfanren"))
+            if not gf_dir.startswith(base_gf_dir): return jsonify({"status": "error", "message": "非法越权访问"}), 403
             if os.path.exists(gf_dir):
                 with open(os.path.join(gf_dir, "words.txt"), "w", encoding="utf-8") as f:
                     f.write(words)
@@ -439,7 +450,12 @@ class FlavorFusionUltimate(Star):
             except ImportError:
                 base_data_path = "data"
                 
+            if ".." in name or "/" in name or "\\" in name: return jsonify({"status": "error", "message": "非法名称"}), 400
             gf_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "ganfanren", name))
+            base_gf_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "ganfanren"))
+            if not gf_dir.startswith(base_gf_dir): return jsonify({"status": "error", "message": "非法越权访问"}), 403
+            base_gf_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "ganfanren"))
+            if not gf_dir.startswith(base_gf_dir): return jsonify({"status": "error", "message": "非法越权访问"}), 403
             if os.path.exists(gf_dir) and os.path.isdir(gf_dir):
                 shutil.rmtree(gf_dir)
                 return jsonify({"status": "ok", "message": f"已成功删除干饭人 {name}"})
@@ -546,6 +562,7 @@ class FlavorFusionUltimate(Star):
             payload = await request.get_json(silent=True) or {}
             category = payload.get("category")
             world = payload.get("world", "")
+            if ".." in world or "/" in world or "\\" in world: world = ""
             mode = payload.get("mode", "batch")
             single_chef = payload.get("single_chef", "").strip()
             single_dish = payload.get("single_dish", "").strip()
@@ -566,14 +583,19 @@ class FlavorFusionUltimate(Star):
                 if not world: world = "common"
                 target_dir = os.path.join(base_dir, "memes", world, mood)
             elif category == "ganfanren":
-                target_dir = os.path.join(base_dir, "ganfanren", payload.get("char_name"))
+                char_name = payload.get("char_name", "")
+                if ".." in char_name or "/" in char_name or "\\" in char_name: char_name = ""
+                target_dir = os.path.join(base_dir, "ganfanren", char_name)
             else:
                 return jsonify({"status":"error", "message": "Invalid category"}), 400
                 
+            target_dir = os.path.abspath(target_dir)
+            if not target_dir.startswith(os.path.abspath(base_dir)): return jsonify({"status": "error", "message": "跨目录上传拒绝"}), 403
             os.makedirs(target_dir, exist_ok=True)
             
             for f in files:
-                fname = f.get("filename")
+                fname = f.get("filename", "")
+                if ".." in fname or "/" in fname or "\\" in fname: continue
                 b64 = f.get("data", "")
                 if not fname or not b64: continue
                 
@@ -674,7 +696,7 @@ class FlavorFusionUltimate(Star):
                     return
         
         if msg_text in ["千小妹还在吃帮助", "千咲吃什么帮助", "干饭帮助", "美食帮助", "千小妹帮助", "千小妹吃什么帮助"]:
-            help_text = """🌸 【千小妹跨次元干饭指南 v3.8.3】 🌸
+            help_text = """🌸 【千小妹跨次元干饭指南 v3.8.4】 🌸
 不知道今天吃啥？让异次元的导游们为你随机摇号吧！
 
 🎲 基础盲盒（全宇宙随机）
@@ -1380,8 +1402,8 @@ class FlavorFusionUltimate(Star):
             words = payload.get("words", "").strip()
             images = payload.get("images", [])
             
-            if not name:
-                return jsonify({"status": "error", "message": "干饭人名字不能为空"}), 400
+            if not name or ".." in name or "/" in name or "\\" in name:
+                return jsonify({"status": "error", "message": "干饭人名字为空或包含非法字符"}), 400
                 
             try:
                 from astrbot.core.utils.astrbot_path import get_astrbot_data_path
@@ -1390,7 +1412,8 @@ class FlavorFusionUltimate(Star):
                 base_data_path = "data"
                 
             base_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating"))
-            gf_dir = os.path.join(base_dir, "ganfanren", name)
+            gf_dir = os.path.abspath(os.path.join(base_dir, "ganfanren", name))
+            if not gf_dir.startswith(os.path.abspath(os.path.join(base_dir, "ganfanren"))): return jsonify({"status": "error", "message": "非法越权访问"}), 403
             os.makedirs(gf_dir, exist_ok=True)
             
             words_path = os.path.join(gf_dir, "words.txt")
