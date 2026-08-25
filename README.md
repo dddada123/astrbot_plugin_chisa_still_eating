@@ -9,7 +9,7 @@
 一个为 [AstrBot](https://github.com/Soulter/AstrBot) 深度定制的跨次元多世界干饭系统。
 每天都在纠结吃什么？那就让异次元的向导们来帮你随机摇号吧！把食物图片扔进对应的文件夹，它就会自动变成菜单里的美味！通过完美的分类引擎，为你的群聊带来极具情感连接和随机惊喜的沉浸式“吃什么”体验！
 
-当前版本：3.7.2 | 作者：Rua432
+当前版本：3.7.3 | 作者：Rua432
 
 <div align="center">
   <img src="https://count.getloli.com/@chisa_still_eating?name=chisa_still_eating&theme=asoul&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto">
