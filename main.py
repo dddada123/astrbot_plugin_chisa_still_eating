@@ -20,7 +20,7 @@ from .responder import Responder
 
 __version__ = "3.7.3"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.7.2", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.7.3", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
