@@ -1,4 +1,4 @@
-﻿import os
+import os
 import asyncio          # 补充导入
 from quart import jsonify, request, send_file
 import threading
@@ -69,7 +69,7 @@ class FlavorFusionUltimate(Star):
         self.common_eat_pattern = re.compile("|".join([re.escape(str(k)) for k in common_eat_keywords if k]))
         self.common_drink_pattern = re.compile("|".join([re.escape(str(k)) for k in common_drink_keywords if k]))
 
-    # ================== 下载资源（修复后） ==================
+    # ================== 下载资源（优化后） ==================
     def _download_and_extract_assets(self):
         if self._is_download_thread_active:
             return
@@ -80,10 +80,19 @@ class FlavorFusionUltimate(Star):
         logging.info("[ChisaEating] 开始自动下载基础图库资源...")
         
         try:
+            # 资源包下载地址列表 (url, 是否使用系统代理)
+            # 镜像站禁用代理，直连保留代理
             urls = [
-                "https://gh-proxy.com/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip",
-                "https://ghproxy.net/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip",
-                "https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip"
+                # 首选镜像站（国内加速，禁用代理）
+                ("https://gh-proxy.com/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip", False),
+                # 备选镜像站（禁用代理）
+                ("https://edgeone.gh-proxy.com/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip", False),
+                ("https://hk.gh-proxy.com/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip", False),
+                ("https://gh.dpik.top/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip", False),
+                # 原备用镜像（也禁用代理）
+                ("https://ghproxy.net/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip", False),
+                # 最后直连 GitHub（保留系统代理，适用于需要代理的环境）
+                ("https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip", True)
             ]
             
             zip_path = os.path.join(self.image_mgr.data_dir, "assets_temp.zip")
@@ -92,11 +101,18 @@ class FlavorFusionUltimate(Star):
             TARGET_HASH = "239dda1a6de8ad4227f166eabe19db83c9ce4a15806e14fdbd7ecbbf98da30ae"
             success = False
             
-            for url in urls:
+            for url, use_proxy in urls:
                 try:
                     logging.info(f"[ChisaEating] 尝试从 {url} 下载...")
                     self.downloaded_bytes = 0
-                    response = requests.get(url, stream=True, timeout=120)
+                    # 根据是否使用代理决定请求参数
+                    if use_proxy:
+                        # 使用系统代理（默认行为）
+                        response = requests.get(url, stream=True, timeout=120)
+                    else:
+                        # 显式禁用代理（镜像站直连）
+                        proxies = {"http": None, "https": None}
+                        response = requests.get(url, stream=True, timeout=120, proxies=proxies)
                     response.raise_for_status()
                     
                     sha256_hash = hashlib.sha256()
