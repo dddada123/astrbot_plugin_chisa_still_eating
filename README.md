@@ -9,16 +9,45 @@
 一个为 [AstrBot](https://github.com/Soulter/AstrBot) 深度定制的跨次元多世界干饭系统。
 每天都在纠结吃什么？那就让异次元的向导们来帮你随机摇号吧！把食物图片扔进对应的文件夹，它就会自动变成菜单里的美味！通过完美的分类引擎，为你的群聊带来极具情感连接和随机惊喜的沉浸式“吃什么”体验！
 
-当前版本：3.8.5 | 作者：Rua432
+当前版本：3.9.1 | 作者：Rua432
 
 <div align="center">
   <img src="https://count.getloli.com/@chisa_still_eating?name=chisa_still_eating&theme=asoul&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto">
 </div>
 
+
 ## 特别鸣谢
 感谢 [MimoKit](https://github.com/MimoKit) 移植的 GsCore 版本 —— [ChisaEating](https://github.com/MimoKit/ChisaEating)
 
 ---
+
+## 🏬 千小妹商会 (v3.9.1 核心扩展)
+
+为了让大家能更方便、更直观地扩展和管理庞大的跨次元食物库，我们在 3.9.1 版本正式实装了**「千小妹商会」**生态系统！您可以自由浏览由官方或社区精选的图包（DLC），并一键装载到您的机器人后厨中。
+
+### 🖥️ WEBUI 沉浸式云端商城
+我们在 AstrBot 的插件管理面板中内置了专属的商会界面。您无需复杂配置，只需点开面板即可享受图形化的进货体验。
+- **美观的橱窗展示**：商品支持动态徽章、封面惰性加载，多分类清晰排版。
+- **智能测速与下载风控**：内置多节点（镜像/直连）智能测速，确保下载又快又稳；同时拥有全局并发下载锁，避免系统卡死。
+
+![商会总体界面](https://s1.imagehub.cc/images/2026/08/27/fbfe935becd5e554ff526e61cc67a967.png)
+
+*进货时自带极其美观的实时进度提示与动态加载：*
+![WEBUI实时进度播报功能](https://s1.imagehub.cc/images/2026/08/27/7e642c09fa57a8219ca2f2914c671d7d.png)
+
+### 💬 QQ / 群聊原生交互终端
+即使不在电脑前，身为管理员的您也可以直接在 QQ 群或私聊中唤醒千小妹，进行极速云端进货。
+- 发送 千小妹商会 即可唤起拥有 60 秒倒计时的交互式菜单。
+- **🛡️ 合并转发防霸屏系统**：无论是冗长的帮助文档（千小妹帮助 / 千小妹速查），还是庞大的商品名录，均全面采用 **OneBot 标准合并转发** 机制发送。不仅图文排版极佳，更能智能读取并显示机器人的真实头像，彻底告别群内长文本刷屏烦恼！
+
+![唤醒商会](https://s1.imagehub.cc/images/2026/08/27/63f51a133ab1bbf81d2b21319ea42f8b.png)
+
+根据通道选择，系统会返回极其干净整齐的商品名录，并引导您输入短指令（如 进货[fd0001]）发起下载：
+![进货进度播报](https://s1.imagehub.cc/images/2026/08/27/c2e0828a7a4530b1b8ce9a609bd0b2f5.png)
+
+所有下载与网络状况，均具备完善的异常拦截和断连反馈体系：
+![断连反馈提醒](https://s1.imagehub.cc/images/2026/08/27/f29313ca64d2beda5e59dab57721a7fc.png)
+
 
 ## 🌟 核心特色与功能
 
@@ -209,3 +238,6 @@ data/plugin_data/astrbot_plugin_chisa_still_eating/
   <img src="assets/wechat_pay.png" width="200" height="200" alt="微信赞助码" style="margin-right: 20px;">
   <img src="assets/alipay.png" width="200" height="200" alt="支付宝赞助码">
 </div>
+
+
+

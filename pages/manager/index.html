@@ -279,7 +279,44 @@
     .status-toast.success { background: #388e3c; }
     .status-toast.error { background: var(--primary); }
     .modal-buttons { display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px; }
-  </style>
+  
+    /* ========================================= */
+    /* DLC Store Layout Styles */
+    /* ========================================= */
+    .store-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid var(--line); flex-wrap: wrap; gap: 10px; }
+    .network-select { display: flex; align-items: center; color: var(--muted); font-size: 14px;}
+    .network-select select { background: #2a2a2a; color: white; border: 1px solid var(--line); padding: 8px; border-radius: 4px; margin-left: 10px; outline: none; }
+    .store-actions { display: flex; gap: 10px; }
+    
+    .store-filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-btn { background: #2a2a2a; border: 1px solid var(--line); color: var(--muted); padding: 6px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.2s ease; }
+    .filter-btn.active, .filter-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    
+    .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+    .store-card { background: #1a1a1a; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; transition: transform 0.2s; display: flex; flex-direction: column;}
+    .store-card:hover { transform: translateY(-5px) !important; border-color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    .store-card-img-placeholder { height: 160px; background: #2a2a2a; display: flex; align-items: center; justify-content: center; color: var(--muted); font-family: 'Consolas', 'Courier New', monospace; border-bottom: 1px solid var(--line); font-size: 20px; font-weight: bold; letter-spacing: 1px;}
+    .store-card-info { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; }
+    .store-card-title { font-size: 18px; font-weight: bold; color: white; margin-bottom: 5px; }
+    .store-card-meta { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .store-card-desc { font-size: 13px; color: #ccc; margin-bottom: 15px; line-height: 1.5; flex-grow: 1; }
+    .store-download-btn { width: 100%; background: rgba(226, 172, 107, 0.1); color: var(--primary); border: 1px solid var(--primary); margin-top: auto;}
+    .store-download-btn:hover { background: var(--primary); color: #121212; }
+
+  
+    @keyframes btnDownloading {
+      0% { background-position: 0 0; }
+      100% { background-position: 40px 40px; }
+    }
+    .btn-downloading {
+      background-image: linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent) !important;
+      background-size: 40px 40px !important;
+      animation: btnDownloading 1s linear infinite !important;
+      background-color: #f39c12 !important;
+      color: white !important;
+      border-color: #e67e22 !important;
+    }
+</style>
 </head>
 <body>
   <div class="bg-overlay"></div>
@@ -289,7 +326,11 @@
     <header>
       <div>
         <h1>🔪 千小妹跨次元后厨</h1>
-        <div class="subtitle">v3.8.5 (Experimental) | 高性能流式数据大屏</div>
+        <div class="subtitle" style="display:flex; align-items:center; gap:10px;">
+        <span>v3.9.1 (Experimental) | 高性能流式数据大屏</span>
+        <span style="color:var(--muted);">|</span>
+        <button class="btn btn-small" style="background:transparent; border:1px dashed var(--line); color:var(--muted); padding:3px 8px; font-size:12px; cursor:pointer;" onclick="openSkinModal()">🎨 主题皮肤: 默认 (红黑)</button>
+      </div>
       </div>
       <button class="btn" onclick="fetchData()">🔄 刷新本地数据</button>
     </header>
@@ -301,7 +342,7 @@
       <button class="tab-btn" onclick="switchTab('tab-food', this)">🍔 食物总仓</button>
       <button class="tab-btn" onclick="switchTab('tab-drink', this)">🧋 饮品仓库</button>
       <button class="tab-btn" onclick="switchTab('tab-dark', this)">☠️ 黑暗料理</button>
-      <button class="tab-btn" onclick="switchTab('tab-dlc', this)">🛒 DLC 商店</button>
+      <button class="tab-btn" onclick="switchTab('tab-dlc', this)">✂️ 千小妹商会</button>
     </div>
 
     <!-- Sections -->
@@ -329,11 +370,63 @@
 
     
     <div id="tab-dlc" class="section">
-      <div class="coming-soon" style="padding: 50px 20px; font-size: 18px;">
-        <h2>🛒 跨次元美食 DLC 商店</h2>
-        <p style="color: var(--muted); margin-bottom: 20px;">这里未来将提供一键下载精选整合包、导游拓展包功能。</p>
-        <button class="btn" style="background:#555; cursor:not-allowed;" onclick="showToast('暂未上线此功能，敬请期待！', 'error')">暂未上线此功能</button>
+      <!-- 固定的本地 Banner -->
+      <div class="store-banner-container" style="width: 100%; aspect-ratio: 7 / 1; min-height: 120px; max-height: 240px; border-radius: 8px; margin-bottom: 20px; overflow: hidden; border: 1px solid var(--line); background: #1a1a1a;">
+         <img id="store-banner-img" src="./banner.jpg" alt="Store Banner" style="width: 100%; height: 100%; object-fit: cover; display: block;" 
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+         <div style="display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); font-size: 16px; letter-spacing: 1px; border: 1px dashed var(--line); border-radius: 8px; background: #2a2a2a;">
+            <div>[Banner 占位区]</div>
+            <div style="font-size: 12px; margin-top: 8px;">请将 banner.jpg 放入 pages/manager 目录</div>
+         </div>
       </div>
+
+            <div class="top-store-switch" style="display: flex; gap: 10px; padding: 10px 20px; background: #1a1a1a; border: 1px solid var(--line); justify-content: center; margin-bottom: 15px; border-radius: 8px;">
+        <button class="btn btn-small" id="btn-official-store" style="background: var(--primary);" onclick="switchStoreType('official')">🛒 千小妹严选</button>
+        <button class="btn btn-small" id="btn-custom-store" style="background: #333;" onclick="switchStoreType('custom')">🌐 自定义源 (预留)</button>
+      </div>
+
+      <div class="store-controls" style="flex-direction: column; align-items: stretch; gap: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 10px;">
+              <div class="network-select">
+                  <label>下载节点引擎: </label>
+                  <select id="dlc-node">
+                  <option value="smart">🚀 智能测速国内镜像 (国内免梯推荐)</option>
+                  <option value="direct">🌐 Github 原生拉取 (海外/代理专属)</option>
+                  <option value="gh-proxy.com">⚡ gh-proxy.com</option>
+                  <option value="hk.gh-proxy.com">⚡ hk.gh-proxy.com</option>
+                  <option value="gh.dpik.top">⚡ gh.dpik.top</option>
+                  <option value="edgeone.gh-proxy.com">⚡ edgeone.gh-proxy.com</option>
+              </select>
+          </div>
+          <div class="store-actions">
+              <button class="btn" onclick="fetchStoreIndex()">🔄 获取线上目录</button>
+              <button class="btn" onclick="fetchStoreCovers()">🖼️ 缓存橱窗图</button>
+              <button class="btn" style="background:#444;" onclick="document.getElementById('custom-repo-box').style.display = document.getElementById('custom-repo-box').style.display === 'none' ? 'flex' : 'none'">⚙️ 高级设置</button>
+          </div>
+          </div>
+          
+          <div id="custom-repo-box" style="display: none; width: 100%; flex-direction: column; gap: 10px; background: #222; padding: 15px; border-radius: 8px; border: 1px dashed #555;">
+              <div style="color: var(--primary); font-weight: bold; font-size: 14px;">🛠️ 第三方自建源设置 (开发者选项)</div>
+              <div style="font-size: 12px; color: var(--muted);">你可以通过填写自定义的仓库地址，来接入社区其他作者提供的第三方 DLC 商店。填写后点击上方的【获取线上目录】生效。</div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                  <label style="font-size: 13px; color: #ccc;">自定义主仓库地址:</label>
+                  <input type="text" id="custom-repo-url" placeholder="例如: https://github.com/YourName/RepoName" style="flex-grow: 1; background: #121212; border: 1px solid #444; color: white; padding: 6px; border-radius: 4px;">
+                  <button class="btn btn-small" style="background: #333;" onclick="document.getElementById('custom-repo-url').value=''; showToast('已恢复官方默认源，请重新获取目录');">恢复官方源</button>
+              </div>
+          </div>
+      </div>
+      
+      <div class="store-filters">
+          <button class="filter-btn active" onclick="filterStore('all', this)">📦 全部资源</button>
+          <button class="filter-btn" onclick="filterStore('gf', this)">🏃 干饭人</button>
+          <button class="filter-btn" onclick="filterStore('cf', this)">👨‍🍳 大厨</button>
+          <button class="filter-btn" onclick="filterStore('gd', this)">🌸 导游MEME</button>
+          <button class="filter-btn" onclick="filterStore('fd', this)">🍔 食物总仓</button>
+          <button class="filter-btn" onclick="filterStore('dr', this)">🧋 饮品仓库</button>
+          <button class="filter-btn" onclick="filterStore('dk', this)">☠️ 黑暗料理</button>
+      </div>
+      
+      <div id="store-content-area" class="store-grid"></div>
     </div>
 
     <!-- Container divs that will be populated by renderCategory -->
@@ -367,7 +460,7 @@
   </div>
 
   <div id="mascotBubble" class="mascot-bubble"></div>
-  <img id="mascot" src="" class="chisa-mascot" alt="千咲监工" title="千小妹正在后厨监工！" style="display:none;" onclick="pokeMascot()" />
+  <img id="mascot" src="" class="chisa-mascot" alt="千小妹监工" title="千小妹正在后厨监工！" style="display:none;" onclick="pokeMascot()" />
 
   <!-- Add Ganfanren Modal -->
   <div id="addGanfanrenModal" class="modal">
@@ -434,6 +527,38 @@
   </div>
 
   
+    <!-- UI Skin Modal Skeleton -->
+  <div id="skinModal" class="modal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <span class="close" onclick="document.getElementById('skinModal').style.display='none'">&times;</span>
+      <h3 style="margin-top: 0; color: var(--primary);">🎨 跨次元后厨 - 主题装扮</h3>
+      <p style="color: var(--muted); font-size: 13px; margin-bottom: 20px;">
+        在这里可以切换通过 DLC 商城下载的第三方皮肤。<br>目前仅提供结构展示，核心引擎正在规划中...
+      </p>
+      
+      <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="padding: 15px; background: #2a2a2a; border: 1px solid var(--primary); border-radius: 8px; display:flex; justify-content:space-between; align-items:center;">
+              <span style="color:white; font-weight:bold;">● 默认主题 (纯血红黑)</span>
+              <span style="color:var(--primary); font-size:12px;">✅ 正在使用</span>
+          </div>
+          <div style="padding: 15px; background: #1a1a1a; border: 1px dashed var(--line); border-radius: 8px; display:flex; justify-content:space-between; align-items:center; color: var(--muted);">
+              <span>● [zt0001] 猩红之夜 (未下载)</span>
+              <button class="btn btn-small" style="background:#444;" disabled>使用</button>
+          </div>
+          <div style="padding: 15px; background: #1a1a1a; border: 1px dashed var(--line); border-radius: 8px; display:flex; justify-content:space-between; align-items:center; color: var(--muted);">
+              <span>● [zt0002] 清凉薄荷 (未下载)</span>
+              <button class="btn btn-small" style="background:#444;" disabled>使用</button>
+          </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    function openSkinModal() {
+        document.getElementById('skinModal').style.display='flex';
+    }
+  </script>
+
   <!-- Rename Modal -->
   <div id="renameModal" class="modal">
     <div class="modal-content" style="max-width: 450px;">
@@ -651,6 +776,454 @@
         }).catch(function() { showToast("请求失败", "error"); });
     }
 
+    
+    function fetchStoreIndex() {
+        var node = document.getElementById("dlc-node").value;
+        var customUrl = document.getElementById("custom-repo-url") ? document.getElementById("custom-repo-url").value : "";
+        showToast("正在请求线上目录...", "");
+        var sdk = getSdk();
+        if(!sdk) return;
+        
+        sdk.apiPost("fetch_dlc_catalog", { node: node, custom_url: customUrl }).then(function(res) {
+            var data = parseSdkResponse(res);
+            if (data && data.status === 'success') {
+                try { if (customUrl) { localStorage.setItem("chisa_custom_repo", customUrl); } else { localStorage.removeItem("chisa_custom_repo"); } } catch(e) { console.warn("localStorage is not available in sandbox."); }
+                showToast("目录拉取成功！", "success");
+                loadCatalog();
+            } else if (data && data.message === 'ALL_NODES_FAILED') {
+                showToast("加速节点失效，已为您重置测速引擎，请再点一次！", "error");
+            } else {
+                showToast("拉取失败: " + (data ? data.message : "网络错误"), "error");
+            }
+        }).catch(function(e) {
+            showToast("拉取发生异常", "error");
+        });
+    }
+    
+    function fetchStoreCovers() {
+        var node = document.getElementById("dlc-node").value;
+        var customUrl = document.getElementById("custom-repo-url") ? document.getElementById("custom-repo-url").value : "";
+        showToast("指令已下发: 正在增量拉取缺失的封面...", "");
+        var sdk = getSdk();
+        if (!sdk) return;
+        
+        var images = document.querySelectorAll('.store-card-img');
+        for(var i=0; i<images.length; i++){ (function(img, index) {
+            var coverId = img.getAttribute('data-cover');
+            // Only fetch if it is currently showing the placeholder
+            if (coverId && img.src.indexOf('hello.jpg') !== -1) {
+                // Add loading spinner or visual cue to the card here if needed
+                img.style.opacity = 0.3;
+                setTimeout(function() {
+                    sdk.apiPost("fetch_single_cover", { file: coverId, node: node, custom_url: customUrl }).then(function(res) {
+                        var data = parseSdkResponse(res);
+                        if (data && data.status === 'success') {
+                            img.style.opacity = 0;
+                            setTimeout(function() {
+                                // Now request it natively from local via dynamic loader endpoint
+                                sdk.apiGet("dlc_cover", { file: coverId }).then(function(res2) {
+                                    var data2 = parseSdkResponse(res2);
+                                    if(data2 && data2.data_url) {
+                                        img.src = data2.data_url;
+                                        if(img.nextElementSibling) img.nextElementSibling.style.display = 'none';
+                                        img.onload = function() { img.style.opacity = 1; };
+                                    } else {
+                                        img.style.opacity = 1; // Fallback
+                                    }
+                                });
+                            }, 300);
+                        } else {
+                            img.style.opacity = 1; // Fallback
+                        }
+                    }).catch(function(e) {
+                        img.style.opacity = 1;
+                    });
+                }, index * 200);
+            }
+        })(images[i], i);
+
+        }
+    }
+    
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>'"]/g, function(tag) {
+            var charsToReplace = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' };
+            return charsToReplace[tag] || tag;
+        });
+    }
+
+    var storeCatalog = [];
+    var catalogLoaded = false;
+    
+    function loadCatalog() {
+        var sdk = getSdk();
+        if (!sdk) return;
+        var container = document.getElementById('store-content-area');
+        container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 50px;">正在读取本地目录...</div>';
+        
+        sdk.apiGet("dlc_catalog", {}).then(function(res) {
+            var data = parseSdkResponse(res);
+            
+            // AstrBot's SDK sometimes automatically unwraps the "data" field from the response.
+            // If the inner data is an array (our catalog), data itself becomes the array!
+            var isArray = Array.isArray(data);
+            var isSuccessObject = data && data.status === 'success' && data.data;
+            var isMissing = data && data.status === 'missing';
+            
+            if (isArray || isSuccessObject) {
+                storeCatalog = isArray ? data : data.data;
+                catalogLoaded = true;
+                renderStoreGrid('all');
+                loadDownloadedRecords();
+            } else if (isMissing) {
+                container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 50px;">' +
+                    '<div style="font-size: 24px; margin-bottom: 20px;">📦 未找到本地缓存的商品目录</div>' +
+                    '<button class="btn" style="padding: 10px 20px; font-size: 16px;" onclick="fetchStoreIndex()">点击获取线上目录</button>' +
+                    '<div style="color: var(--muted); font-size: 12px; margin-top: 20px;">目录拉取成功后会永久保存在 plugin_data 中。</div>' +
+                '</div>';
+            } else {
+                var errInfo = data ? JSON.stringify(data) : "网络请求或解析失败，请按 F12 检查控制台";
+                container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #cc4444; padding: 50px;">读取目录失败<br><br><span style="font-size: 12px; color: #aaa;">' + errInfo + '</span></div>';
+            }
+        });
+    }
+
+    
+        // Frontend Concurrency Queue (3.9.10 Optimization)
+        var imageQueue = [];
+        var activeRequests = 0;
+        var MAX_CONCURRENT = 3;
+
+        function processQueue() {
+            if (imageQueue.length === 0 || activeRequests >= MAX_CONCURRENT) return;
+            var task = imageQueue.shift();
+            activeRequests++;
+            task().then(function() {
+                activeRequests--;
+                processQueue();
+            }).catch(function() {
+                activeRequests--;
+                processQueue();
+            });
+        }
+        
+        function enqueueImageLoad(img, coverId) {
+            return new Promise(function(resolve, reject) {
+                var localSrc = "./plugin_data/astrbot_plugin_chisa_still_eating/Webui-PIC/Shop/cover/" + coverId + "?t=" + new Date().getTime();
+                var tmpImg = new Image();
+                tmpImg.onload = function() {
+                    img.src = localSrc;
+                    img.style.opacity = 1;
+                    if(img.nextElementSibling) img.nextElementSibling.style.display = 'none';
+                    resolve();
+                };
+                tmpImg.onerror = function() {
+                    var sdk = getSdk();
+                    if (sdk) {
+                        sdk.apiGet("dlc_cover", { file: coverId }).then(function(res) {
+                            var data = parseSdkResponse(res);
+                            if(data && data.status === 'success' && data.data_url) {
+                                img.src = data.data_url;
+                                img.style.opacity = 1;
+                                if(img.nextElementSibling) img.nextElementSibling.style.display = 'none';
+                            }
+                            resolve();
+                        }).catch(resolve);
+                    } else {
+                        resolve();
+                    }
+                };
+                tmpImg.src = "./plugin_data/astrbot_plugin_chisa_still_eating/Webui-PIC/Shop/cover/" + coverId;
+            });
+        }
+
+        var storeObserver = new IntersectionObserver(function(entries, observer) {
+            for(var i=0; i<entries.length; i++) {
+                var entry = entries[i];
+                var img = entry.target;
+                
+                if (entry.isIntersecting) {
+                    if (!img.dataset.loaded && !img.dataset.timer) {
+                        // 200ms debounce
+                        (function(targetImg) {
+                            targetImg.dataset.timer = setTimeout(function() {
+                                targetImg.dataset.timer = "";
+                                var coverId = targetImg.getAttribute('data-cover');
+                                if(coverId && !targetImg.dataset.loaded) {
+                                    targetImg.dataset.loaded = "true";
+                                    imageQueue.push(function() { return enqueueImageLoad(targetImg, coverId); });
+                                    processQueue();
+                                }
+                                observer.unobserve(targetImg);
+                            }, 200);
+                        })(img);
+                    }
+                } else {
+                    if (img.dataset.timer) {
+                        clearTimeout(img.dataset.timer);
+                        img.dataset.timer = "";
+                    }
+                }
+            }
+        }, { rootMargin: "100px 0px" });
+
+    function renderStoreGrid(filterCat) {
+        if (!filterCat) filterCat = 'all';
+        var container = document.getElementById('store-content-area');
+        container.innerHTML = '';
+        
+        var filtered = [];
+        if (filterCat === 'all') {
+            filtered = storeCatalog;
+        } else {
+            for (var i = 0; i < storeCatalog.length; i++) {
+                if (storeCatalog[i].cat === filterCat) {
+                    filtered.push(storeCatalog[i]);
+                }
+            }
+        }
+        
+        if (filtered.length === 0) {
+            container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 50px;">暂无该分类商品</div>';
+            return;
+        }
+
+        var htmlStr = '';
+        for (var j = 0; j < filtered.length; j++) {
+            var item = filtered[j];
+            var safeId = escapeHTML(item.id);
+            var safeExt = escapeHTML(item.cover_ext || 'jpg');
+            var safeTitle = escapeHTML(item.title);
+            var safeAuthor = escapeHTML(item.author);
+            var safeSize = escapeHTML(item.size);
+            var safeDesc = escapeHTML(item.desc);
+            var safeHash = escapeHTML(item.sha256);
+            
+            htmlStr += '<div class="store-card fade-in" style="opacity:0; transform:translateY(15px); transition: opacity 0.5s ease, transform 0.5s ease;">' +
+                '<div style="height: 130px; background: #2a2a2a; border-bottom: 1px solid var(--line); overflow: hidden; position: relative; display:flex; align-items:center; justify-content:center;">' +
+                    '<img class="store-card-img" src="./hello.jpg" data-cover="' + safeId + '.' + safeExt + '" style="width: 100%; height: 100%; object-fit: cover; transition: opacity 0.4s ease;" ' +
+                         'onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">' +
+                    '<div style="display:none; width:100%; height:100%; align-items:center; justify-content:center; color:#d9a5a5; font-family:\'Consolas\', \'Courier New\', monospace; font-size:20px; font-weight:bold; letter-spacing:1px; background:#2e1a1a;">' +
+                        '[' + safeId + ']' +
+                    '</div>' +
+                '</div>' +
+                '<div class="store-card-info" style="padding: 10px;">' +
+                    '<div class="store-card-title" style="margin-bottom: 12px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; width: 100%;">' + parseTitleTag(safeTitle) + '</div>' +
+                    '<div class="store-card-meta" style="font-size: 11px; margin-bottom: 8px; color: var(--muted); line-height: 1.6;">' +
+                        '作者: ' + safeAuthor + ' | 大小: ' + safeSize + '<br>' +
+                        '编号: <span style="color:#d9a5a5; font-family: monospace;">[' + safeId + ']</span>' +
+                    '</div>' +
+                    '<div class="store-card-desc" style="font-size: 12px; margin-bottom: 10px;">' + safeDesc + '</div>' +
+                    '';
+            var isDownloaded = false;
+            for(var k=0; k<downloadedRecords.length; k++){ if(downloadedRecords[k] === item.id) { isDownloaded = true; break; } }
+            var btnStyle = isDownloaded ? 'background: rgba(25, 135, 84, 0.15); color: #198754; border-color: #157347;' : '';
+            var btnText = isDownloaded ? '🔄 重新下载' : '⬇️ 下载部署';
+            htmlStr += '<button class="btn store-download-btn" style="padding: 6px; font-size: 12px; ' + btnStyle + '" onclick="downloadDLC(\'' + safeId + '\', \'' + safeHash + '\', \'' + safeSize + '\')">' + btnText + '</button>' +
+                '</div>' +
+            '</div>';
+        }
+        
+        container.innerHTML = htmlStr;
+
+        var sdk = getSdk();
+        var cards = container.querySelectorAll('.store-card');
+        for (var i = 0; i < cards.length; i++) {
+            (function(card, index) {
+                var img = card.querySelector('.store-card-img');
+                var coverId = img.getAttribute('data-cover');
+                
+                if (coverId) {
+                    var localSrc = "./plugin_data/astrbot_plugin_chisa_still_eating/Webui-PIC/Shop/cover/" + coverId + "?t=" + new Date().getTime();
+                    var tmpImg = new Image();
+                    tmpImg.onload = function() {
+                        img.src = localSrc; img.style.display = 'block'; if(img.nextElementSibling) img.nextElementSibling.style.display = 'none';
+                    };
+                    tmpImg.onerror = function() {
+                        if (sdk) {
+                            sdk.apiGet("dlc_cover", { file: coverId }).then(function(res) {
+                                var data = parseSdkResponse(res);
+                                if(data && data.status === 'success' && data.data_url) {
+                                    img.src = data.data_url; img.style.display = 'block'; if(img.nextElementSibling) img.nextElementSibling.style.display = 'none';
+                                }
+                            });
+                        }
+                    };
+                    tmpImg.src = "./plugin_data/astrbot_plugin_chisa_still_eating/Webui-PIC/Shop/cover/" + coverId;
+                }
+                
+                setTimeout(function() {
+                    card.style.opacity = 1;
+                    card.style.transform = 'translateY(0)';
+                }, 50 + index * 40);
+            })(cards[i], i);
+        }
+    }
+
+    function filterStore(cat, btn) {
+        var fBtns = document.querySelectorAll('.filter-btn'); for(var fi=0; fi<fBtns.length; fi++){ fBtns[fi].classList.remove('active'); }
+        btn.classList.add('active');
+        renderStoreGrid(cat);
+    }
+
+
+    
+    var downloadedRecords = [];
+    function loadDownloadedRecords() {
+        var sdk = getSdk();
+        if(!sdk) return;
+        setTimeout(function() {
+            sdk.apiGet("get_dlc_downloaded", {}).then(function(res) {
+                var data = parseSdkResponse(res);
+                if (Array.isArray(data)) {
+                    downloadedRecords = data;
+                } else if (data && Array.isArray(data.data)) {
+                    downloadedRecords = data.data;
+                } else if (data && data.status === 'success') {
+                    downloadedRecords = Array.isArray(data.data) ? data.data : [];
+                }
+                var currentActiveFilter = 'all';
+                var filters = document.querySelectorAll('.filter-btn');
+                for(var fi=0; fi<filters.length; fi++){
+                    if(filters[fi].classList.contains('active')){
+                        var clickAttr = filters[fi].getAttribute('onclick');
+                        var m = clickAttr ? clickAttr.match(/filterStore\('([^']+)'/) : null;
+                        if(m) currentActiveFilter = m[1];
+                        break;
+                    }
+                }
+                renderStoreGrid(currentActiveFilter);
+            }).catch(function(e) {
+                console.warn("Failed to load downloaded records", e);
+            });
+        }, 200);
+    }
+
+    var activeDownloadInterval = null;
+        var activeDownloadInterval = null;
+    function downloadDLC(id, sha256, sizeStr) {
+        var node = document.getElementById("dlc-node").value;
+        var storeType = currentStoreType; 
+        
+        showMascotBubble("千小妹已经去仓库进货啦，请稍等片刻哦，现在不要乱点别的~");
+        
+        var sdk = getSdk();
+        if (!sdk) return;
+        
+        var btns = document.querySelectorAll('.store-download-btn');
+        var originalTexts = {};
+        for (var i = 0; i < btns.length; i++) {
+            originalTexts[i] = btns[i].innerText;
+            btns[i].disabled = true;
+            if (btns[i].getAttribute('onclick').indexOf(id) !== -1) {
+                btns[i].innerText = "⏳ 准备下载中...";
+                btns[i].classList.add("btn-downloading");
+            }
+        }
+        
+        var totalBytes = 1;
+        if (sizeStr) {
+            if (sizeStr.indexOf('MB') !== -1) totalBytes = parseFloat(sizeStr) * 1024 * 1024;
+            else if (sizeStr.indexOf('KB') !== -1) totalBytes = parseFloat(sizeStr) * 1024;
+        }
+        
+        if (activeDownloadInterval) clearInterval(activeDownloadInterval);
+        activeDownloadInterval = setInterval(function() {
+            sdk.apiPost("get_download_progress", { id: id }).then(function(res) {
+                var data = parseSdkResponse(res);
+                if (data && data.status === 'success' && data.size > 0) {
+                    var pct = Math.min(Math.floor((data.size / totalBytes) * 100), 99);
+                    showMascotBubble("📦 千小妹正在狂奔搬运中... 进度 [" + pct + "%]，不要着急哦~");
+                    var currentBtns = document.querySelectorAll('.store-download-btn');
+                    for (var b = 0; b < currentBtns.length; b++) {
+                        if (currentBtns[b].getAttribute('onclick').indexOf(id) !== -1) {
+                            currentBtns[b].innerText = "⏳ 下载中 (" + pct + "%)...";
+                        }
+                    }
+                }
+            });
+        }, 3000);
+        
+        function restoreButtons() {
+            if (activeDownloadInterval) clearInterval(activeDownloadInterval);
+            var allBtns = document.querySelectorAll('.store-download-btn');
+            for (var j = 0; j < allBtns.length; j++) {
+                allBtns[j].disabled = false;
+                if(originalTexts[j]) {
+                    allBtns[j].innerText = originalTexts[j];
+                }
+                allBtns[j].classList.remove("btn-downloading");
+            }
+        }
+        
+        sdk.apiPost("download_dlc", { 
+            id: id, 
+            sha256: sha256, 
+            node: node,
+            store_type: storeType
+        }).then(function(res) {
+            var data = parseSdkResponse(res);
+            if (data && data.status === 'success') {
+                showMascotBubble("进货完成！DLC " + id + " 已经顺利放入后厨啦~");
+                if (downloadedRecords.indexOf(id) === -1) {
+                    downloadedRecords.push(id);
+                }
+                fetchData(); // refresh local data in memory
+                
+                // Keep the current filter category active
+                var currentActiveFilter = 'all';
+                var filters = document.querySelectorAll('.filter-btn');
+                for(var fi=0; fi<filters.length; fi++){
+                    if(filters[fi].classList.contains('active')){
+                        var clickAttr = filters[fi].getAttribute('onclick');
+                        var m = clickAttr ? clickAttr.match(/filterStore\('([^']+)'/) : null;
+                        if(m) currentActiveFilter = m[1];
+                        break;
+                    }
+                }
+                restoreButtons();
+                renderStoreGrid(currentActiveFilter); 
+            } else {
+                if (data && data.message === 'ALL_NODES_FAILED') {
+                    showToast("加速节点失效，已为您重置测速引擎，请再试一次！", "error");
+                } else {
+                    showToast("下载失败: " + (data ? data.message : "网络错误"), "error");
+                }
+                restoreButtons();
+            }
+        }).catch(function(e) {
+            showToast("拉取发生异常，请检查后台日志", "error");
+            restoreButtons();
+        });
+    }
+
+    var currentStoreType = 'official';
+    function switchStoreType(type) {
+        currentStoreType = type;
+        document.getElementById('btn-official-store').style.background = type === 'official' ? 'var(--primary)' : '#333';
+        document.getElementById('btn-custom-store').style.background = type === 'custom' ? 'var(--primary)' : '#333';
+        
+        if (type === 'custom') {
+            document.getElementById('store-content-area').innerHTML = 
+                '<div style="grid-column: 1 / -1; padding: 30px; background: rgba(255,255,255,0.05); border-radius: 8px;">' +
+                '<h3 style="margin-top:0;">⚙️ 自定义生态源配置</h3>' +
+                '<p style="color:var(--muted); font-size:13px;">在这里你可以接入由社区驱动的第三方 DLC 仓库。</p>' +
+                '<div style="margin-bottom: 15px;">' +
+                    '<label style="display:block; margin-bottom:5px;">Raw 仓库目录地址 (用于拉取目录与封面)</label>' +
+                    '<input type="text" id="diy-raw-url" placeholder="https://raw.githubusercontent.com/..." style="width:100%; padding:8px; background:#111; color:#fff; border:1px solid #444; border-radius:4px;">' +
+                '</div>' +
+                '<div style="margin-bottom: 15px;">' +
+                    '<label style="display:block; margin-bottom:5px;">Release 压缩包根地址 (用于下载大包)</label>' +
+                    '<input type="text" id="diy-release-url" placeholder="https://github.com/.../releases/download/..." style="width:100%; padding:8px; background:#111; color:#fff; border:1px solid #444; border-radius:4px;">' +
+                '</div>' +
+                '<button class="btn" style="padding:8px 16px;" onclick="showToast(\'自定义仓库功能将在下个版本开放\', \'\')">保存并拉取</button>' +
+                '</div>';
+        } else {
+            loadCatalog();
+        }
+    }
+
     function customConfirm(msg) {
         return new Promise(function(resolve) {
             var modal = document.getElementById('confirmModal');
@@ -690,7 +1263,7 @@
 
     // IntersectionObserver for Lazy Loading
     var lazyObserver = new IntersectionObserver(function(entries, observer) {
-        entries.forEach(function(entry) {
+        for(var i=0; i<entries.length; i++){ var entry = entries[i]; (function(entry) {
             if (entry.isIntersecting) {
                 var img = entry.target;
                 var path = img.getAttribute('data-path');
@@ -700,8 +1273,45 @@
                 }
                 observer.unobserve(img);
             }
-        });
+        })(entry); }
     }, { rootMargin: "250px" });
+
+    
+    function parseTitleTag(title) {
+        var map = {
+            "【食品】": "🍔",
+            "【饮品】": "🧋",
+            "【干饭人】": "🏃",
+            "【黑暗料理】": "☠️",
+            "【大厨】": "👨‍🍳",
+            "【导游MEME】": "🌸",
+            "【食物】": "🍔"
+        };
+        var match = title.match(/^(【.*?】)\s*(.*)$/);
+        if (match) {
+            var tag = match[1];
+            var rest = match[2];
+            var emoji = map[tag];
+            if (emoji) {
+                var tagName = tag.replace(/【|】/g, '');
+                
+                
+                return '<div style="background: rgba(217, 165, 165, 0.08); border: 1px solid rgba(217, 165, 165, 0.2); border-radius: 6px; padding: 10px 5px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">' +
+                       '<div style="margin-bottom: 8px; width: 100%; display: flex; justify-content: center;"><span style="background: rgba(217, 165, 165, 0.2); padding: 3px 10px; border-radius: 4px; font-size: 11px; color: #d9a5a5; font-weight: bold; letter-spacing: 0.5px;">' + emoji + ' ' + tagName + '</span></div>' +
+                       '<div style="font-size: 15px; font-weight: bold; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.3; color: white;">' + rest + '</div>' +
+                       '</div>';
+
+
+            }
+        }
+        
+        
+        return '<div style="background: rgba(217, 165, 165, 0.08); border: 1px solid rgba(217, 165, 165, 0.2); border-radius: 6px; padding: 10px 5px; width: 100%; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center;">' +
+               '<div style="font-size: 15px; font-weight: bold; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.3; color: white;">' + title + '</div>' +
+               '</div>';
+
+
+    }
 
     function parseSdkResponse(res) {
         var data = res;
@@ -717,9 +1327,20 @@
       for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
       document.getElementById(tabId).classList.add('active');
       if (btnElement) btnElement.classList.add('active');
+      
+      if (tabId === 'tab-dlc') {
+          triggerMascotQuote('shop');
+          if (!catalogLoaded) {
+              loadCatalog();
+          }
+      }
     }
 
     function initAccordions() {
+      var customSaved = null; try { customSaved = localStorage.getItem("chisa_custom_repo"); } catch(e) { console.warn("localStorage is not available in sandbox."); }
+      if(customSaved && document.getElementById("custom-repo-url")) {
+          document.getElementById("custom-repo-url").value = customSaved;
+      }
       var acc = document.getElementsByClassName("accordion");
       for (var i = 0; i < acc.length; i++) {
         var clone = acc[i].cloneNode(true);
@@ -797,7 +1418,7 @@
         }
     }
 
-    function updateBatchUI() {
+        function updateBatchUI() {
         var bar = document.getElementById('batchActionBar');
         if (isBatchMode) {
             bar.style.display = 'flex';
@@ -805,19 +1426,21 @@
         } else {
             bar.style.display = 'none';
         }
-        
+
         var btns = document.querySelectorAll('.batch-toggle-btn');
-        btns.forEach(function(b) {
+        for(var i=0; i<btns.length; i++){
+            var b = btns[i];
             b.innerText = isBatchMode ? '退出批量' : '批量管理';
             if (isBatchMode) b.classList.add('active-batch');
             else b.classList.remove('active-batch');
-        });
-        
+        }
+
         var cards = document.querySelectorAll('.img-card');
-        cards.forEach(function(c) {
+        for(var j=0; j<cards.length; j++){
+            var c = cards[j];
             if (isBatchMode) c.classList.add('batch-mode');
             else { c.classList.remove('batch-mode'); c.classList.remove('selected'); }
-        });
+        }
     }
 
     function startDragSelect(e, el, path) {

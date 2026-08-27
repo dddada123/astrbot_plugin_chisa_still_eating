@@ -18,9 +18,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "3.8.5"
+__version__ = "3.8.51"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.8.5", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.8.51", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -31,6 +31,7 @@ class FlavorFusionUltimate(Star):
         
         self.image_mgr = ImageManager(self.plugin_dir)
         self.data_mgr = FoodDataManager(config)
+        self._dlc_best_node = None
         self.limiter = RateLimiter()
         self.responder = Responder()
         
@@ -70,6 +71,113 @@ class FlavorFusionUltimate(Star):
         self.common_drink_pattern = re.compile("|".join([re.escape(str(k)) for k in common_drink_keywords if k]))
 
     # ================== 下载资源（修复后） ==================
+
+    async def _download_and_extract_dlc_async(self, dlc_id, sha256_hash_str):
+        self.is_downloading = True
+        self.downloaded_bytes = 0
+        self.download_total_bytes = 1 
+        temp_zip_path = ""
+        
+        try:
+            import hashlib
+            import zipfile
+            import os
+            import aiohttp
+            import asyncio
+            
+            node = await self._get_optimal_dlc_node()
+            if node == "failed":
+                raise Exception("所有测速节点均无响应")
+                
+            url = f"https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/Chisa_Dlc_Store/{dlc_id}.zip"
+            if node != "direct":
+                url = f"https://{node}/https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/Chisa_Dlc_Store/{dlc_id}.zip"
+            
+            try:
+                from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+                base_data_path = get_astrbot_data_path()
+            except ImportError:
+                base_data_path = "data"
+                
+            target_extract_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating"))
+            temp_zip_path = os.path.join(target_extract_dir, f"{dlc_id}_temp.zip")
+            os.makedirs(target_extract_dir, exist_ok=True)
+            
+            async with aiohttp.ClientSession(trust_env=(node == "direct")) as session:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=300)) as resp:
+                    if resp.status != 200:
+                        raise Exception(f"HTTP {resp.status}")
+                    
+                    total = int(resp.headers.get('Content-Length', 0))
+                    if total > 0:
+                        self.download_total_bytes = total
+                        
+                    hasher = hashlib.sha256()
+                    with open(temp_zip_path, 'wb') as f:
+                        async for chunk in resp.content.iter_chunked(8192):
+                            f.write(chunk)
+                            hasher.update(chunk)
+                            self.downloaded_bytes += len(chunk)
+                            
+                    actual_sha256 = hasher.hexdigest()
+                    
+            if sha256_hash_str and actual_sha256 != sha256_hash_str:
+                if os.path.exists(temp_zip_path):
+                    os.remove(temp_zip_path)
+                raise Exception(f"校验失败! 预期 {sha256_hash_str[:8]} 但得到 {actual_sha256[:8]}")
+                
+            def extract_safe(z_path, t_dir):
+                with zipfile.ZipFile(z_path, 'r') as z_ref:
+                    for z_info in z_ref.filelist:
+                        if ".." in z_info.filename or z_info.filename.startswith("/") or z_info.filename.startswith("\\"):
+                            raise Exception("Unsafe path in ZIP")
+                    z_ref.extractall(t_dir)
+                    
+            try:
+                await asyncio.to_thread(extract_safe, temp_zip_path, target_extract_dir)
+                import logging
+                logging.info(f"[Chisa DLC] 📦 DLC [{dlc_id}] 解压成功！")
+            except Exception as e:
+                import logging
+                logging.error(f"[Chisa DLC] ❌ DLC [{dlc_id}] 解压失败: {e}")
+                raise e
+            
+            if os.path.exists(temp_zip_path):
+                os.remove(temp_zip_path)
+                
+            self._reload_all_caches()
+            
+            # Sync downloaded state to downloaded.json for WebUI compatibility
+            try:
+                import json
+                json_path = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "index", "downloaded.json"))
+                os.makedirs(os.path.dirname(json_path), exist_ok=True)
+                records = []
+                if os.path.exists(json_path):
+                    with open(json_path, 'r', encoding='utf-8') as f:
+                        try:
+                            records = json.load(f)
+                        except: pass
+                if dlc_id not in records:
+                    records.append(dlc_id)
+                with open(json_path, 'w', encoding='utf-8') as f:
+                    json.dump(records, f, ensure_ascii=False)
+                import logging
+                logging.info(f"[Chisa DLC] 📝 已将 [{dlc_id}] 写入商会已购清单。")
+            except Exception as ex:
+                import logging
+                logging.error(f"[Chisa DLC] ⚠️ 写入已购清单失败: {ex}")
+                
+            return True
+            
+        except Exception as e:
+            if temp_zip_path and os.path.exists(temp_zip_path):
+                os.remove(temp_zip_path)
+            raise e
+        finally:
+            self.is_downloading = False
+            self.downloaded_bytes = 0
+
     def _download_and_extract_assets(self):
         if self._is_download_thread_active:
             return
@@ -326,7 +434,7 @@ class FlavorFusionUltimate(Star):
                 f.write(f"- {name}\n")
             f.write("\n如需在 WebUI 指定卡池，请直接复制下方文本到【指定干饭人卡池】配置框：\n")
             f.write(";".join(names) + "\n")
-        logging.info(f"[ChisaEating v3.8.5] 📋 已更新可用干饭人清单到 plugin_data 目录，共 {len(names)} 名")
+        logging.info(f"[ChisaEating v3.8.51] 📋 已更新可用干饭人清单到 plugin_data 目录，共 {len(names)} 名")
 
     def _refresh_world_cache(self):
         raw_settings = {
@@ -635,19 +743,202 @@ class FlavorFusionUltimate(Star):
         msg_text = event.message_str
         if not msg_text: return
         msg_text = msg_text.strip()
+
+        uid = str(event.get_sender_id())
+        
+        import time
+        import re
+        import asyncio
+        import os
+        
+        if uid in self._shop_sessions:
+            session = self._shop_sessions[uid]
+            if time.time() - session['time'] > 60:
+                del self._shop_sessions[uid]
+            else:
+                choice = msg_text.strip()
+                if choice in ['1', '2', '3']:
+                    del self._shop_sessions[uid]
+                    catalog = self._read_catalog()
+                    if not catalog:
+                        yield event.make_result().message("⚠️ 无法读取目录数据，请重新同步。")
+                        event.stop_event()
+                        return
+                        
+                    mapping = {
+                        '1': {'cats': ['gf', 'cf', 'gd'], 'title': '千小妹商会 - 招募通道', 'cmd_format': '招募{id}'},
+                        '2': {'cats': ['fd', 'dr'], 'title': '千小妹商会 - 餐饮通道', 'cmd_format': '进货{id}'},
+                        '3': {'cats': ['dk'], 'title': '千小妹商会 - 次元裂缝', 'cmd_format': '黑魔法召唤{id}'}
+                    }
+                    
+                    config = mapping[choice]
+                    results = {}
+                    for item in catalog:
+                        cat = item.get('cat', '')
+                        if cat in config['cats']:
+                            if cat not in results: results[cat] = []
+                            results[cat].append(item)
+                            
+                    msg = f"📦 {config['title']} 📦\n*回复\"{config['cmd_format'].format(id='[编号]')}\"或\"{config['cmd_format'].format(id='编号')}\"即可下载对应包体\n*也可以到AstrbotWebUI浏览商品，还有预览图哦\n\n"
+                    
+                    emoji_map = {
+                        'fd': '🍔 食品区', 'dr': '🧋 饮品区', 
+                        'gf': '🏃 干饭人', 'cf': '👨‍🍳 大厨', 'gd': '🌸 导游MEME', 
+                        'dk': '☠️ 黑暗料理'
+                    }
+                    
+                    for cat_key in config['cats']:
+                        msg += f"{emoji_map.get(cat_key, cat_key)}\n"
+                        if cat_key in results and results[cat_key]:
+                            for item in results[cat_key]:
+                                msg += f"·[{item.get('id', '')}] {item.get('title', '')}\n"
+                        else:
+                            msg += "·这个分类暂时还没有商品上架·\n"
+                        msg += "\n"
+                            
+                    async for res in self._send_forward_msg(event, "千小妹商会商品列表", msg.strip()):
+                        yield res
+                    event.stop_event()
+                    return
+                elif len(choice) <= 2: 
+                    self._shop_sessions[uid]['time'] = time.time()
+                    yield event.make_result().message("输入错误哦，请回复 1、2 或 3")
+                    event.stop_event()
+                    return
+                else:
+                    del self._shop_sessions[uid]
+
+        if msg_text.strip() == "千小妹商会":
+            if not self._is_admin(event):
+                yield event.make_result().message("哼！千小妹商会重地，闲人免进！只有签了契约的管理员才能进去进货哦~")
+                event.stop_event()
+                return
+                
+            cat_path = self._get_catalog_path()
+            if not os.path.exists(cat_path):
+                yield event.make_result().message("仓库空空如也！是否进行千小妹商会信息同步？\n（请回复：/千小妹商会信息同步）")
+                event.stop_event()
+                return
+                
+            self._shop_sessions[uid] = {'time': time.time()}
+            yield event.make_result().message("🎀 千小妹商会营业中 🎀\n欢迎老板！请在 60 秒内回复数字选择进货通道：\n1️⃣ 干饭人/大厨/导游招募\n2️⃣ 云食品/云饮品仓库\n3️⃣ 黑暗料理次元裂缝")
+            event.stop_event()
+            return
+            
+        if msg_text.strip() in ["/千小妹商会信息同步", "千小妹商会信息同步拉取Json", "千小妹商会信息同步"]:
+            if not self._is_admin(event):
+                yield event.make_result().message("只有管理员可以同步商会信息哦！")
+                event.stop_event()
+                return
+                
+            yield event.make_result().message("正在联系商会总仓...请稍等片刻哦~")
+            
+            node = await self._get_optimal_dlc_node()
+            if node == "failed":
+                yield event.make_result().message("所有节点响应超时，同步失败，请稍后再试！")
+                event.stop_event()
+                return
+                
+            original_url = "https://raw.githubusercontent.com/dddada123/astrbot_plugin_chisa_still_eating_photo/main/index/catalog.json"
+            url = original_url
+            if node != "direct":
+                url = f"https://{node}/{original_url}"
+            import aiohttp
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url, timeout=15) as resp:
+                        if resp.status == 200:
+                            content = await resp.read()
+                            cat_path = self._get_catalog_path()
+                            os.makedirs(os.path.dirname(cat_path), exist_ok=True)
+                            with open(cat_path, 'wb') as f:
+                                f.write(content)
+                            yield event.make_result().message("✅ 同步完成！请再次输入 【千小妹商会】 开始逛街~")
+                        else:
+                            yield event.make_result().message(f"同步失败，节点返回状态码: {resp.status}")
+            except Exception as e:
+                yield event.make_result().message(f"同步异常: {str(e)}")
+            event.stop_event()
+            return
+            
+        dl_match = re.match(r'^(进货|招募|黑魔法召唤)\[?([a-z]{2}\d{4})\]?$', msg_text.strip(), re.IGNORECASE)
+        if dl_match:
+            if not self._is_admin(event):
+                yield event.make_result().message("只有管理员才能操作商会进货哦！")
+                event.stop_event()
+                return
+                
+            dlc_id = dl_match.group(2).lower()
+            
+            if self.is_downloading:
+                pct = 0
+                if hasattr(self, 'download_total_bytes') and getattr(self, 'download_total_bytes', 0) > 0:
+                    pct = int((self.downloaded_bytes / self.download_total_bytes) * 100)
+                yield event.make_result().message(f"📦 千小妹正在狂奔搬运中... 进度 [{pct}%]，请等待当前进货完成后再操作哦~")
+                event.stop_event()
+                return
+                
+            catalog = self._read_catalog()
+            if not catalog:
+                yield event.make_result().message("⚠️ 无法读取目录数据，请先输入 千小妹商会 进行同步。")
+                event.stop_event()
+                return
+                
+            target_item = next((item for item in catalog if item.get('id', '').lower() == dlc_id), None)
+            if not target_item:
+                yield event.make_result().message(f"找不到编号为 {dlc_id} 的商品呢，老板是不是记错啦？")
+                event.stop_event()
+                return
+                
+            sha256 = target_item.get('sha256', '')
+            yield event.make_result().message(f"收到！千小妹这就去进货 {dlc_id}，请稍等片刻...")
+            
+            async def trigger_download():
+                import logging
+                try:
+                    res = await self._download_and_extract_dlc_async(dlc_id, sha256)
+                    if res:
+                        from astrbot.core.message.message_event_result import MessageChain
+                        from astrbot.api.message_components import Plain
+                        success_msg = f"🎉 千小妹已经把 [{dlc_id}] 搬到后厨啦！快去尝尝吧~\n(💡 提示：如果图片没能加载到插件内，直接在管理面板重载插件就可以啦~)"
+                        logging.info(f"[Chisa DLC] ✅ 群聊指令进货 [{dlc_id}] 完美落库！")
+                        await event.send(MessageChain([Plain(success_msg)]))
+                except Exception as e:
+                    logging.error(f"[Chisa DLC] ❌ 群聊触发下载 {dlc_id} 失败: {e}")
+                    try:
+                        from astrbot.core.message.message_event_result import MessageChain
+                        from astrbot.api.message_components import Plain
+                        await event.send(MessageChain([Plain(f"❌ 进货遭遇次元风暴: {str(e)}")]))
+                    except: pass
+            
+            asyncio.create_task(trigger_download())
+            event.stop_event()
+            return
+
         
         is_plugin_cmd = False
+        if "进货" in msg_text or "招募" in msg_text or "黑魔法召唤" in msg_text:
+            is_plugin_cmd = True
         if ("/加菜" in msg_text or "加菜" in msg_text or "/上传厨师" in msg_text or "上传厨师" in msg_text or 
             "帮助" in msg_text or "吃什么" in msg_text or "喝什么" in msg_text or "特产" in msg_text or 
             "特饮" in msg_text or "吃饭" in msg_text or "料理" in msg_text or "召唤" in msg_text or "特供" in msg_text) and "千小妹图库下载进度" not in msg_text:
             is_plugin_cmd = True
             
         if self.is_downloading and is_plugin_cmd:
-            mb = self.downloaded_bytes / (1024 * 1024)
-            progress_msg = f"【千小妹下载进度】\n正在为您搬运跨次元美食资源...下载完成后即可正常使用以及查看帮助\n当前已下载: {mb:.2f} MB / 160.46 MB"
-            yield event.make_result().message(progress_msg)
-            event.stop_event()
-            return
+            if hasattr(self, '_is_download_thread_active') and self._is_download_thread_active:
+                mb = self.downloaded_bytes / (1024 * 1024)
+                progress_msg = f"【千小妹基础图库下载进度】\n正在为您搬运跨次元美食资源...下载完成后即可正常使用以及查看帮助\n当前已下载: {mb:.2f} MB / 160.46 MB"
+                yield event.make_result().message(progress_msg)
+                event.stop_event()
+                return
+            else:
+                pct = 0
+                if hasattr(self, 'download_total_bytes') and getattr(self, 'download_total_bytes', 0) > 0:
+                    pct = int((self.downloaded_bytes / self.download_total_bytes) * 100)
+                progress_msg = f"📦 千小妹正在狂奔搬运中... 当前进货进度 [{pct}%]，请稍后再操作哦~"
+                yield event.make_result().message(progress_msg)
+                event.stop_event()
+                return
 
         if "/加菜 " in msg_text or "加菜 " in msg_text:
             async for res in self.handle_add_food(event, msg_text):
@@ -699,7 +990,7 @@ class FlavorFusionUltimate(Star):
                     return
         
         if msg_text in ["千小妹还在吃帮助", "千咲吃什么帮助", "干饭帮助", "美食帮助", "千小妹帮助", "千小妹吃什么帮助"]:
-            help_text = """🌸 【千小妹跨次元干饭指南 v3.8.5】 🌸
+            help_text = """🌸 【千小妹跨次元干饭指南 v3.9.1】 🌸
 不知道今天吃啥？让异次元的导游们为你随机摇号吧！
 
 🎲 基础盲盒（全宇宙随机）
@@ -717,7 +1008,13 @@ class FlavorFusionUltimate(Star):
 💬 来点黑暗料理：导游的恶作剧，吃出人命概不负责！
 💡 提示：频繁点菜不仅会被导游吐槽，饭还可能会被别的干饭人“截胡”抢走哦！
 ---
+🛒 千小妹商会 (云端无缝进货)
+💬 千小妹商会：唤出千小妹云端商会菜单，输入数字极速点单进货！
+💬 进货[编号] / 招募[编号] / 黑魔法召唤[编号]：直接输入对应DLC编号，将官方商品一键装入本地后厨。
+💬 /千小妹商会信息同步：强制拉取商会最新商品名录。
+---
 ⚙️ 系统与图库管理 (注：需在AstrBot后台配置管理员)
+💬 千小妹速查：极速调出可用短指令表。
 💬 千小妹图库下载进度：随时查看后台图库的拉取进度。
 💬 更新千小妹图库：强制进行160MB图包的安全拉取。
 💬 【加菜格式】：加菜 [世界] [分类] [菜名]
@@ -728,7 +1025,31 @@ class FlavorFusionUltimate(Star):
 ⚠️ 若您是在服务器后台手动放入新图片或TXT，请务必在WebUI点击【重载插件】或群内发送 更新千小妹图库 刷新缓存。
 
 (📝 注：以上所有指令均不受机器人名字影响。发“小爱吃什么”也能完美触发哦！)"""
-            yield event.make_result().message(help_text)
+            async for res in self._send_forward_msg(event, "千小妹帮助文档", help_text):
+                yield res
+            event.stop_event()
+            re
+        if msg_text == "千小妹速查" or msg_text == "/千小妹速查":
+            quick_msg = (
+                "📌 【千小妹速查表】\n\n"
+                "🍔 基础功能\n"
+                "· 吃什么 / 喝点啥\n"
+                "· 来点现实的食物 / 鸣潮特产\n\n"
+                "👑 进阶与整活\n"
+                "· 来点黑暗料理\n"
+                "· 召唤[某人]下厨 / [某人]特供料理\n\n"
+                "🛒 商会系统 (需管理员)\n"
+                "· 千小妹商会\n"
+                "· 进货[编号] / 招募[编号] / 黑魔法召唤[编号]\n"
+                "· /千小妹商会信息同步\n\n"
+                "⚙️ 管理指令 (需管理员)\n"
+                "· 更新千小妹图库\n"
+                "· 千小妹图库下载进度\n"
+                "· 加菜 [世界] [分类] [菜名] (带图)\n"
+                "· 上传厨师 [厨师名] (带图)"
+            )
+            async for res in self._send_forward_msg(event, "千小妹短指令速查表", quick_msg):
+                yield res
             event.stop_event()
             return
 
@@ -1248,6 +1569,104 @@ class FlavorFusionUltimate(Star):
             yield event.make_result().message("上传厨师失败：图片下载失败或平台限制导致无法读取。")
         return
 
+    
+
+    
+
+    async def _send_forward_msg(self, event, title: str, text_content: str):
+        if not self.config.get("forward_long_text", True):
+            yield event.make_result().message(text_content)
+            return
+            
+        try:
+            from astrbot.api.message_components import Forward, Node, Plain
+            from astrbot.core.message.components import MessageChain
+            
+            # Construct Node. Use bot's own ID to ensure bot's avatar is displayed.
+            bot_id = getattr(event, "bot_id", None)
+            if not bot_id and hasattr(event.message_obj, "self_id"):
+                bot_id = event.message_obj.self_id
+            if not bot_id:
+                bot_id = str(event.get_sender_id()) # Extreme fallback
+            
+            node_kwargs = {
+                "uin": str(bot_id),
+                "name": title,
+                "content": [Plain(text_content)]
+            }
+            try:
+                node = Node(custom_name=title, uin=str(bot_id), content=[Plain(text_content)])
+            except TypeError:
+                node = Node(**node_kwargs)
+                
+            yield event.make_result().message(Forward([node]))
+            return
+        except ImportError:
+            # Fallback for old Astrbot versions without Forward
+            pass
+        except Exception as e:
+            import logging
+            logging.error(f"[Chisa DLC] Forward component failed: {e}")
+            
+        try:
+            # Raw fallback for Nakuru/Aiocqhttp if possible
+            provider = getattr(event, "client", getattr(event, "bot", getattr(event, "provider", None)))
+            if provider and hasattr(provider, "api") and hasattr(provider.api, "call_action"):
+                group_id = getattr(event.message_obj, "group_id", None)
+                bot_id = getattr(event, "bot_id", None)
+                if not bot_id and hasattr(event.message_obj, "self_id"):
+                    bot_id = event.message_obj.self_id
+                if not bot_id:
+                    bot_id = str(event.get_sender_id())
+                messages = [{
+                    "type": "node",
+                    "data": {
+                        "name": title,
+                        "uin": str(bot_id),
+                        "content": [{"type": "text", "data": {"text": text_content}}]
+                    }
+                }]
+                if group_id:
+                    await provider.api.call_action('send_group_forward_msg', group_id=int(group_id), messages=messages)
+                else:
+                    await provider.api.call_action('send_private_forward_msg', user_id=int(event.get_sender_id()), messages=messages)
+                
+                event.stop_event()
+                return
+        except Exception as e:
+            import logging
+            logging.error(f"[Chisa DLC] Raw API forward failed: {e}")
+            
+        yield event.make_result().message(text_content)
+    def _is_admin(self, event):
+        uid = str(event.get_sender_id())
+        admin_users = [str(x).strip() for x in self.config.get("admin_users", []) if str(x).strip()]
+        if not admin_users or uid not in admin_users:
+            return False
+        return True
+
+    def _get_catalog_path(self):
+        try:
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            base_data_path = get_astrbot_data_path()
+        except ImportError:
+            base_data_path = "data"
+        import os
+        return os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "index", "catalog.json"))
+
+    def _read_catalog(self):
+        import os
+        import json
+        cat_path = self._get_catalog_path()
+        if not os.path.exists(cat_path):
+            return None
+        with open(cat_path, 'r', encoding='utf-8-sig') as f:
+            data = json.load(f)
+            if isinstance(data, dict) and "data" in data:
+                return data["data"]
+            return data
+            
+    _shop_sessions = {}
     def _register_web_api(self):
         register_api = getattr(self.context, "register_web_api", None)
         if not callable(register_api):
@@ -1260,11 +1679,29 @@ class FlavorFusionUltimate(Star):
         register_api(f"/{self.plugin_name}/update_ganfanren", self.page_update_ganfanren, ["POST"], "更新干饭人语录")
         register_api(f"/{self.plugin_name}/upload_image", self.page_upload_image, ["POST"], "上传图片")
         register_api(f"/{self.plugin_name}/delete_image", self.page_delete_image, ["POST"], "删除图片")
+        
+        # DLC 商城 API 注册
+        register_api(f"/{self.plugin_name}/dlc_catalog", self.page_dlc_catalog, ["GET"], "获取本地DLC缓存目录")
+        register_api(f"/{self.plugin_name}/fetch_dlc_catalog", self.page_fetch_dlc_catalog, ["POST"], "拉取线上DLC目录")
+        register_api(f"/{self.plugin_name}/fetch_single_cover", self.page_fetch_single_cover, ["POST"], "增量拉取单张DLC封面")
+        register_api(f"/{self.plugin_name}/dlc_cover", self.page_dlc_cover, ["GET"], "获取本地DLC缓存封面")
+        register_api(f"/{self.plugin_name}/download_dlc", self.page_download_dlc, ["POST"], "下载DLC")
+        register_api(f"/{self.plugin_name}/test_reflection", self.page_test_reflection, ["GET"], "test")
+        register_api(f"/{self.plugin_name}/get_dlc_downloaded", self.page_get_dlc_downloaded, ["GET"], "获取已下载DLC记录")
+        register_api(f"/{self.plugin_name}/get_download_progress", self.page_get_download_progress, ["POST"], "获取DLC下载进度")
         register_api(f"/{self.plugin_name}/delete_ganfanren", self.page_delete_ganfanren, ["POST"], "删除干饭人")
         register_api(f"/{self.plugin_name}/rename_image", self.page_rename_image, ["POST"], "重命名图片")
 
 
 
+
+    async def page_test_reflection(self):
+        try:
+            from quart import jsonify
+            import astrbot.api.message_components as mc
+            return jsonify({"components": dir(mc)})
+        except Exception as e:
+            return jsonify({"error": str(e)})
     async def page_list_images(self):
         """WebUI: 获取本地图库清单"""
         try:
@@ -1337,6 +1774,420 @@ class FlavorFusionUltimate(Star):
             from quart import jsonify
             logging.error(f"[ChisaEating] page_list_images error: {traceback.format_exc()}")
             return jsonify({"status": "error", "message": str(e)}), 500
+
+    
+    async def _get_optimal_dlc_node(self) -> str:
+        if getattr(self, '_dlc_best_node', None) is not None:
+            return self._dlc_best_node
+            
+        import asyncio
+        import aiohttp
+        import time
+        import logging
+        
+        logging.info("[Chisa DLC] 🌐 开始智能并发测速以寻找最优下载节点...")
+        test_url = "https://raw.githubusercontent.com/dddada123/astrbot_plugin_chisa_still_eating_photo/main/index/catalog.json"
+        
+        nodes = [
+            "gh-proxy.com",
+            "hk.gh-proxy.com",
+            "gh.dpik.top",
+            "edgeone.gh-proxy.com"
+        ]
+        
+        async def test_node(node):
+            start = time.time()
+            url = f"https://{node}/{test_url}" if node else test_url
+            try:
+                async with aiohttp.ClientSession(trust_env=False) as session:
+                    async with session.get(url, timeout=10) as resp:
+                        resp.raise_for_status()
+                        await resp.read()
+                        return node, int((time.time() - start) * 1000)
+            except:
+                return node, float('inf')
+                
+        tasks = [asyncio.create_task(test_node(n)) for n in nodes]
+        done, pending = await asyncio.wait(tasks, timeout=10, return_when=asyncio.ALL_COMPLETED)
+        
+        best_node = None
+        best_lat = float('inf')
+        
+        for task in done:
+            try:
+                node, lat = task.result()
+                if lat != float('inf'):
+                    logging.info(f"[Chisa DLC] 👉 [{node or 'direct'}] 响应延迟: {lat}ms")
+                    if lat < best_lat:
+                        best_lat = lat
+                        best_node = node
+                else:
+                    logging.info(f"[Chisa DLC] 👉 [{node or 'direct'}] 状态: 🔴 超时/连通失败")
+            except:
+                pass
+                
+        if best_node is None and pending:
+            logging.info("[Chisa DLC] ⏳ 10秒内未捕获到极速节点，自动进入最高 30 秒深度探测模式...")
+            done2, pending2 = await asyncio.wait(pending, timeout=20, return_when=asyncio.ALL_COMPLETED)
+            for task in done2:
+                try:
+                    node, lat = task.result()
+                    if lat != float('inf'):
+                        logging.info(f"[Chisa DLC] 👉 [{node or 'direct'}] 响应延迟: {lat}ms")
+                        if lat < best_lat:
+                            best_lat = lat
+                            best_node = node
+                    else:
+                        logging.info(f"[Chisa DLC] 👉 [{node or 'direct'}] 状态: 🔴 超时/连通失败")
+                except:
+                    pass
+                    
+        if best_node is not None:
+            logging.info(f"[Chisa DLC] 👑 测速决议：最优节点锁定为 [{best_node or 'direct'}] ({best_lat}ms)。")
+            self._dlc_best_node = best_node
+            return best_node
+            
+        logging.warning("[Chisa DLC] ❌ 警告：所有国内加速镜像均无法连通！")
+        return ""
+
+    async def page_dlc_catalog(self):
+        try:
+            import os
+            import json
+            import logging
+            from quart import jsonify
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            try:
+                base_data_path = get_astrbot_data_path()
+            except ImportError:
+                base_data_path = "data"
+            index_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "index"))
+            catalog_path = os.path.join(index_dir, "catalog.json")
+            if not os.path.exists(catalog_path):
+                return jsonify({"status": "missing"})
+            with open(catalog_path, 'r', encoding='utf-8-sig') as f:
+                data = json.load(f)
+            return jsonify({"status": "success", "data": data})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_fetch_dlc_catalog(self):
+        try:
+            import os
+            import aiohttp
+            from quart import jsonify, request
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            payload = await request.get_json(silent=True) or {}
+            node = payload.get("node", "smart")
+            custom_url = payload.get("custom_url", "").strip()
+            
+            raw_base = "https://raw.githubusercontent.com/dddada123/astrbot_plugin_chisa_still_eating_photo/main"
+            if custom_url:
+                custom_url = custom_url.replace("https://github.com/", "https://raw.githubusercontent.com/")
+                if not custom_url.endswith("/main"):
+                    custom_url = custom_url.rstrip("/") + "/main"
+                raw_base = custom_url
+                
+            original_url = f"{raw_base}/index/catalog.json"
+            
+            if node == "smart":
+                node = await self._get_optimal_dlc_node()
+                
+            url = original_url
+            if node and node != "direct":
+                url = f"https://{node}/{original_url}"
+                
+            try:
+                # trust_env=False forces physical connection (ignores global proxy)
+                async with aiohttp.ClientSession(trust_env=(node == "direct")) as session:
+                    async with session.get(url, timeout=15) as resp:
+                        if resp.status != 200:
+                            raise Exception(f"HTTP {resp.status}")
+                        content = await resp.read()
+            except Exception as e:
+                import logging
+                if payload.get("node", "smart") == "smart":
+                    logging.warning(f"[Chisa DLC] ⚠️ 锁定节点下载失败 ({e})，清除测速缓存！")
+                    self._dlc_best_node = None
+                    return jsonify({"status": "error", "message": "ALL_NODES_FAILED"}), 500
+                return jsonify({"status": "error", "message": str(e)}), 500
+                    
+            try:
+                base_data_path = get_astrbot_data_path()
+            except ImportError:
+                base_data_path = "data"
+            index_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "index"))
+            os.makedirs(index_dir, exist_ok=True)
+            with open(os.path.join(index_dir, "catalog.json"), 'wb') as f:
+                f.write(content)
+            return jsonify({"status": "success"})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_fetch_single_cover(self):
+        try:
+            import os
+            import aiohttp
+            from quart import request, jsonify
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            
+            payload = await request.get_json(silent=True) or {}
+            filename = payload.get("file", "").strip()
+            node = payload.get("node", "smart")
+            custom_url = payload.get("custom_url", "").strip()
+            
+            if not filename or ".." in filename or "/" in filename or "\\" in filename:
+                return jsonify({"status": "error"}), 400
+                
+            raw_base = "https://raw.githubusercontent.com/dddada123/astrbot_plugin_chisa_still_eating_photo/main"
+            if custom_url:
+                custom_url = custom_url.replace("https://github.com/", "https://raw.githubusercontent.com/")
+                if not custom_url.endswith("/main"):
+                    custom_url = custom_url.rstrip("/") + "/main"
+                raw_base = custom_url
+                
+            original_url = f"{raw_base}/covers/{filename}"
+            
+            if node == "smart":
+                node = await self._get_optimal_dlc_node()
+                
+            url = original_url
+            if node and node != "direct":
+                url = f"https://{node}/{original_url}"
+                
+            try:
+                async with aiohttp.ClientSession(trust_env=(node == "direct")) as session:
+                    async with session.get(url, timeout=15) as resp:
+                        if resp.status != 200:
+                            raise Exception(f"HTTP {resp.status}")
+                        content = await resp.read()
+            except Exception as e:
+                import logging
+                if payload.get("node", "smart") == "smart":
+                    logging.warning(f"[Chisa DLC] ⚠️ 锁定节点单张图拉取失败 ({e})，清除测速缓存！")
+                    self._dlc_best_node = None
+                    return jsonify({"status": "error", "message": "ALL_NODES_FAILED"}), 500
+                return jsonify({"status": "error"}), 500
+                    
+            try:
+                base_data_path = get_astrbot_data_path()
+            except ImportError:
+                base_data_path = "data"
+            cover_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "cover"))
+            os.makedirs(cover_dir, exist_ok=True)
+            full_path = os.path.join(cover_dir, filename)
+            
+            with open(full_path, 'wb') as f:
+                f.write(content)
+                
+            return jsonify({"status": "success"})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error"}), 500
+
+    
+    
+    async def page_get_dlc_downloaded(self):
+        try:
+            import os
+            import json
+            from quart import jsonify
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            
+            try:
+                base_data_path = get_astrbot_data_path()
+            except ImportError:
+                base_data_path = "data"
+                
+            json_path = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "index", "downloaded.json"))
+            
+            downloaded = []
+            if os.path.exists(json_path):
+                with open(json_path, "r", encoding="utf-8-sig") as f:
+                    downloaded = json.load(f)
+                    
+            return jsonify({"status": "success", "data": downloaded})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    
+    async def page_get_download_progress(self):
+        try:
+            import os
+            from quart import jsonify, request
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            
+            payload = await request.get_json(silent=True) or {}
+            dlc_id = payload.get("id", "").strip()
+            
+            if not dlc_id or ".." in dlc_id or "/" in dlc_id or "\\" in dlc_id:
+                return jsonify({"status": "error"}), 400
+                
+            try:
+                base_data_path = get_astrbot_data_path()
+            except ImportError:
+                base_data_path = "data"
+                
+            temp_zip_path = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", f"temp_{dlc_id}.zip"))
+            
+            if os.path.exists(temp_zip_path):
+                size = os.path.getsize(temp_zip_path)
+                return jsonify({"status": "success", "size": size})
+            else:
+                return jsonify({"status": "success", "size": 0})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_download_dlc(self):
+        try:
+            import os
+            import aiohttp
+            import hashlib
+            import shutil
+            import zipfile
+            import logging
+            from quart import jsonify, request
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            
+            payload = await request.get_json(silent=True) or {}
+            dlc_id = payload.get("id", "").strip()
+            expected_sha256 = payload.get("sha256", "").strip()
+            node = payload.get("node", "smart")
+            store_type = payload.get("store_type", "official")
+            
+            if not dlc_id or ".." in dlc_id or "/" in dlc_id or "\\" in dlc_id:
+                return jsonify({"status": "error", "message": "Invalid DLC ID"}), 400
+                
+            # Base logic for official store
+            release_base = "https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/Chisa_Dlc_Store"
+            original_url = f"{release_base}/{dlc_id}.zip"
+            
+            if node == "smart":
+                node = await self._get_optimal_dlc_node()
+                
+            url = original_url
+            if node and node != "direct":
+                url = f"https://{node}/{original_url}"
+                
+            try:
+                base_data_path = get_astrbot_data_path()
+            except ImportError:
+                base_data_path = "data"
+                
+            temp_zip_path = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", f"temp_{dlc_id}.zip"))
+            
+            logging.info(f"[Chisa DLC] 开始下载 DLC 包: {url}")
+            try:
+                async with aiohttp.ClientSession(trust_env=(node == "direct")) as session:
+                    async with session.get(url, timeout=300) as resp:
+                        if resp.status != 200:
+                            raise Exception(f"HTTP {resp.status}")
+                            
+                        # Streaming download
+                        sha256_hash = hashlib.sha256()
+                        with open(temp_zip_path, 'wb') as f:
+                            async for chunk in resp.content.iter_chunked(8192):
+                                f.write(chunk)
+                                sha256_hash.update(chunk)
+                                
+                        actual_sha256 = sha256_hash.hexdigest()
+            except Exception as e:
+                import logging
+                if payload.get("node", "smart") == "smart":
+                    logging.warning(f"[Chisa DLC] ⚠️ 锁定节点下载大包失败 ({e})，清除测速缓存！")
+                    self._dlc_best_node = None
+                    return jsonify({"status": "error", "message": "ALL_NODES_FAILED"}), 500
+                return jsonify({"status": "error", "message": str(e)}), 500
+                
+            # Hash verification
+            if expected_sha256 and actual_sha256 != expected_sha256:
+                if os.path.exists(temp_zip_path):
+                    os.remove(temp_zip_path)
+                return jsonify({"status": "error", "message": f"Hash mismatch! Expected {expected_sha256[:8]}, got {actual_sha256[:8]}"}), 500
+                
+            # Extraction
+            target_extract_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating"))
+            try:
+                import asyncio
+                
+                def extract_safe(z_path, t_dir):
+                    with zipfile.ZipFile(z_path, 'r') as z_ref:
+                        for z_info in z_ref.filelist:
+                            if ".." in z_info.filename or z_info.filename.startswith("/") or z_info.filename.startswith("\\"):
+                                raise Exception("Unsafe path in ZIP")
+                        z_ref.extractall(t_dir)
+                
+                # Offload heavy IO to a separate thread so it doesn't block the main asyncio loop
+                await asyncio.to_thread(extract_safe, temp_zip_path, target_extract_dir)
+                    
+                # Clean up
+                if os.path.exists(temp_zip_path):
+                    os.remove(temp_zip_path)
+                    
+                logging.info(f"[Chisa DLC] 🎉 DLC {dlc_id} 部署完成！")
+                
+                # Record download
+                import json
+                json_path = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "index", "downloaded.json"))
+                os.makedirs(os.path.dirname(json_path), exist_ok=True)
+                downloaded = []
+                if os.path.exists(json_path):
+                    try:
+                        with open(json_path, "r", encoding="utf-8-sig") as f:
+                            downloaded = json.load(f)
+                    except:
+                        pass
+                if dlc_id not in downloaded:
+                    downloaded.append(dlc_id)
+                    with open(json_path, "w", encoding="utf-8") as f:
+                        json.dump(downloaded, f, ensure_ascii=False)
+                        
+                # Reload caches (async wrapper or direct call)
+                self._reload_all_caches()
+                
+                return jsonify({"status": "success"})
+            except Exception as e:
+                return jsonify({"status": "error", "message": f"Extraction failed: {str(e)}"}), 500
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_dlc_cover(self):
+        try:
+            import os
+            import mimetypes
+            import base64
+            from quart import request, jsonify
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            
+            filename = request.args.get("file", "")
+            if not filename or ".." in filename or "/" in filename or "\\" in filename:
+                return jsonify({"status": "error"}), 400
+                
+            try:
+                base_data_path = get_astrbot_data_path()
+            except ImportError:
+                base_data_path = "data"
+                
+            cover_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "cover"))
+            full_path = os.path.join(cover_dir, filename)
+            
+            if not os.path.exists(full_path) or not os.path.isfile(full_path):
+                return jsonify({"status": "missing"}), 404
+                
+            media_type = mimetypes.guess_type(full_path)[0] or "image/jpeg"
+            with open(full_path, "rb") as f:
+                raw_bytes = f.read()
+                data_url = f"data:{media_type};base64,{base64.b64encode(raw_bytes).decode('ascii')}"
+                
+            return jsonify({"status": "success", "data_url": data_url})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error"}), 500
 
     async def page_image_data(self):
         """WebUI: 发送真实图片 Base64 数据"""
@@ -1441,3 +2292,4 @@ class FlavorFusionUltimate(Star):
             import traceback
             logging.error(f"[ChisaEating] page_add_ganfanren error: {traceback.format_exc()}")
             return jsonify({"status": "error", "message": str(e)}), 500
+
