@@ -1,7 +1,7 @@
 ﻿name: astrbot_plugin_chisa_still_eating
 display_name: 千小妹还在吃
-short_desc: 跨次元多世界随机干饭与专属厨师召唤系统。
-desc: 一个带有情绪记忆的跨次元干饭插件。无需繁琐配置，把图扔进文件夹即可生效。支持多世界美食大乱斗、群聊防重复菜单、专属厨师立绘展示，以及干饭人随机出没截胡抢饭！包含全自动资源部署引擎。
+short_desc: 跨次元干饭与厨师羁绊召唤插件。内置 WebUI 与千小妹云端商会，支持图包一键进货。
+desc: 带有情绪记忆的跨次元干饭插件。支持多世界美食乱斗、专属厨师立绘及干饭人随机截胡！内置高级可视化 WebUI 与「千小妹商会」，海量官方图包一键进货。具备群聊防重与合并转发防刷屏机制，免配置开箱即食。
 version: "3.9.1"
 author: Rua432
 repo: https://github.com/dddada123/astrbot_plugin_chisa_still_eating
