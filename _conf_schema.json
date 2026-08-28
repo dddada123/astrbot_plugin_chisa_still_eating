@@ -1,10 +1,4 @@
 {
-    "force_download_assets": {
-        "description": "🔄 强制重新下载基础图库 (约160M)",
-        "hint": "勾选并重启机器人后，将在后台自动拉取160MB图库包。❗请注意：拉取成功后，请务必回来取消勾选并保存，以免每次重启都重复下载！",
-        "type": "bool",
-        "default": false
-    },
     "admin_users": {
         "default": [],
         "description": "👑 管理员账号白名单",

@@ -327,7 +327,7 @@
       <div>
         <h1>🔪 千小妹跨次元后厨</h1>
         <div class="subtitle" style="display:flex; align-items:center; gap:10px;">
-        <span>v3.9.1 (Experimental) | 高性能流式数据大屏</span>
+        <span>v4.0.0 | 高性能流式数据大屏</span>
         <span style="color:var(--muted);">|</span>
         <button class="btn btn-small" style="background:transparent; border:1px dashed var(--line); color:var(--muted); padding:3px 8px; font-size:12px; cursor:pointer;" onclick="openSkinModal()">🎨 主题皮肤: 默认 (红黑)</button>
       </div>
@@ -370,48 +370,44 @@
 
     
     <div id="tab-dlc" class="section">
-      <!-- 固定的本地 Banner -->
-      <div class="store-banner-container" style="width: 100%; aspect-ratio: 7 / 1; min-height: 120px; max-height: 240px; border-radius: 8px; margin-bottom: 20px; overflow: hidden; border: 1px solid var(--line); background: #1a1a1a;">
-         <img id="store-banner-img" src="./banner.jpg" alt="Store Banner" style="width: 100%; height: 100%; object-fit: cover; display: block;" 
-              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-         <div style="display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); font-size: 16px; letter-spacing: 1px; border: 1px dashed var(--line); border-radius: 8px; background: #2a2a2a;">
-            <div>[Banner 占位区]</div>
-            <div style="font-size: 12px; margin-top: 8px;">请将 banner.jpg 放入 pages/manager 目录</div>
+      <!-- 动态商店 Banner -->
+      <div class="store-banner-container" style="position: relative; width: 100%; aspect-ratio: 7 / 1; min-height: 120px; max-height: 240px; border-radius: 8px; margin-bottom: 20px; overflow: hidden; border: 1px solid var(--line); background: #1a1a1a;">
+         <img id="store-banner-img" src="./banner.jpg" alt="Store Banner" onerror="this.style.display='none'; var fb=document.getElementById('store-banner-fallback'); if(fb) fb.style.display='flex';" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+         <div id="store-banner-fallback" style="display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); font-size: 16px; letter-spacing: 1px; border: 1px dashed var(--line); border-radius: 8px; background: #2a2a2a;">
+            <div style="font-size: 24px; color: #555;">🏪 欢迎光临创意工坊</div>
+         </div>
+         <div id="store-banner-overlay" style="display: none; position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.85), transparent); padding: 30px 15px 10px 15px; box-sizing: border-box; flex-direction: column; justify-content: flex-end;">
+            <h2 id="store-banner-name" style="margin: 0 0 6px 0; color: #fff; font-size: 18px; text-shadow: 1px 1px 4px rgba(0,0,0,0.8);"></h2>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 12px; font-size: 11px; color: #fff; backdrop-filter: blur(4px);">✍️ <span id="store-banner-author"></span></span>
+                <span id="store-banner-desc" style="color: #eee; font-size: 12px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%;"></span>
+            </div>
          </div>
       </div>
 
-            <div class="top-store-switch" style="display: flex; gap: 10px; padding: 10px 20px; background: #1a1a1a; border: 1px solid var(--line); justify-content: center; margin-bottom: 15px; border-radius: 8px;">
-        <button class="btn btn-small" id="btn-official-store" style="background: var(--primary);" onclick="switchStoreType('official')">🛒 千小妹严选</button>
-        <button class="btn btn-small" id="btn-custom-store" style="background: #333;" onclick="switchStoreType('custom')">🌐 自定义源 (预留)</button>
-      </div>
-
-      <div class="store-controls" style="flex-direction: column; align-items: stretch; gap: 15px;">
+            <!-- 商店主控区 (节点、按钮) -->
+      <div class="store-controls" style="flex-direction: column; align-items: stretch; gap: 15px; margin-bottom: 20px;">
           <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 10px;">
               <div class="network-select">
                   <label>下载节点引擎: </label>
                   <select id="dlc-node">
-                  <option value="smart">🚀 智能测速国内镜像 (国内免梯推荐)</option>
-                  <option value="direct">🌐 Github 原生拉取 (海外/代理专属)</option>
-                  <option value="gh-proxy.com">⚡ gh-proxy.com</option>
-                  <option value="hk.gh-proxy.com">⚡ hk.gh-proxy.com</option>
-                  <option value="gh.dpik.top">⚡ gh.dpik.top</option>
-                  <option value="edgeone.gh-proxy.com">⚡ edgeone.gh-proxy.com</option>
-              </select>
-          </div>
-          <div class="store-actions">
-              <button class="btn" onclick="fetchStoreIndex()">🔄 获取线上目录</button>
-              <button class="btn" onclick="fetchStoreCovers()">🖼️ 缓存橱窗图</button>
-              <button class="btn" style="background:#444;" onclick="document.getElementById('custom-repo-box').style.display = document.getElementById('custom-repo-box').style.display === 'none' ? 'flex' : 'none'">⚙️ 高级设置</button>
-          </div>
-          </div>
-          
-          <div id="custom-repo-box" style="display: none; width: 100%; flex-direction: column; gap: 10px; background: #222; padding: 15px; border-radius: 8px; border: 1px dashed #555;">
-              <div style="color: var(--primary); font-weight: bold; font-size: 14px;">🛠️ 第三方自建源设置 (开发者选项)</div>
-              <div style="font-size: 12px; color: var(--muted);">你可以通过填写自定义的仓库地址，来接入社区其他作者提供的第三方 DLC 商店。填写后点击上方的【获取线上目录】生效。</div>
-              <div style="display: flex; align-items: center; gap: 10px;">
-                  <label style="font-size: 13px; color: #ccc;">自定义主仓库地址:</label>
-                  <input type="text" id="custom-repo-url" placeholder="例如: https://github.com/YourName/RepoName" style="flex-grow: 1; background: #121212; border: 1px solid #444; color: white; padding: 6px; border-radius: 4px;">
-                  <button class="btn btn-small" style="background: #333;" onclick="document.getElementById('custom-repo-url').value=''; showToast('已恢复官方默认源，请重新获取目录');">恢复官方源</button>
+                      <option value="smart">🚀 智能测速国内镜像 (国内免梯推荐)</option>
+                      <option value="direct">🌐 Github 原生拉取 (海外/代理专属)</option>
+                      <option value="gh-proxy.com">⚡ gh-proxy.com</option>
+                      <option value="hk.gh-proxy.com">⚡ hk.gh-proxy.com</option>
+                      <option value="gh.dpik.top">⚡ gh.dpik.top</option>
+                      <option value="edgeone.gh-proxy.com">⚡ edgeone.gh-proxy.com</option>
+                  </select>
+              </div>
+              <div class="store-actions" style="display: flex; gap: 10px;">
+                  <!-- 源切换按钮挪到这里，和获取按钮同级 -->
+                  <div class="top-store-switch" style="display: flex; gap: 0px; background: #1a1a1a; border: 1px solid var(--line); border-radius: 4px; overflow: hidden;">
+                      <button class="btn btn-small" id="btn-official-store" style="background: var(--primary); border-radius: 0; border: none;" onclick="switchStoreType('official')">🛒 千小妹严选</button>
+                      <button class="btn btn-small" id="btn-custom-store" style="background: #333; border-radius: 0; border: none; border-left: 1px solid var(--line);" onclick="switchStoreType('custom')">🌐 创意工坊</button>
+                  </div>
+                  <button class="btn" style="background: #e53935;" onclick="fetchStoreIndex()">🔄 刷新货架</button>
+                  <button class="btn" style="background: #43a047;" onclick="fetchStoreCovers('incr')">🖼️ 橱窗图增量刷新</button>
+                  <button class="btn" style="background: #00897b;" onclick="fetchStoreCovers('full')">🧹 橱窗图全量刷新</button>
               </div>
           </div>
       </div>
@@ -621,7 +617,133 @@
         showMascotBubble(msg);
     }
 
+
+    // --- Workshop History Logic (V3.9.12, V3.9.26 迁移至后端持久化) ---
+    // sandbox 下 localStorage 完全不可用，书架改为: 内存缓存 + 后端 _bookmarks.json 持久化
+    var workshopHistoryCache = null;
+
+    function getWorkshopHistory() {
+        if (workshopHistoryCache === null) {
+            // 缓存未就绪时先尝试 localStorage 旧数据兜底 (能用则用)
+            try {
+                var data = safeStorageGet("chisa_workshop_history");
+                workshopHistoryCache = data ? JSON.parse(data) : [];
+            } catch(e) { workshopHistoryCache = []; }
+        }
+        if (!Array.isArray(workshopHistoryCache)) workshopHistoryCache = [];
+        return workshopHistoryCache;
+    }
+
+    function saveWorkshopHistory(historyArr) {
+        workshopHistoryCache = historyArr;
+        // 双写: localStorage 可用则用 (保底兼容)，真正持久化走后端
+        safeStorageSet("chisa_workshop_history", JSON.stringify(historyArr));
+        var sdk = getSdk();
+        if (sdk) {
+            sdk.apiPost("save_workshop_bookmarks", { bookmarks: historyArr }).catch(function(e) {
+                console.warn("书架持久化失败", e);
+            });
+        }
+    }
+
+    // 页面加载后从后端拉取书架，填充内存缓存
+    function loadWorkshopHistoryFromBackend() {
+        var sdk = getSdk();
+        if (!sdk) return;
+        sdk.apiGet("workshop_bookmarks", {}).then(function(res) {
+            var data = parseSdkResponse(res);
+            var arr = null;
+            if (Array.isArray(data)) arr = data;
+            else if (data && data.status === 'success' && Array.isArray(data.data)) arr = data.data;
+            if (arr !== null) {
+                workshopHistoryCache = arr;
+                if (typeof renderWorkshopChips === 'function') renderWorkshopChips();
+            }
+        }).catch(function() {});
+    }
+
+    function addWorkshopToHistory(url, name) {
+        if (!url) return;
+        var history = getWorkshopHistory();
+        var idx = history.findIndex(function(item) { return item.url === url; });
+        if (idx !== -1) {
+            history.splice(idx, 1);
+        }
+        history.unshift({ url: url, name: name || "未知商店" });
+        if (history.length > 15) history = history.slice(0, 15);
+        saveWorkshopHistory(history);
+        renderWorkshopChips();
+    }
+
+    function removeWorkshopFromHistory(url, event) {
+        if (event) event.stopPropagation();
+        var history = getWorkshopHistory();
+        var idx = history.findIndex(function(item) { return item.url === url; });
+        if (idx !== -1) {
+            history.splice(idx, 1);
+            saveWorkshopHistory(history);
+            renderWorkshopChips();
+            
+            var currentUrl = document.getElementById("custom-repo-url") ? document.getElementById("custom-repo-url").value : "";
+            if (currentUrl === url) {
+                showMascotBubble("退订成功！千小妹正在带您返回官方源哦~");
+                setTimeout(function() {
+                    switchStoreType('official');
+                }, 1000);
+            }
+        }
+    }
+
+    // 书签显示名: 优先用户保存的商店名，否则从 URL 剥离短名
+    function getWorkshopDisplayName(item) {
+        var url = (item && item.url) ? item.url : String(item || "");
+        var name = (item && item.name) ? item.name : "";
+        if (!name || name === "未知商店") {
+            name = url.replace('https://github.com/', '').replace('https://raw.githubusercontent.com/', '');
+            if (name.endsWith('/main')) name = name.substring(0, name.length - 5);
+        }
+        return name || "未知商店";
+    }
+
+    function renderWorkshopChips() {
+        var container = document.getElementById('workshop-chips');
+        if (!container) return;
+        
+        var history = getWorkshopHistory();
+        if (history.length === 0) {
+            container.innerHTML = '<div style="font-size: 12px; color: #555;">暂无订阅工坊</div>';
+            return;
+        }
+        
+        var html = '';
+        for (var i = 0; i < history.length; i++) {
+            var displayName = getWorkshopDisplayName(history[i]);
+            // v3.9.3: 改为索引传参，URL/店名不再拼入 onclick 字符串 (消除引号破坏与注入隐患)
+            html += '<div style="display: flex; align-items: center; background: rgba(33, 150, 243, 0.1); border: 1px solid rgba(33, 150, 243, 0.4); border-radius: 16px; padding: 4px 10px; cursor: pointer; transition: background 0.2s;" ' +
+                    'onclick="loadCustomStoreByIndex(' + i + ')" ' +
+                    'onmouseover="this.style.background=\'rgba(33, 150, 243, 0.2)\'" ' +
+                    'onmouseout="this.style.background=\'rgba(33, 150, 243, 0.1)\'">' +
+                    '<span style="font-size: 12px; color: #90caf9; margin-right: 6px;">' + escapeHTML(displayName) + '</span>' +
+                    '<span style="font-size: 14px; color: #ef5350; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 6px; cursor: pointer;" ' +
+                    'onclick="removeWorkshopFromHistoryByIndex(' + i + ', event)">×</span>' +
+                    '</div>';
+        }
+        container.innerHTML = html;
+    }
+
     function getSdk() { return astrSdk || window.AstrBotPluginPage; }
+
+    // 安全存储三件套: WebUI 运行在 iframe sandbox 中时裸调 localStorage 会抛 SecurityError，
+    // 导致调用中断（3.9.23 及之前 switchStoreType 因此在按钮变色后中断，工坊连接面板永远不渲染）
+    function safeStorageGet(key) {
+        try { return localStorage.getItem(key); } catch (e) { return null; }
+    }
+    function safeStorageSet(key, val) {
+        try { localStorage.setItem(key, val); } catch (e) {}
+    }
+    function safeStorageRemove(key) {
+        try { localStorage.removeItem(key); } catch (e) {}
+    }
 
 
     function showToast(msg, type) {
@@ -703,8 +825,36 @@
             "截胡台词更新啦，下次登场一定要大声喊出来哦~",
             "收到！这段语录千小妹已经背下来了。",
             "语录写得很棒！感觉已经能听到大家干饭的声音了。"
+        ],
+        'shop_official': [
+            "欢迎回到千小妹严选！这里的每一件都是官方精挑细选的哦~",
+            "官方货架已备好，全是千小妹亲自验收的好东西！",
+            "嚯嚯~千小妹严选正常营业中，看看今天想吃点什么？",
+            "欢迎光临！官方云仓的商品保质保量，请放心挑选~",
+            "严选小铺开张啦！慢慢看，不着急下嘴哦。"
+        ],
+        'shop_custom': [
+            "次元裂缝已开启！社区作者们的宝贝都在这边哦~",
+            "欢迎来到创意工坊！这里藏着大家伙儿的奇思妙想呢。",
+            "创意工坊报到~说不定能淘到意想不到的宝物哦！",
+            "工坊大门敞开中，一起去看看别的世界吃什么吧！",
+            "嘿嘿，创意工坊里全是新朋友，千小妹也很有兴趣呢~"
         ]
     };
+
+    // v3.9.3: 书签点击专用引语 (带商店名，随机一条)
+    function showBookmarkQuote(shopName) {
+        var list = [
+            "次元导航已锁定【{N}】！千小妹这就带路~",
+            "叮——【{N}】的传送门打开了，请跟紧千小妹哦！",
+            "切割空间中...唔哇，【{N}】的商品香气已经飘过来啦~",
+            "【{N}】的店主正在门口迎接我们呢，快进去看看吧！",
+            "喔！是【{N}】的味道，千小妹先替你闻为敬~",
+            "正在向【{N}】跃迁，请系好安全带，马上到站！"
+        ];
+        var msg = list[Math.floor(Math.random() * list.length)].replace(/\{N\}/g, shopName);
+        showMascotBubble(msg);
+    }
 
     var mascotQuotes = [
         "唔...要不要一起来尝尝刚出炉的焦烤棉花糖？",
@@ -777,51 +927,163 @@
     }
 
     
-    function fetchStoreIndex() {
+    // v3.9.3: 书签点击入口 (索引传参，避免 URL 拼入 onclick)
+    function loadCustomStoreByIndex(idx) {
+        var item = getWorkshopHistory()[idx];
+        if (!item) return;
+        var url = item.url || String(item);
+        if (!url) return;
+        var shopName = getWorkshopDisplayName(item);
+        loadCustomStore(url, shopName);
+    }
+
+    function removeWorkshopFromHistoryByIndex(idx, event) {
+        var item = getWorkshopHistory()[idx];
+        if (!item) return;
+        removeWorkshopFromHistory(item.url || String(item), event);
+    }
+
+        function loadCustomStore(url, bookmarkName) {
+        document.getElementById('custom-repo-url').value = url;
+        var match = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+        var repoId = "";
+        if (match) repoId = match[1] + "_" + match[2];
+        else repoId = url.replace(/[^a-zA-Z0-9_-]/g, "_");
+        
+        currentRepoId = repoId;
+        customLastUrl = url;  // 会话内存态: 书签点击同样保持工坊状态
+        safeStorageSet("chisa_custom_repo", url);
+        
+        // v3.9.3: 千小妹气泡 - 切割空间连接到目标工坊
+        showBookmarkQuote(bookmarkName || getWorkshopDisplayName({ url: url }));
+        
+        var sdk = getSdk();
+        if (sdk) {
+            sdk.apiGet("dlc_catalog", { store_type: 'custom', repo_id: repoId }).then(function(res) {
+                var data = parseSdkResponse(res);
+                if (data && data.status === 'success' && data.data && data.data.length > 0) {
+                    customCatalog = data.data;
+                    customMetadata = data.metadata || null;
+                    updateStoreBanner(customMetadata);
+                    renderStoreGrid('all');
+                    loadDownloadedRecords();
+                    showMascotBubble("【" + (bookmarkName || "工坊") + "】的货架已经就绪啦，慢慢逛哦~");
+                } else {
+                    // v3.9.3: 无本地缓存时不再弹窗询问，直接自动拉取线上目录
+                    showMascotBubble("本地还没进过这家的货，千小妹这就去云端搬货架哦~");
+                    fetchStoreIndex();
+                }
+            }).catch(function(e) {
+                showMascotBubble("本地没找到存货，千小妹直接去云端拉啦~");
+                fetchStoreIndex();
+            });
+        }
+    }
+
+    function fetchStoreIndex(silent) {
         var node = document.getElementById("dlc-node").value;
         var customUrl = document.getElementById("custom-repo-url") ? document.getElementById("custom-repo-url").value : "";
-        showToast("正在请求线上目录...", "");
+        var repoId = "";
+        if (currentStoreType === 'custom') {
+            // 防护: 工坊模式必须先填写仓库地址 (自动同步只在官方模式触发，此处静默退出)
+            if (!customUrl) {
+                if (!silent) {
+                    showToast("请先在上方输入第三方仓库地址再连接哦~", "error");
+                    var connectBody = document.getElementById('ws-connect-body');
+                    if (connectBody) connectBody.style.display = 'block';
+                }
+                return;
+            }
+            var match = customUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+            if (match) repoId = match[1] + "_" + match[2];
+            else repoId = customUrl.replace(/[^a-zA-Z0-9_-]/g, "_");
+            currentRepoId = repoId;
+        } else {
+            currentRepoId = "";
+        }
+        if (!silent) showToast("正在请求线上目录......", "");
+        if (!silent) showMascotBubble("千小妹正在穿越次元收取最新货架，请稍等片刻哦~");
         var sdk = getSdk();
         if(!sdk) return;
         
-        sdk.apiPost("fetch_dlc_catalog", { node: node, custom_url: customUrl }).then(function(res) {
+        sdk.apiPost("fetch_dlc_catalog", { node: node, custom_url: customUrl, store_type: currentStoreType, repo_id: currentRepoId }).then(function(res) {
             var data = parseSdkResponse(res);
             if (data && data.status === 'success') {
-                try { if (customUrl) { localStorage.setItem("chisa_custom_repo", customUrl); } else { localStorage.removeItem("chisa_custom_repo"); } } catch(e) { console.warn("localStorage is not available in sandbox."); }
-                showToast("目录拉取成功！", "success");
+                if (customUrl && currentStoreType === 'custom') { 
+                    customLastUrl = customUrl;  // 会话内存态: 切换商店标签后工坊状态不丢
+                    safeStorageSet("chisa_custom_repo", customUrl);
+                    if (typeof addWorkshopToHistory === 'function') {
+                        var metaName = data.metadata ? data.metadata.store_name : null;
+                        addWorkshopToHistory(customUrl, metaName);
+                    }
+                } else { 
+                    safeStorageRemove("chisa_custom_repo");
+                }
+                showToast(silent ? "🛒 货架已自动同步最新商品！" : "目录拉取成功！", "success");
+                if (!silent) showMascotBubble("货架焕然一新！欢迎光临，慢慢逛哦~");
+                // v3.9.26: 拉取响应自带 metadata，直接更新横幅，不等 loadCatalog 二次往返
+                if (data.metadata && data.metadata.store_name) {
+                    if (currentStoreType === 'custom') {
+                        customMetadata = data.metadata;
+                    } else {
+                        officialMetadata = data.metadata;
+                    }
+                    updateStoreBanner(data.metadata);
+                }
+                if (currentStoreType === 'custom') {
+                    var cb = document.getElementById('ws-connect-body');
+                    var ci = document.getElementById('ws-connect-icon');
+                    if (cb && cb.style.display !== 'none') {
+                        cb.style.display = 'none';
+                        ci.style.transform = 'rotate(-90deg)';
+                    }
+                }
                 loadCatalog();
             } else if (data && data.message === 'ALL_NODES_FAILED') {
-                showToast("加速节点失效，已为您重置测速引擎，请再点一次！", "error");
+                if (!silent) showToast("加速节点失效，已为您重置测速引擎，请再点一次！", "error");
             } else {
-                showToast("拉取失败: " + (data ? data.message : "网络错误"), "error");
+                if (!silent) showToast("拉取失败: " + (data ? data.message : "网络错误"), "error");
             }
         }).catch(function(e) {
-            showToast("拉取发生异常", "error");
+            if (!silent) showToast("拉取发生异常", "error");
         });
     }
     
-    function fetchStoreCovers() {
+    // 封面缓存目录与商店类型/仓库联动: 官方 Shop/cover，工坊按仓库隔离，防止同名封面互相覆盖
+    function getCoverFolder() {
+        if (currentStoreType === 'custom' && currentRepoId) {
+            var safeId = currentRepoId.replace(/[^a-zA-Z0-9_-]/g, "_");
+            return "Workshop/cover/" + safeId;
+        }
+        return "Shop/cover";
+    }
+
+    // mode: 'incr' 只补拉缺失(占位)的封面; 'full' 全量重新下载覆盖(用于修复封面串台/错图)
+    function fetchStoreCovers(mode) {
+        var isFull = (mode === 'full');
         var node = document.getElementById("dlc-node").value;
         var customUrl = document.getElementById("custom-repo-url") ? document.getElementById("custom-repo-url").value : "";
-        showToast("指令已下发: 正在增量拉取缺失的封面...", "");
+        var storeType = currentStoreType;
+        var repoId = currentStoreType === 'custom' ? currentRepoId : "";
+        showToast(isFull ? "指令已下发: 正在全量重新下载橱窗图并覆盖..." : "指令已下发: 正在增量拉取缺失的封面...", "");
         var sdk = getSdk();
         if (!sdk) return;
         
         var images = document.querySelectorAll('.store-card-img');
         for(var i=0; i<images.length; i++){ (function(img, index) {
             var coverId = img.getAttribute('data-cover');
-            // Only fetch if it is currently showing the placeholder
-            if (coverId && img.src.indexOf('hello.jpg') !== -1) {
+            // 增量模式只处理当前显示占位图的卡片; 全量模式一律重新拉取
+            if (coverId && (isFull || img.src.indexOf('hello.jpg') !== -1)) {
                 // Add loading spinner or visual cue to the card here if needed
                 img.style.opacity = 0.3;
                 setTimeout(function() {
-                    sdk.apiPost("fetch_single_cover", { file: coverId, node: node, custom_url: customUrl }).then(function(res) {
+                    sdk.apiPost("fetch_single_cover", { file: coverId, node: node, custom_url: customUrl, store_type: storeType, repo_id: repoId }).then(function(res) {
                         var data = parseSdkResponse(res);
                         if (data && data.status === 'success') {
                             img.style.opacity = 0;
                             setTimeout(function() {
                                 // Now request it natively from local via dynamic loader endpoint
-                                sdk.apiGet("dlc_cover", { file: coverId }).then(function(res2) {
+                                sdk.apiGet("dlc_cover", { file: coverId, store_type: storeType, repo_id: repoId }).then(function(res2) {
                                     var data2 = parseSdkResponse(res2);
                                     if(data2 && data2.data_url) {
                                         img.src = data2.data_url;
@@ -845,6 +1107,75 @@
         }
     }
     
+    
+    function updateStoreBanner(metadata) {
+        var img = document.getElementById('store-banner-img');
+        var fallback = document.getElementById('store-banner-fallback');
+        var overlay = document.getElementById('store-banner-overlay');
+        var nameEl = document.getElementById('store-banner-name');
+        var authorEl = document.getElementById('store-banner-author');
+        var descEl = document.getElementById('store-banner-desc');
+        
+        if (metadata) {
+            overlay.style.display = 'flex';
+            nameEl.textContent = metadata.store_name || (currentStoreType === 'custom' ? '未知第三方商店' : '千小妹官方云仓');
+            authorEl.textContent = metadata.author || 'Unknown';
+            // v3.9.26: 占位元数据给出明确指引，用户能感知当前是缓存占位而非真实装潢
+            if (metadata.is_placeholder) {
+                descEl.textContent = (metadata.description || '暂无商店简介') + '（占位信息，点击「🔄 刷新货架」获取商店真实装潢）';
+            } else {
+                descEl.textContent = metadata.description || '';
+            }
+        } else {
+            overlay.style.display = 'flex';
+            if (currentStoreType === 'custom') {
+                nameEl.textContent = '第三方创意工坊';
+                authorEl.textContent = '社区作者';
+                descEl.textContent = '连接仓库后自动加载商店装潢';
+            } else {
+                nameEl.textContent = '千小妹官方云仓';
+                authorEl.textContent = '千小妹';
+                descEl.textContent = '点击「🔄 刷新货架」加载官方装潢';
+            }
+        }
+
+        var fallbackUrl = './banner.jpg';
+        var repoId = currentStoreType === 'custom' ? currentRepoId : "";
+        var sdk = getSdk();
+        
+        if (sdk) {
+            sdk.apiGet("store_banner", { store_type: currentStoreType, repo_id: repoId }).then(function(res) {
+                var data = parseSdkResponse(res);
+                if (data && data.status === 'success' && data.data_url) {
+                    var tempImg = new Image();
+                    tempImg.onload = function() {
+                        if (img.getAttribute('src') !== this.src) img.src = this.src;
+                        img.style.display = 'block';
+                        fallback.style.display = 'none';
+                    };
+                    tempImg.onerror = function() {
+                        if (img.getAttribute('src') !== fallbackUrl) img.src = fallbackUrl;
+                        img.style.display = 'block';
+                        fallback.style.display = 'none';
+                    };
+                    tempImg.src = data.data_url;
+                } else {
+                    if (img.getAttribute('src') !== fallbackUrl) img.src = fallbackUrl;
+                    img.style.display = 'block';
+                    fallback.style.display = 'none';
+                }
+            }).catch(function(e){
+                if (img.getAttribute('src') !== fallbackUrl) img.src = fallbackUrl;
+                img.style.display = 'block';
+                fallback.style.display = 'none';
+            });
+        } else {
+            if (img.getAttribute('src') !== fallbackUrl) img.src = fallbackUrl;
+            img.style.display = 'block';
+            fallback.style.display = 'none';
+        }
+    }
+
     function escapeHTML(str) {
         if (!str) return '';
         return String(str).replace(/[&<>'"]/g, function(tag) {
@@ -853,38 +1184,105 @@
         });
     }
 
-    var storeCatalog = [];
+    var officialCatalog = [];
+    var customCatalog = [];
+    var officialMetadata = null;
+    var customMetadata = null;
     var catalogLoaded = false;
     
+    // v3.9.26: 从专用接口补全商店元数据 (SDK 响应形态不确定/元数据缺失时的兜底通道)
+    function fetchMetadataFallback() {
+        var sdk = getSdk();
+        if (!sdk) return;
+        var q = {};
+        if (currentStoreType === 'custom' && currentRepoId) {
+            q.store_type = 'custom';
+            q.repo_id = currentRepoId;
+        } else if (currentStoreType !== 'custom') {
+            q.store_type = 'official';
+        } else {
+            return;
+        }
+        sdk.apiGet("dlc_metadata", q).then(function(res) {
+            var mdata = parseSdkResponse(res);
+            var meta = null;
+            if (mdata && mdata.status === 'success' && mdata.data) meta = mdata.data;
+            else if (mdata && mdata.store_name) meta = mdata;
+            if (meta && meta.store_name && !meta.is_placeholder) {
+                if (currentStoreType === 'custom') {
+                    customMetadata = meta;
+                } else {
+                    officialMetadata = meta;
+                }
+                updateStoreBanner(meta);
+            }
+        }).catch(function() {});
+    }
+
     function loadCatalog() {
         var sdk = getSdk();
         if (!sdk) return;
-        var container = document.getElementById('store-content-area');
-        container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 50px;">正在读取本地目录...</div>';
         
-        sdk.apiGet("dlc_catalog", {}).then(function(res) {
+        var renderTargetId = 'store-content-area';
+        var container = document.getElementById(renderTargetId);
+        
+        // 防护: 工坊模式但尚未填写仓库地址时，跳过请求直接显示引导提示，防止官方数据误入工坊
+        if (currentStoreType === 'custom' && !currentRepoId) {
+            updateStoreBanner(null);
+            if (container) {
+                container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: var(--muted);"><div style="font-size: 24px; margin-bottom: 15px;">🌐 欢迎来到创意工坊</div><div>👆 请在上方输入仓库地址并点击连接，获取第三方作者的 DLC 列表！</div></div>';
+            }
+            return;
+        }
+        
+        if (container) {
+            container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 50px;">正在读取本地目录...</div>';
+        }
+        
+        var isCustom = (currentStoreType === 'custom' ? "1" : "0");
+        var repoId = currentStoreType === 'custom' ? currentRepoId : "";
+        sdk.apiGet("dlc_catalog", { is_custom: isCustom, store_type: currentStoreType, repo_id: repoId }).then(function(res) {
+            // 防串扰: 请求返回时若商店类型已切换，丢弃过期响应
+            if ((currentStoreType === 'custom') !== (isCustom === "1")) return;
+            
             var data = parseSdkResponse(res);
             
-            // AstrBot's SDK sometimes automatically unwraps the "data" field from the response.
-            // If the inner data is an array (our catalog), data itself becomes the array!
             var isArray = Array.isArray(data);
             var isSuccessObject = data && data.status === 'success' && data.data;
             var isMissing = data && data.status === 'missing';
             
             if (isArray || isSuccessObject) {
-                storeCatalog = isArray ? data : data.data;
+                var gotMeta = false;
+                if (currentStoreType === 'custom') {
+                    customCatalog = isArray ? data : data.data;
+                    customMetadata = isSuccessObject ? data.metadata : null;
+                    gotMeta = !!(customMetadata && customMetadata.store_name);
+                    updateStoreBanner(customMetadata);
+                } else {
+                    officialCatalog = isArray ? data : data.data;
+                    officialMetadata = isSuccessObject ? data.metadata : null;
+                    gotMeta = !!(officialMetadata && officialMetadata.store_name);
+                    updateStoreBanner(officialMetadata);
+                }
+                // v3.9.26: 响应中元数据缺失 (纯数组/空对象) 时，走专用接口补全商店装潢信息
+                if (!gotMeta) fetchMetadataFallback();
+                
                 catalogLoaded = true;
                 renderStoreGrid('all');
                 loadDownloadedRecords();
             } else if (isMissing) {
-                container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 50px;">' +
-                    '<div style="font-size: 24px; margin-bottom: 20px;">📦 未找到本地缓存的商品目录</div>' +
-                    '<button class="btn" style="padding: 10px 20px; font-size: 16px;" onclick="fetchStoreIndex()">点击获取线上目录</button>' +
-                    '<div style="color: var(--muted); font-size: 12px; margin-top: 20px;">目录拉取成功后会永久保存在 plugin_data 中。</div>' +
-                '</div>';
+                updateStoreBanner(null);
+                if (container) {
+                    var emptyMsg = currentStoreType === 'custom' 
+                        ? '👆 请在上方输入仓库地址并点击连接，获取第三方作者的 DLC 列表！'
+                        : '<div style="font-size: 24px; margin-bottom: 20px;">📦 未找到本地缓存的商品目录</div><button class="btn" style="padding: 10px 20px; font-size: 16px;" onclick="fetchStoreIndex()">🔄 点击刷新货架</button><div style="color: var(--muted); font-size: 12px; margin-top: 20px;">货架拉取成功后会永久保存在 plugin_data 中。</div>';
+                    container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: var(--muted);">' + emptyMsg + '</div>';
+                }
             } else {
-                var errInfo = data ? JSON.stringify(data) : "网络请求或解析失败，请按 F12 检查控制台";
-                container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #cc4444; padding: 50px;">读取目录失败<br><br><span style="font-size: 12px; color: #aaa;">' + errInfo + '</span></div>';
+                if (container) {
+                    var errInfo = data ? JSON.stringify(data) : "网络请求或解析失败，请按 F12 检查控制台";
+                    container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #cc4444; padding: 50px;">读取目录失败<br><br><span style="font-size: 12px; color: #aaa;">' + errInfo + '</span></div>';
+                }
             }
         });
     }
@@ -910,7 +1308,8 @@
         
         function enqueueImageLoad(img, coverId) {
             return new Promise(function(resolve, reject) {
-                var localSrc = "./plugin_data/astrbot_plugin_chisa_still_eating/Webui-PIC/Shop/cover/" + coverId + "?t=" + new Date().getTime();
+                var folderName = getCoverFolder();
+                var localSrc = "./plugin_data/astrbot_plugin_chisa_still_eating/Webui-PIC/" + folderName + "/" + coverId + "?t=" + new Date().getTime();
                 var tmpImg = new Image();
                 tmpImg.onload = function() {
                     img.src = localSrc;
@@ -921,7 +1320,7 @@
                 tmpImg.onerror = function() {
                     var sdk = getSdk();
                     if (sdk) {
-                        sdk.apiGet("dlc_cover", { file: coverId }).then(function(res) {
+                        sdk.apiGet("dlc_cover", { file: coverId, store_type: currentStoreType, repo_id: (currentStoreType === 'custom' ? currentRepoId : "") }).then(function(res) {
                             var data = parseSdkResponse(res);
                             if(data && data.status === 'success' && data.data_url) {
                                 img.src = data.data_url;
@@ -934,7 +1333,7 @@
                         resolve();
                     }
                 };
-                tmpImg.src = "./plugin_data/astrbot_plugin_chisa_still_eating/Webui-PIC/Shop/cover/" + coverId;
+                tmpImg.src = "./plugin_data/astrbot_plugin_chisa_still_eating/Webui-PIC/" + folderName + "/" + coverId;
             });
         }
 
@@ -970,16 +1369,19 @@
 
     function renderStoreGrid(filterCat) {
         if (!filterCat) filterCat = 'all';
-        var container = document.getElementById('store-content-area');
+        var renderTargetId = 'store-content-area';
+        var container = document.getElementById(renderTargetId);
+        if (!container) return;
         container.innerHTML = '';
         
+        var currentCat = currentStoreType === 'custom' ? customCatalog : officialCatalog;
         var filtered = [];
         if (filterCat === 'all') {
-            filtered = storeCatalog;
+            filtered = currentCat;
         } else {
-            for (var i = 0; i < storeCatalog.length; i++) {
-                if (storeCatalog[i].cat === filterCat) {
-                    filtered.push(storeCatalog[i]);
+            for (var i = 0; i < currentCat.length; i++) {
+                if (currentCat[i].cat === filterCat) {
+                    filtered.push(currentCat[i]);
                 }
             }
         }
@@ -1035,14 +1437,15 @@
                 var coverId = img.getAttribute('data-cover');
                 
                 if (coverId) {
-                    var localSrc = "./plugin_data/astrbot_plugin_chisa_still_eating/Webui-PIC/Shop/cover/" + coverId + "?t=" + new Date().getTime();
+                    var folderName = getCoverFolder();
+                    var localSrc = "./plugin_data/astrbot_plugin_chisa_still_eating/Webui-PIC/" + folderName + "/" + coverId + "?t=" + new Date().getTime();
                     var tmpImg = new Image();
                     tmpImg.onload = function() {
                         img.src = localSrc; img.style.display = 'block'; if(img.nextElementSibling) img.nextElementSibling.style.display = 'none';
                     };
                     tmpImg.onerror = function() {
                         if (sdk) {
-                            sdk.apiGet("dlc_cover", { file: coverId }).then(function(res) {
+                            sdk.apiGet("dlc_cover", { file: coverId, store_type: currentStoreType, repo_id: (currentStoreType === 'custom' ? currentRepoId : "") }).then(function(res) {
                                 var data = parseSdkResponse(res);
                                 if(data && data.status === 'success' && data.data_url) {
                                     img.src = data.data_url; img.style.display = 'block'; if(img.nextElementSibling) img.nextElementSibling.style.display = 'none';
@@ -1050,7 +1453,7 @@
                             });
                         }
                     };
-                    tmpImg.src = "./plugin_data/astrbot_plugin_chisa_still_eating/Webui-PIC/Shop/cover/" + coverId;
+                    tmpImg.src = "./plugin_data/astrbot_plugin_chisa_still_eating/Webui-PIC/" + folderName + "/" + coverId;
                 }
                 
                 setTimeout(function() {
@@ -1074,7 +1477,13 @@
         var sdk = getSdk();
         if(!sdk) return;
         setTimeout(function() {
-            sdk.apiGet("get_dlc_downloaded", {}).then(function(res) {
+            // 按商店来源读取已购清单: 官方读 Shop/index，工坊读 Workshop/{repo_id}/index
+            var q = {};
+            if (currentStoreType === 'custom' && currentRepoId) {
+                q.store_type = 'custom';
+                q.repo_id = currentRepoId;
+            }
+            sdk.apiGet("get_dlc_downloaded", q).then(function(res) {
                 var data = parseSdkResponse(res);
                 if (Array.isArray(data)) {
                     downloadedRecords = data;
@@ -1161,7 +1570,9 @@
             id: id, 
             sha256: sha256, 
             node: node,
-            store_type: storeType
+            store_type: storeType,
+            custom_url: (storeType === 'custom' ? getCustomRepoUrl() : ""),
+            repo_id: (storeType === 'custom' ? currentRepoId : "")
         }).then(function(res) {
             var data = parseSdkResponse(res);
             if (data && data.status === 'success') {
@@ -1199,28 +1610,139 @@
     }
 
     var currentStoreType = 'official';
+    var currentRepoId = "";
+    // 工坊会话内存态: sandbox 下 localStorage 不可用，用内存变量保持"两端商店同时存在"的切换体验
+    var customLastUrl = "";   // 本次会话最近一次成功连接的工坊地址
+
+    function getCustomRepoUrl() {
+        var el = document.getElementById("custom-repo-url");
+        if (el && el.value && el.value.trim()) return el.value.trim();
+        return customLastUrl;
+    }
+
+    // 从后端恢复最近一次成功连接的工坊仓库 (刷新 WebUI 后内存丢失时的兜底通道)
+    function restoreLastCustomRepo() {
+        var sdk = getSdk();
+        if (!sdk) return;
+        sdk.apiGet("last_custom_repo", {}).then(function(res) {
+            var data = parseSdkResponse(res);
+            if (data && data.status === 'success' && data.data && data.data.repo_id) {
+                var el = document.getElementById("custom-repo-url");
+                // 仅当用户尚未手动输入其他仓库时才自动恢复
+                if (currentStoreType === 'custom' && !customLastUrl && (!el || !el.value.trim())) {
+                    customLastUrl = data.data.url || "";
+                    if (el) el.value = customLastUrl;
+                    currentRepoId = data.data.repo_id;
+                    showToast("已自动恢复上次连接的工坊: " + (data.data.store_name || data.data.repo_id), "");
+                    loadCatalog();
+                }
+            }
+        }).catch(function() {});
+    }
+
+    // 手动把当前输入框中的仓库地址存入书架
+    function saveWorkshopBookmark() {
+        var el = document.getElementById("custom-repo-url");
+        var url = el ? el.value.trim() : "";
+        if (!url) { showToast("请先输入仓库地址再存入书架哦~", "error"); return; }
+        var name = null;
+        if (currentStoreType === 'custom' && typeof customMetadata !== 'undefined' && customMetadata &&
+            customMetadata.store_name && !customMetadata.is_placeholder) {
+            name = customMetadata.store_name;
+        }
+        addWorkshopToHistory(url, name);
+        showToast("📌 已存入我的工坊书架！", "success");
+    }
+    
+    window.toggleWsPanel = function(bodyId, iconId) {
+        var body = document.getElementById(bodyId);
+        var icon = document.getElementById(iconId);
+        if (body.style.display === 'none') {
+            body.style.display = 'block';
+            icon.style.transform = 'rotate(0deg)';
+        } else {
+            body.style.display = 'none';
+            icon.style.transform = 'rotate(-90deg)';
+        }
+    };
+
     function switchStoreType(type) {
         currentStoreType = type;
-        document.getElementById('btn-official-store').style.background = type === 'official' ? 'var(--primary)' : '#333';
-        document.getElementById('btn-custom-store').style.background = type === 'custom' ? 'var(--primary)' : '#333';
-        
+        document.getElementById('btn-official-store').style.background = type === 'official' ? '#c62828' : '#333';
+        document.getElementById('btn-custom-store').style.background = type === 'custom' ? '#1976d2' : '#333';
+        // v3.9.3: 千小妹气泡 - 商店切换引导
+        triggerMascotQuote(type === 'custom' ? 'shop_custom' : 'shop_official');
+
+        var wsHeader = document.getElementById('workshop-header-area');
+        if (!wsHeader) {
+            wsHeader = document.createElement('div');
+            wsHeader.id = 'workshop-header-area';
+            wsHeader.style.display = 'none';
+            wsHeader.style.flexDirection = 'column';
+            wsHeader.style.gap = '15px';
+            wsHeader.style.marginBottom = '20px';
+            var contentArea = document.getElementById('store-content-area');
+            contentArea.parentNode.insertBefore(wsHeader, contentArea);
+        }
+
         if (type === 'custom') {
-            document.getElementById('store-content-area').innerHTML = 
-                '<div style="grid-column: 1 / -1; padding: 30px; background: rgba(255,255,255,0.05); border-radius: 8px;">' +
-                '<h3 style="margin-top:0;">⚙️ 自定义生态源配置</h3>' +
-                '<p style="color:var(--muted); font-size:13px;">在这里你可以接入由社区驱动的第三方 DLC 仓库。</p>' +
-                '<div style="margin-bottom: 15px;">' +
-                    '<label style="display:block; margin-bottom:5px;">Raw 仓库目录地址 (用于拉取目录与封面)</label>' +
-                    '<input type="text" id="diy-raw-url" placeholder="https://raw.githubusercontent.com/..." style="width:100%; padding:8px; background:#111; color:#fff; border:1px solid #444; border-radius:4px;">' +
+            // 状态恢复优先级: 会话内存态 > localStorage (sandbox 下不可用) > 后端 last_repo (异步兜底)
+            var customUrl = customLastUrl || safeStorageGet("chisa_custom_repo") || "";
+            if (customUrl) {
+                var match = customUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+                if (match) currentRepoId = match[1] + "_" + match[2];
+                else currentRepoId = customUrl.replace(/[^a-zA-Z0-9_-]/g, "_");
+            } else {
+                currentRepoId = "";
+            }
+            wsHeader.style.display = 'flex';
+            wsHeader.innerHTML = 
+                '<div style="background: rgba(33, 150, 243, 0.05); border: 1px solid rgba(33, 150, 243, 0.2); border-radius: 8px; overflow: hidden;">' +
+                    '<div onclick="toggleWsPanel(\'ws-connect-body\', \'ws-connect-icon\')" style="padding: 12px 20px; background: rgba(33, 150, 243, 0.1); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #90caf9;">' +
+                        '<span>🚀 连接创意工坊</span>' +
+                        '<span id="ws-connect-icon" style="transition: transform 0.2s;">▼</span>' +
+                    '</div>' +
+                    '<div id="ws-connect-body" style="padding: 20px; display: block;">' +
+                        '<p style="color:var(--muted); font-size:13px; margin-top:0; margin-bottom: 15px;">粘贴社区作者分享的完整仓库地址 (如: https://github.com/作者名/仓库名)，即可接入并下载他们的作品！</p>' +
+                        '<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">' +
+                            '<input type="text" id="custom-repo-url" placeholder="https://github.com/YourName/RepoName" style="flex: 1; min-width: 220px; padding: 10px 12px; background: #111; color: #fff; border: 1px solid #444; border-radius: 4px; font-size: 14px;">' +
+                            '<button class="btn" style="background:#1976d2; padding: 10px 20px; font-size: 14px;" onclick="fetchStoreIndex()">连接并拉取目录</button>' +
+                            '<button class="btn" style="background:#546e7a; padding: 10px 20px; font-size: 14px;" onclick="saveWorkshopBookmark()">📌 存入书架</button>' +
+                        '</div>' +
+                    '</div>' +
                 '</div>' +
-                '<div style="margin-bottom: 15px;">' +
-                    '<label style="display:block; margin-bottom:5px;">Release 压缩包根地址 (用于下载大包)</label>' +
-                    '<input type="text" id="diy-release-url" placeholder="https://github.com/.../releases/download/..." style="width:100%; padding:8px; background:#111; color:#fff; border:1px solid #444; border-radius:4px;">' +
-                '</div>' +
-                '<button class="btn" style="padding:8px 16px;" onclick="showToast(\'自定义仓库功能将在下个版本开放\', \'\')">保存并拉取</button>' +
+                '<div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed #444; border-radius: 8px; overflow: hidden;">' +
+                    '<div onclick="toggleWsPanel(\'ws-bookshelf-body\', \'ws-bookshelf-icon\')" style="padding: 10px 20px; background: rgba(0, 0, 0, 0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #aaa; font-size: 14px;">' +
+                        '<span>📚 我的工坊书架 (最多保存15个)</span>' +
+                        '<span id="ws-bookshelf-icon" style="transition: transform 0.2s;">▼</span>' +
+                    '</div>' +
+                    '<div id="ws-bookshelf-body" style="padding: 15px; display: block;">' +
+                        '<div id="workshop-chips" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>' +
+                    '</div>' +
                 '</div>';
-        } else {
+            
+            var savedRepo = safeStorageGet("chisa_custom_repo");
+            var inputVal = customLastUrl || savedRepo || "";
+            if (inputVal) {
+                document.getElementById("custom-repo-url").value = inputVal;
+            }
+            if (typeof renderWorkshopChips === 'function') {
+                renderWorkshopChips();
+            }
+            // 无任何已保存仓库时，异步尝试从后端恢复最近一次成功连接的工坊
+            if (!inputVal) {
+                restoreLastCustomRepo();
+            }
+            // 始终从后端按当前 repo_id 读取本地缓存，防止内存缓存与仓库 ID 不一致导致串数据
             loadCatalog();
+        } else {
+            wsHeader.style.display = 'none';
+            if (officialCatalog.length > 0) {
+                updateStoreBanner(officialMetadata);
+                renderStoreGrid('all');
+            } else {
+                loadCatalog();
+            }
         }
     }
 
@@ -1330,6 +1852,13 @@
       
       if (tabId === 'tab-dlc') {
           triggerMascotQuote('shop');
+          // 每次页面加载(含刷新)后的首次进入商会，自动后台同步一次官方货架，避免长期只看旧缓存
+          if (!window._chisaAutoSynced) {
+              window._chisaAutoSynced = true;
+              if (currentStoreType === 'official') {
+                  fetchStoreIndex(true);
+              }
+          }
           if (!catalogLoaded) {
               loadCatalog();
           }
@@ -1337,7 +1866,7 @@
     }
 
     function initAccordions() {
-      var customSaved = null; try { customSaved = localStorage.getItem("chisa_custom_repo"); } catch(e) { console.warn("localStorage is not available in sandbox."); }
+      var customSaved = safeStorageGet("chisa_custom_repo");
       if(customSaved && document.getElementById("custom-repo-url")) {
           document.getElementById("custom-repo-url").value = customSaved;
       }
@@ -1902,6 +2431,7 @@
                 sdk.ready().then(function() {
                     loadMascot();
                     fetchData();
+                    loadWorkshopHistoryFromBackend();  // v3.9.26: 书架从后端恢复
                 }).catch(function(e) { console.error("SDK Ready failed", e); });
             } else {
                 attempts++;

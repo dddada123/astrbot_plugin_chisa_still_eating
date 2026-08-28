@@ -1,4 +1,4 @@
-﻿import os
+import os
 import asyncio          # 补充导入
 from quart import jsonify, request, send_file
 import threading
@@ -184,7 +184,7 @@ class FlavorFusionUltimate(Star):
         self._is_download_thread_active = True
         self.is_downloading = True
         self.downloaded_bytes = 0
-        self.download_msg = "正在从远程拉取图库源文件 (约 160MB)，请耐心等待..."
+        self.download_msg = "正在从远程拉取图库源文件 (约 99.2MB)，请耐心等待..."
         
         import concurrent.futures
         import time
@@ -196,7 +196,7 @@ class FlavorFusionUltimate(Star):
         logging.info("[ChisaEating] 🚀 开始图库部署准备...检测到国内网络环境，启动多线程智能测速引擎。")
         logging.info("[ChisaEating] 📡 正在并发探测 4 个 Github 加速节点 (Timeout=10s)...")
 
-        base_url = "https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/v3.0-beta/V3.astrbot_plugin_chisa_still_eating.zip"
+        base_url = "https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/Chisa_Dlc_Store/fd0000.zip"
         mirrors = [
             f"https://gh-proxy.com/{base_url}",
             f"https://hk.gh-proxy.com/{base_url}",
@@ -282,7 +282,7 @@ class FlavorFusionUltimate(Star):
         try:
             zip_path = os.path.join(self.image_mgr.data_dir, "assets_temp.zip")
             os.makedirs(self.image_mgr.data_dir, exist_ok=True)
-            TARGET_HASH = "239dda1a6de8ad4227f166eabe19db83c9ce4a15806e14fdbd7ecbbf98da30ae"
+            TARGET_HASH = "18648dfbd827cc69b1e0c627058d15a5b0a5622967a2a11b852cc8098df499c9"
             success = False
 
             for item in urls_to_try:
@@ -291,7 +291,7 @@ class FlavorFusionUltimate(Star):
                 desc = item["desc"]
                 
                 try:
-                    logging.info(f"[ChisaEating] ⬇️ 正在通过 {desc} 下载资源包 (160MB)...")
+                    logging.info(f"[ChisaEating] ⬇️ 正在通过 {desc} 下载资源包 (99.2MB)...")
                     self.downloaded_bytes = 0
                     response = requests.get(url, stream=True, timeout=120, proxies=proxies)
                     response.raise_for_status()
@@ -970,7 +970,7 @@ class FlavorFusionUltimate(Star):
                     yield event.make_result().message("【千小妹提示】图库正在下载中，请勿重复触发...")
                 else:
                     threading.Thread(target=self._download_and_extract_assets, daemon=True).start()
-                    yield event.make_result().message("【千小妹提示】已收到显式确认！开始从 Github 拉取并更新图库 (约160MB)，请查看后台日志或稍后重试抽卡。回复/千小妹图库下载进度或任意吃什么命令可查看当前下载进度。")
+                    yield event.make_result().message("【千小妹提示】已收到显式确认！开始从 Github 拉取并更新图库 (约99.2MB)，请查看后台日志或稍后重试抽卡。回复/千小妹图库下载进度或任意吃什么命令可查看当前下载进度。")
             event.stop_event()
             return
             
@@ -990,7 +990,7 @@ class FlavorFusionUltimate(Star):
                     return
         
         if msg_text in ["千小妹还在吃帮助", "千咲吃什么帮助", "干饭帮助", "美食帮助", "千小妹帮助", "千小妹吃什么帮助"]:
-            help_text = """🌸 【千小妹跨次元干饭指南 v3.9.1】 🌸
+            help_text = """🌸 【千小妹跨次元干饭指南 v4.0.0】 🌸
 不知道今天吃啥？让异次元的导游们为你随机摇号吧！
 
 🎲 基础盲盒（全宇宙随机）
@@ -1016,7 +1016,7 @@ class FlavorFusionUltimate(Star):
 ⚙️ 系统与图库管理 (注：需在AstrBot后台配置管理员)
 💬 千小妹速查：极速调出可用短指令表。
 💬 千小妹图库下载进度：随时查看后台图库的拉取进度。
-💬 更新千小妹图库：强制进行160MB图包的安全拉取。
+💬 更新千小妹图库：强制进行99.2MB图包的安全拉取。
 💬 【加菜格式】：加菜 [世界] [分类] [菜名]
 ⚠️ (参数之间必须打空格，且图片要和文字发在同一条消息里！)
 💡 举例：加菜 三次元 食物 肯德基肉霸堡 (带图)
@@ -1168,7 +1168,7 @@ class FlavorFusionUltimate(Star):
 
 🛠️ 【全自动拉取方案】：
 请先前往 AstrBot 后台 WebUI，在本插件配置的『管理员账号白名单』中填入您的 QQ 号。
-随后在群内发送 /更新千小妹图库 即可触发 160MB 图包的安全拉取。
+随后在群内发送 /更新千小妹图库 即可触发 99.2MB 图包的安全拉取。
 
 📦 【网盘手动兜底方案】（若拉取超时/失败）：
 夸克：https://pan.quark.cn/s/301110d45a48
@@ -1185,7 +1185,7 @@ class FlavorFusionUltimate(Star):
 
 🛠️ 【全自动拉取方案】：
 请先前往 AstrBot 后台 WebUI，在本插件配置的『管理员账号白名单』中填入您的 QQ 号。
-随后在群内发送 /更新千小妹图库 即可触发 160MB 图包的安全拉取。
+随后在群内发送 /更新千小妹图库 即可触发 99.2MB 图包的安全拉取。
 
 📦 【网盘手动兜底方案】（若拉取超时/失败）：
 夸克：https://pan.quark.cn/s/301110d45a48
@@ -1683,6 +1683,11 @@ class FlavorFusionUltimate(Star):
         # DLC 商城 API 注册
         register_api(f"/{self.plugin_name}/dlc_catalog", self.page_dlc_catalog, ["GET"], "获取本地DLC缓存目录")
         register_api(f"/{self.plugin_name}/fetch_dlc_catalog", self.page_fetch_dlc_catalog, ["POST"], "拉取线上DLC目录")
+        register_api(f"/{self.plugin_name}/store_banner", self.page_store_banner, ["GET"], "获取商店海报本地缓存")
+        register_api(f"/{self.plugin_name}/last_custom_repo", self.page_get_last_custom_repo, ["GET"], "获取最近连接的工坊仓库")
+        register_api(f"/{self.plugin_name}/workshop_bookmarks", self.page_get_workshop_bookmarks, ["GET"], "读取工坊书架")
+        register_api(f"/{self.plugin_name}/save_workshop_bookmarks", self.page_save_workshop_bookmarks, ["POST"], "保存工坊书架")
+        register_api(f"/{self.plugin_name}/dlc_metadata", self.page_dlc_metadata, ["GET"], "获取商店本地元数据")
         register_api(f"/{self.plugin_name}/fetch_single_cover", self.page_fetch_single_cover, ["POST"], "增量拉取单张DLC封面")
         register_api(f"/{self.plugin_name}/dlc_cover", self.page_dlc_cover, ["GET"], "获取本地DLC缓存封面")
         register_api(f"/{self.plugin_name}/download_dlc", self.page_download_dlc, ["POST"], "下载DLC")
@@ -1850,24 +1855,64 @@ class FlavorFusionUltimate(Star):
         logging.warning("[Chisa DLC] ❌ 警告：所有国内加速镜像均无法连通！")
         return ""
 
+    def _get_store_dir(self, store_type, repo_id=None):
+        import os
+        from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+        try:
+            base_data_path = get_astrbot_data_path()
+        except ImportError:
+            base_data_path = "data"
+        plugin_dir = os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating")
+        
+        if store_type == "custom":
+            # 修复穿透 Bug: custom 模式但 repo_id 为空时，绝不允许落入官方 Shop 目录
+            if not repo_id:
+                return os.path.join(plugin_dir, "Webui-PIC", "Workshop", "_empty_", "index")
+            safe_id = "".join(c if c.isalnum() or c in "-_" else "_" for c in str(repo_id))
+            return os.path.join(plugin_dir, "Webui-PIC", "Workshop", safe_id, "index")
+        else:
+            return os.path.join(plugin_dir, "Webui-PIC", "Shop", "index")
+
+    def _get_banner_dir(self):
+        import os
+        from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+        try:
+            base_data_path = get_astrbot_data_path()
+        except ImportError:
+            base_data_path = "data"
+        return os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "banner")
+
     async def page_dlc_catalog(self):
         try:
             import os
             import json
-            import logging
-            from quart import jsonify
-            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
-            try:
-                base_data_path = get_astrbot_data_path()
-            except ImportError:
-                base_data_path = "data"
-            index_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "index"))
+            from quart import jsonify, request
+            
+            store_type = request.args.get("store_type", "official")
+            repo_id = request.args.get("repo_id", "")
+            
+            # 双保险: custom 模式必须携带 repo_id，否则直接返回 missing，防止官方数据被误渲染到工坊
+            if store_type == "custom" and not repo_id.strip():
+                return jsonify({"status": "missing"})
+                
+            index_dir = self._get_store_dir(store_type, repo_id)
             catalog_path = os.path.join(index_dir, "catalog.json")
             if not os.path.exists(catalog_path):
                 return jsonify({"status": "missing"})
+                
             with open(catalog_path, 'r', encoding='utf-8-sig') as f:
                 data = json.load(f)
-            return jsonify({"status": "success", "data": data})
+                
+            meta_path = os.path.join(index_dir, "metadata.json")
+            meta_data = {}
+            if os.path.exists(meta_path):
+                try:
+                    with open(meta_path, 'r', encoding='utf-8-sig') as mf:
+                        meta_data = json.load(mf)
+                except Exception:
+                    meta_data = {}
+                    
+            return jsonify({"status": "success", "data": data, "metadata": meta_data})
         except Exception as e:
             from quart import jsonify
             return jsonify({"status": "error", "message": str(e)}), 500
@@ -1876,55 +1921,338 @@ class FlavorFusionUltimate(Star):
         try:
             import os
             import aiohttp
+            import asyncio
+            import json
+            import re
             from quart import jsonify, request
-            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+            
             payload = await request.get_json(silent=True) or {}
             node = payload.get("node", "smart")
             custom_url = payload.get("custom_url", "").strip()
+            store_type = payload.get("store_type", "official")
+            repo_id = payload.get("repo_id", "")
             
-            raw_base = "https://raw.githubusercontent.com/dddada123/astrbot_plugin_chisa_still_eating_photo/main"
-            if custom_url:
-                custom_url = custom_url.replace("https://github.com/", "https://raw.githubusercontent.com/")
-                if not custom_url.endswith("/main"):
-                    custom_url = custom_url.rstrip("/") + "/main"
-                raw_base = custom_url
+            # 防护: 工坊模式必须携带仓库地址，防止把官方目录数据拉写到错误路径
+            if store_type == "custom" and not custom_url:
+                return jsonify({"status": "error", "message": "请先输入第三方仓库地址"}), 400
                 
-            original_url = f"{raw_base}/index/catalog.json"
-            
+            # ---------- 仓库地址标准化: 从任意 GitHub URL 形态中提取 owner/repo ----------
+            def extract_owner_repo(url):
+                m = re.search(r"github\.com[/:]([A-Za-z0-9_-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?(?:/|$)", url)
+                if m:
+                    return m.group(1), m.group(2)
+                return None, None
+
+            owner, repo_name = "dddada123", "astrbot_plugin_chisa_still_eating_photo"
+            if store_type == "custom" and custom_url:
+                c_owner, c_repo = extract_owner_repo(custom_url)
+                if not c_owner or not c_repo:
+                    return jsonify({"status": "error", "message": "无法识别仓库地址，请填写形如 https://github.com/作者名/仓库名 的完整地址"}), 400
+                owner, repo_name = c_owner, c_repo
+
+            # 三级源: raw 短格式 → raw refs 格式 → jsDelivr CDN (国内可达性最好，且绕开代理缓存怪癖)
+            source_bases = [
+                f"https://raw.githubusercontent.com/{owner}/{repo_name}/main",
+                f"https://raw.githubusercontent.com/{owner}/{repo_name}/refs/heads/main",
+                f"https://cdn.jsdelivr.net/gh/{owner}/{repo_name}@main",
+            ]
+            # 兼容: 用户自定义 raw_base 时 (旧逻辑入参) 仍以标准化结果为准
+
             if node == "smart":
                 node = await self._get_optimal_dlc_node()
                 
-            url = original_url
-            if node and node != "direct":
-                url = f"https://{node}/{original_url}"
+            import logging
+            
+            async def _do_fetch(url, use_node):
+                try:
+                    async with aiohttp.ClientSession(trust_env=(use_node == "direct")) as session:
+                        async with session.get(url, timeout=aiohttp.ClientTimeout(total=20)) as resp:
+                            if resp.status == 200:
+                                return await resp.read()
+                except Exception:
+                    pass
+                return None
                 
-            try:
-                # trust_env=False forces physical connection (ignores global proxy)
-                async with aiohttp.ClientSession(trust_env=(node == "direct")) as session:
-                    async with session.get(url, timeout=15) as resp:
-                        if resp.status != 200:
-                            raise Exception(f"HTTP {resp.status}")
-                        content = await resp.read()
-            except Exception as e:
-                import logging
+            async def _fetch_via(base, path):
+                """对单个源尝试拉取。raw 源: 节点代理优先→直连兜底; jsDelivr 源: CDN直连优先→节点代理兜底
+                (gh-proxy 类代理通常只反代 GitHub 域名，对 cdn.jsdelivr.net 会拒绝)"""
+                if "jsdelivr" in base:
+                    content = await _do_fetch(f"{base}/{path}", "direct")
+                    if content is None and node and node != "direct":
+                        content = await _do_fetch(f"https://{node}/{base}/{path}", node)
+                    return content
+                url = f"{base}/{path}"
+                if node and node != "direct":
+                    url = f"https://{node}/{url}"
+                content = await _do_fetch(url, node)
+                if content is None and node and node != "direct":
+                    content = await _do_fetch(f"{base}/{path}", "direct")
+                return content
+                
+            async def fetch_repo_file(path):
+                """遍历三级源直到拿到内容; 返回 (content, source_desc)"""
+                for idx, base in enumerate(source_bases):
+                    content = await _fetch_via(base, path)
+                    if content:
+                        return content, f"source{idx+1}({base.split('/')[2]})"
+                return None, "ALL_SOURCES_FAILED"
+                
+            # catalog 与 metadata 并发拉取 (3.9.25 误为串行，节点限流时第二个请求更易失败)
+            (catalog_content, cat_src), (meta_content, meta_src) = await asyncio.gather(
+                fetch_repo_file("index/catalog.json"),
+                fetch_repo_file("Chisa_DLC_Metadata.json")
+            )
+            
+            logging.info(f"[Chisa DLC] 📥 拉取结果 via [{node or 'direct'}]: catalog={'OK' if catalog_content else 'FAIL'} ({cat_src}) metadata={'OK' if meta_content else 'FAIL'} ({meta_src})")
+            
+            if not catalog_content:
                 if payload.get("node", "smart") == "smart":
-                    logging.warning(f"[Chisa DLC] ⚠️ 锁定节点下载失败 ({e})，清除测速缓存！")
+                    logging.warning(f"[Chisa DLC] 锁定节点下载失败，清除测速缓存！")
                     self._dlc_best_node = None
-                    return jsonify({"status": "error", "message": "ALL_NODES_FAILED"}), 500
-                return jsonify({"status": "error", "message": str(e)}), 500
-                    
-            try:
-                base_data_path = get_astrbot_data_path()
-            except ImportError:
-                base_data_path = "data"
-            index_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "index"))
+                return jsonify({"status": "error", "message": "Failed to fetch catalog.json"}), 500
+                
+            index_dir = self._get_store_dir(store_type, repo_id)
             os.makedirs(index_dir, exist_ok=True)
+            
             with open(os.path.join(index_dir, "catalog.json"), 'wb') as f:
-                f.write(content)
-            return jsonify({"status": "success"})
+                f.write(catalog_content)
+                
+            meta_path = os.path.join(index_dir, "metadata.json")
+            
+            meta_data = {}
+            if meta_content:
+                try:
+                    # utf-8-sig 兼容带 BOM 的元数据文件
+                    meta_data = json.loads(meta_content.decode('utf-8-sig'))
+                except Exception as parse_err:
+                    logging.warning(f"[Chisa DLC] ⚠️ Chisa_DLC_Metadata.json 解析失败: {parse_err}")
+                    
+            if not meta_data:
+                # 拉取/解析失败: 本地若已有真实元数据(非占位)则原样保留，避免一次网络抖动导致永久的占位数据
+                existing = {}
+                if os.path.exists(meta_path):
+                    try:
+                        with open(meta_path, 'r', encoding='utf-8-sig') as mf:
+                            existing = json.load(mf)
+                    except Exception:
+                        existing = {}
+                if existing and not existing.get("is_placeholder"):
+                    meta_data = existing
+                    logging.warning("[Chisa DLC] ⚠️ 本次元数据拉取失败，已保留本地历史元数据。")
+                else:
+                    if store_type == "custom":
+                        meta_data = {
+                            "store_name": f"{owner} 的创意工坊",
+                            "author": owner,
+                            "description": f"来自 {repo_name} 仓库的第三方内容",
+                            "is_placeholder": True
+                        }
+                    else:
+                        meta_data = {
+                            "store_name": "千小妹官方云仓",
+                            "author": "千小妹",
+                            "description": "官方精选推荐内容",
+                            "is_official": True,
+                            "is_placeholder": True
+                        }
+                    logging.warning("[Chisa DLC] ⚠️ 元数据不可用且无历史数据，本次使用占位元数据。")
+                    
+            with open(meta_path, 'w', encoding='utf-8') as mf:
+                json.dump(meta_data, mf, ensure_ascii=False)
+                
+            # Download banner: try meta_data.banner_url first, then candidate paths
+            banner_dir = self._get_banner_dir()
+            os.makedirs(banner_dir, exist_ok=True)
+            if store_type == "official":
+                banner_local_path = os.path.join(banner_dir, "shop_banner.jpg")
+            else:
+                safe_id = "".join(c if c.isalnum() or c in "-_" else "_" for c in str(repo_id))
+                banner_local_path = os.path.join(banner_dir, f"workshop_{safe_id}.jpg")
+            
+            banner_content = None
+            # Priority 1: banner_url from metadata (must be GitHub raw)
+            banner_url = meta_data.get("banner_url", "")
+            if banner_url and banner_url.startswith("https://raw.githubusercontent.com/"):
+                b_url = banner_url
+                if node and node != "direct":
+                    b_url = f"https://{node}/{banner_url}"
+                banner_content = await _do_fetch(b_url, node)
+                if banner_content is None and node and node != "direct":
+                    banner_content = await _do_fetch(banner_url, "direct")
+                if banner_content is None:
+                    # banner_url 的 jsDelivr 变体 (把 owner/repo 后的路径拼到 jsDelivr 源上)
+                    m_b = re.search(r"raw\.githubusercontent\.com/([^/]+)/([^/]+)/(?:refs/heads/)?(.+)", banner_url)
+                    if m_b:
+                        js_url = f"https://cdn.jsdelivr.net/gh/{m_b.group(1)}/{m_b.group(2)}@{m_b.group(3)}"
+                        banner_content = await _do_fetch(js_url, "direct")
+            
+            # Priority 2: candidate paths in repo (走多源兜底)
+            if not banner_content:
+                candidates = ["assets/banner.png", "assets/banner.jpg", "assets/banner.gif", "assets/banner.webp", "banner.png", "banner.jpg", "banner.gif", "banner.webp"]
+                for cand in candidates:
+                    banner_content, _ = await fetch_repo_file(cand)
+                    if banner_content:
+                        break
+                    
+            if banner_content:
+                with open(banner_local_path, 'wb') as bf:
+                    bf.write(banner_content)
+                    
+            # 记录最近一次成功连接的工坊仓库，供前端在 localStorage 不可用 (sandbox) 时恢复状态
+            if store_type == "custom" and repo_id:
+                try:
+                    last_repo_path = os.path.join(self._get_banner_dir(), "..", "Workshop", "_last_repo.json")
+                    last_repo_path = os.path.abspath(last_repo_path)
+                    os.makedirs(os.path.dirname(last_repo_path), exist_ok=True)
+                    with open(last_repo_path, 'w', encoding='utf-8') as lf:
+                        json.dump({"url": custom_url, "repo_id": repo_id, "store_name": meta_data.get("store_name", "")}, lf, ensure_ascii=False)
+                except Exception as persist_err:
+                    logging.warning(f"[Chisa DLC] ⚠️ 写入 last_repo 失败: {persist_err}")
+                    
+            return jsonify({"status": "success", "metadata": meta_data})
         except Exception as e:
             from quart import jsonify
             return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_get_last_custom_repo(self):
+        """读取最近一次成功连接的工坊仓库 (sandbox 下 localStorage 不可用时的状态恢复通道)"""
+        try:
+            import os
+            import json
+            from quart import jsonify
+            last_repo_path = os.path.abspath(os.path.join(self._get_banner_dir(), "..", "Workshop", "_last_repo.json"))
+            if os.path.exists(last_repo_path):
+                try:
+                    with open(last_repo_path, 'r', encoding='utf-8-sig') as f:
+                        data = json.load(f)
+                    if data and data.get("repo_id"):
+                        return jsonify({"status": "success", "data": data})
+                except Exception:
+                    pass
+            return jsonify({"status": "missing"}), 404
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    def _get_workshop_bookmarks_path(self):
+        import os
+        return os.path.abspath(os.path.join(self._get_banner_dir(), "..", "Workshop", "_bookmarks.json"))
+
+    async def page_get_workshop_bookmarks(self):
+        """读取工坊书架 (sandbox 下 localStorage 不可用，书架改由后端持久化)"""
+        try:
+            import os
+            import json
+            from quart import jsonify
+            path = self._get_workshop_bookmarks_path()
+            bookmarks = []
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r', encoding='utf-8-sig') as f:
+                        bookmarks = json.load(f)
+                except Exception:
+                    bookmarks = []
+            if not isinstance(bookmarks, list):
+                bookmarks = []
+            return jsonify({"status": "success", "data": bookmarks})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_save_workshop_bookmarks(self):
+        """保存工坊书架 (全量覆盖写)"""
+        try:
+            import os
+            import json
+            from quart import jsonify, request
+            payload = await request.get_json(silent=True) or {}
+            bookmarks = payload.get("bookmarks", [])
+            if not isinstance(bookmarks, list):
+                return jsonify({"status": "error", "message": "Invalid bookmarks"}), 400
+            # 清洗: 只保留 url/name 字段，url 必须为字符串且长度受限
+            cleaned = []
+            for b in bookmarks[:20]:
+                if isinstance(b, dict):
+                    url = str(b.get("url", "")).strip()[:300]
+                    name = str(b.get("name", ""))[:80]
+                    if url:
+                        cleaned.append({"url": url, "name": name})
+                elif isinstance(b, str) and b.strip():
+                    cleaned.append({"url": b.strip()[:300], "name": ""})
+            path = self._get_workshop_bookmarks_path()
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(cleaned, f, ensure_ascii=False, indent=2)
+            return jsonify({"status": "success", "data": cleaned})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_dlc_metadata(self):
+        """读取指定商店的本地缓存元数据 (前端 SDK 响应形态不确定时的元数据专用获取通道)"""
+        try:
+            import os
+            import json
+            from quart import jsonify, request
+            store_type = request.args.get("store_type", "official")
+            repo_id = request.args.get("repo_id", "")
+            if store_type == "custom" and not repo_id.strip():
+                return jsonify({"status": "missing"})
+            index_dir = self._get_store_dir(store_type, repo_id)
+            meta_path = os.path.join(index_dir, "metadata.json")
+            if not os.path.exists(meta_path):
+                return jsonify({"status": "missing"})
+            try:
+                with open(meta_path, 'r', encoding='utf-8-sig') as f:
+                    meta_data = json.load(f)
+            except Exception:
+                return jsonify({"status": "missing"})
+            return jsonify({"status": "success", "data": meta_data})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_store_banner(self):
+        try:
+            import os
+            import mimetypes
+            import base64
+            from quart import request, jsonify
+            store_type = request.args.get("store_type", "official")
+            repo_id = request.args.get("repo_id", "")
+            
+            banner_dir = self._get_banner_dir()
+            if store_type == "official":
+                path = os.path.join(banner_dir, "shop_banner.jpg")
+            else:
+                safe_id = "".join(c if c.isalnum() or c in "-_" else "_" for c in str(repo_id))
+                path = os.path.join(banner_dir, f"workshop_{safe_id}.jpg")
+                
+            if os.path.exists(path) and os.path.isfile(path):
+                media_type = mimetypes.guess_type(path)[0] or "image/jpeg"
+                with open(path, "rb") as f:
+                    raw_bytes = f.read()
+                    data_url = f"data:{media_type};base64,{base64.b64encode(raw_bytes).decode('ascii')}"
+                return jsonify({"status": "success", "data_url": data_url})
+            else:
+                return jsonify({"status": "missing"}), 404
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    def _get_cover_dir(self, store_type, repo_id=None):
+        """封面缓存目录: 官方走 Shop/cover，工坊按仓库隔离到 Workshop/cover/{repo_id}/，防止同名封面互相覆盖"""
+        import os
+        from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+        try:
+            base_data_path = get_astrbot_data_path()
+        except ImportError:
+            base_data_path = "data"
+        pic_root = os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC")
+        if store_type == "custom" and repo_id:
+            safe_id = "".join(c if c.isalnum() or c in "-_" else "_" for c in str(repo_id))
+            return os.path.abspath(os.path.join(pic_root, "Workshop", "cover", safe_id))
+        return os.path.abspath(os.path.join(pic_root, "Shop", "cover"))
 
     async def page_fetch_single_cover(self):
         try:
@@ -1937,17 +2265,19 @@ class FlavorFusionUltimate(Star):
             filename = payload.get("file", "").strip()
             node = payload.get("node", "smart")
             custom_url = payload.get("custom_url", "").strip()
+            store_type = payload.get("store_type", "official")
+            repo_id = payload.get("repo_id", "")
             
             if not filename or ".." in filename or "/" in filename or "\\" in filename:
                 return jsonify({"status": "error"}), 400
                 
             raw_base = "https://raw.githubusercontent.com/dddada123/astrbot_plugin_chisa_still_eating_photo/main"
             if custom_url:
-                custom_url = custom_url.replace("https://github.com/", "https://raw.githubusercontent.com/")
-                if not custom_url.endswith("/main"):
-                    custom_url = custom_url.rstrip("/") + "/main"
-                raw_base = custom_url
-                
+                import re as _re
+                m_cover = _re.search(r"github\.com[/:]([A-Za-z0-9_-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?(?:/|$)", custom_url)
+                if m_cover:
+                    raw_base = f"https://raw.githubusercontent.com/{m_cover.group(1)}/{m_cover.group(2)}/main"
+                    
             original_url = f"{raw_base}/covers/{filename}"
             
             if node == "smart":
@@ -1971,11 +2301,7 @@ class FlavorFusionUltimate(Star):
                     return jsonify({"status": "error", "message": "ALL_NODES_FAILED"}), 500
                 return jsonify({"status": "error"}), 500
                     
-            try:
-                base_data_path = get_astrbot_data_path()
-            except ImportError:
-                base_data_path = "data"
-            cover_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "cover"))
+            cover_dir = self._get_cover_dir(store_type, repo_id)
             os.makedirs(cover_dir, exist_ok=True)
             full_path = os.path.join(cover_dir, filename)
             
@@ -1993,7 +2319,7 @@ class FlavorFusionUltimate(Star):
         try:
             import os
             import json
-            from quart import jsonify
+            from quart import jsonify, request
             from astrbot.core.utils.astrbot_path import get_astrbot_data_path
             
             try:
@@ -2001,7 +2327,14 @@ class FlavorFusionUltimate(Star):
             except ImportError:
                 base_data_path = "data"
                 
-            json_path = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "index", "downloaded.json"))
+            # 与下载记录写入端对称: 官方读 Shop/index，工坊读 Workshop/{repo_id}/index
+            store_type = request.args.get("store_type", "official")
+            repo_id = request.args.get("repo_id", "").strip()
+            if store_type == "custom" and repo_id:
+                safe_rid = "".join(c if c.isalnum() or c in "-_" else "_" for c in repo_id)
+                json_path = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Workshop", safe_rid, "index", "downloaded.json"))
+            else:
+                json_path = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "index", "downloaded.json"))
             
             downloaded = []
             if os.path.exists(json_path):
@@ -2058,12 +2391,21 @@ class FlavorFusionUltimate(Star):
             expected_sha256 = payload.get("sha256", "").strip()
             node = payload.get("node", "smart")
             store_type = payload.get("store_type", "official")
+            custom_url = payload.get("custom_url", "").strip()
             
             if not dlc_id or ".." in dlc_id or "/" in dlc_id or "\\" in dlc_id:
                 return jsonify({"status": "error", "message": "Invalid DLC ID"}), 400
                 
-            # Base logic for official store
-            release_base = "https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/Chisa_Dlc_Store"
+            # Release 下载基址: 官方走主仓库; 工坊按用户仓库构建 (Release Tag 约定与官方一致: Chisa_Dlc_Store)
+            if store_type == "custom" and custom_url:
+                import re as _re
+                m_repo = _re.search(r"github\.com[/:]([A-Za-z0-9_-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?(?:/|$)", custom_url)
+                if not m_repo:
+                    return jsonify({"status": "error", "message": "无法识别第三方仓库地址"}), 400
+                release_base = f"https://github.com/{m_repo.group(1)}/{m_repo.group(2)}/releases/download/Chisa_Dlc_Store"
+                logging.info(f"[Chisa DLC] 🏪 工坊下载通道: {release_base}/{dlc_id}.zip")
+            else:
+                release_base = "https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/Chisa_Dlc_Store"
             original_url = f"{release_base}/{dlc_id}.zip"
             
             if node == "smart":
@@ -2130,9 +2472,14 @@ class FlavorFusionUltimate(Star):
                     
                 logging.info(f"[Chisa DLC] 🎉 DLC {dlc_id} 部署完成！")
                 
-                # Record download
+                # Record download: 官方记到 Shop/index，工坊记到 Workshop/{repo_id}/index，互不混写
                 import json
-                json_path = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "index", "downloaded.json"))
+                repo_id_param = payload.get("repo_id", "").strip()
+                if store_type == "custom" and repo_id_param:
+                    safe_rid = "".join(c if c.isalnum() or c in "-_" else "_" for c in repo_id_param)
+                    json_path = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Workshop", safe_rid, "index", "downloaded.json"))
+                else:
+                    json_path = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "index", "downloaded.json"))
                 os.makedirs(os.path.dirname(json_path), exist_ok=True)
                 downloaded = []
                 if os.path.exists(json_path):
@@ -2162,18 +2509,14 @@ class FlavorFusionUltimate(Star):
             import mimetypes
             import base64
             from quart import request, jsonify
-            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
             
             filename = request.args.get("file", "")
+            store_type = request.args.get("store_type", "official")
+            repo_id = request.args.get("repo_id", "")
             if not filename or ".." in filename or "/" in filename or "\\" in filename:
                 return jsonify({"status": "error"}), 400
                 
-            try:
-                base_data_path = get_astrbot_data_path()
-            except ImportError:
-                base_data_path = "data"
-                
-            cover_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "Shop", "cover"))
+            cover_dir = self._get_cover_dir(store_type, repo_id)
             full_path = os.path.join(cover_dir, filename)
             
             if not os.path.exists(full_path) or not os.path.isfile(full_path):
