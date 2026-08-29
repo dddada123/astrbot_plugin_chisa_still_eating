@@ -927,7 +927,7 @@ class FlavorFusionUltimate(Star):
         if self.is_downloading and is_plugin_cmd:
             if hasattr(self, '_is_download_thread_active') and self._is_download_thread_active:
                 mb = self.downloaded_bytes / (1024 * 1024)
-                progress_msg = f"【千小妹基础图库下载进度】\n正在为您搬运跨次元美食资源...下载完成后即可正常使用以及查看帮助\n当前已下载: {mb:.2f} MB / 160.46 MB"
+                progress_msg = f"【千小妹基础图库下载进度】\n正在为您搬运跨次元美食资源...下载完成后即可正常使用以及查看帮助\n当前已下载: {mb:.2f} MB / 99.20 MB"
                 yield event.make_result().message(progress_msg)
                 event.stop_event()
                 return
@@ -954,7 +954,7 @@ class FlavorFusionUltimate(Star):
         if msg_text == "/千小妹图库下载进度" or msg_text == "千小妹图库下载进度":
             if self.is_downloading:
                 mb = self.downloaded_bytes / (1024 * 1024)
-                yield event.make_result().message(f"【千小妹下载进度】\n正在为您搬运跨次元美食资源...下载完成后即可正常使用以及查看帮助\n当前已下载: {mb:.2f} MB / 160.46 MB")
+                yield event.make_result().message(f"【千小妹下载进度】\n正在为您搬运跨次元美食资源...下载完成后即可正常使用以及查看帮助\n当前已下载: {mb:.2f} MB / 99.20 MB")
             else:
                 yield event.make_result().message("【千小妹提示】当前没有正在进行的图库下载任务哦。")
             event.stop_event()
