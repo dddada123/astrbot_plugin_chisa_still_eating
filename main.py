@@ -1,4 +1,4 @@
-import os
+﻿import os
 import asyncio          # 补充导入
 from quart import jsonify, request, send_file
 import threading
@@ -18,9 +18,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "3.8.51"
+__version__ = "4.1.8"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "3.8.51", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "4.1.8", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -990,7 +990,7 @@ class FlavorFusionUltimate(Star):
                     return
         
         if msg_text in ["千小妹还在吃帮助", "千咲吃什么帮助", "干饭帮助", "美食帮助", "千小妹帮助", "千小妹吃什么帮助"]:
-            help_text = """🌸 【千小妹跨次元干饭指南 v4.0.0】 🌸
+            help_text = """🌸 【千小妹跨次元干饭指南 v4.1.0】 🌸
 不知道今天吃啥？让异次元的导游们为你随机摇号吧！
 
 🎲 基础盲盒（全宇宙随机）
@@ -1688,6 +1688,13 @@ class FlavorFusionUltimate(Star):
         register_api(f"/{self.plugin_name}/workshop_bookmarks", self.page_get_workshop_bookmarks, ["GET"], "读取工坊书架")
         register_api(f"/{self.plugin_name}/save_workshop_bookmarks", self.page_save_workshop_bookmarks, ["POST"], "保存工坊书架")
         register_api(f"/{self.plugin_name}/dlc_metadata", self.page_dlc_metadata, ["GET"], "获取商店本地元数据")
+        register_api(f"/{self.plugin_name}/skin_asset", self.page_skin_asset, ["GET"], "获取皮肤资源(带缓存)")
+        register_api(f"/{self.plugin_name}/skin_index", self.page_skin_index, ["GET"], "拉取皮肤源索引")
+        register_api(f"/{self.plugin_name}/skin_get", self.page_skin_get, ["POST"], "拉取皮肤配置")
+        register_api(f"/{self.plugin_name}/skin_sources", self.page_skin_sources, ["GET"], "读取皮肤源列表")
+        register_api(f"/{self.plugin_name}/save_skin_sources", self.page_save_skin_sources, ["POST"], "保存皮肤源列表")
+        register_api(f"/{self.plugin_name}/skin_pref", self.page_get_skin_pref, ["GET"], "读取皮肤偏好")
+        register_api(f"/{self.plugin_name}/save_skin_pref", self.page_save_skin_pref, ["POST"], "保存皮肤偏好")
         register_api(f"/{self.plugin_name}/fetch_single_cover", self.page_fetch_single_cover, ["POST"], "增量拉取单张DLC封面")
         register_api(f"/{self.plugin_name}/dlc_cover", self.page_dlc_cover, ["GET"], "获取本地DLC缓存封面")
         register_api(f"/{self.plugin_name}/download_dlc", self.page_download_dlc, ["POST"], "下载DLC")
@@ -1696,9 +1703,25 @@ class FlavorFusionUltimate(Star):
         register_api(f"/{self.plugin_name}/get_download_progress", self.page_get_download_progress, ["POST"], "获取DLC下载进度")
         register_api(f"/{self.plugin_name}/delete_ganfanren", self.page_delete_ganfanren, ["POST"], "删除干饭人")
         register_api(f"/{self.plugin_name}/rename_image", self.page_rename_image, ["POST"], "重命名图片")
+        register_api(f"/{self.plugin_name}/frontend_log", self.page_frontend_log, ["POST"], "前端日志打印")
 
 
 
+
+    
+    async def page_frontend_log(self):
+        """接收前端传来的日志并打印，用于调试并发加载和皮肤应用"""
+        try:
+            import logging
+            from quart import request, jsonify
+            payload = await request.get_json(silent=True) or {}
+            msg = payload.get("msg", "")
+            if msg:
+                logging.info(f"[Chisa Skin Front] {msg}")
+            return jsonify({"status": "success"})
+        except Exception:
+            from quart import jsonify
+            return jsonify({"status": "error"}), 500
 
     async def page_test_reflection(self):
         try:
@@ -2129,7 +2152,7 @@ class FlavorFusionUltimate(Star):
                         return jsonify({"status": "success", "data": data})
                 except Exception:
                     pass
-            return jsonify({"status": "missing"}), 404
+            return jsonify({"status": "missing"}) # v4.1.4 修复: 避免触发前端异常捕获
         except Exception as e:
             from quart import jsonify
             return jsonify({"status": "error", "message": str(e)}), 500
@@ -2212,6 +2235,412 @@ class FlavorFusionUltimate(Star):
             from quart import jsonify
             return jsonify({"status": "error", "message": str(e)}), 500
 
+    # ---------- v4.0.08 皮肤商店: 索引/配置拉取与校验 ----------
+    OFFICIAL_SKIN_SOURCE = "dddada123/astrbot_plugin_chisa_still_eating_photo"
+
+    def _skins_dir(self):
+        import os
+        from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+        try:
+            base_data_path = get_astrbot_data_path()
+        except ImportError:
+            base_data_path = "data"
+        d = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "skins"))
+        os.makedirs(d, exist_ok=True)
+        return d
+
+    SKIN_VAR_WHITELIST = {
+        "--hover-tint", "--bg", "--panel", "--card", "--text", "--muted",
+        "--primary", "--primary-hover", "--line", "--shadow",
+        "--surface", "--surface-dark", "--input-bg", "--overlay",
+    }
+    COLOR_RE = re.compile(r"^(#[0-9a-fA-F]{6}|rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*(0|1|0?\.\d+)\s*\))$")
+
+    def _validate_skin_json(self, data):
+        """校验第三方皮肤 JSON: 键白名单 + 颜色格式。返回 (clean_data, err_msg)"""
+        import re as _re
+        if not isinstance(data, dict):
+            return None, "皮肤配置必须是 JSON 对象"
+        if data.get("schema_version") != 1:
+            return None, "schema_version 必须为 1"
+        sid = str(data.get("id", "")).strip()
+        if not sid or len(sid) > 40 or not _re.match(r"^[a-z0-9_]+$", sid):
+            return None, "id 必须为 1-40 位小写字母/数字/下划线"
+        vars_in = data.get("vars")
+        if not isinstance(vars_in, dict) or not vars_in:
+            return None, "vars 不能为空"
+        clean_vars = {}
+        for k, v in vars_in.items():
+            if k not in self.SKIN_VAR_WHITELIST:
+                continue  # 白名单外键直接丢弃 (防注入)
+            if not isinstance(v, str) or not self.COLOR_RE.match(v.strip()):
+                return None, f"变量 {k} 的颜色格式不合法"
+            clean_vars[k] = v.strip()
+        if "--text" not in clean_vars or "--bg" not in clean_vars:
+            return None, "vars 至少需要包含 --text 与 --bg"
+        cleaned = {
+            "schema_version": 1,
+            "id": sid,
+            "name": str(data.get("name", sid))[:40],
+            "author": str(data.get("author", ""))[:40],
+            "type": "glass" if data.get("type") == "glass" else "solid",
+            "desc": str(data.get("desc", ""))[:100],
+            "vars": clean_vars,
+            "glass": bool(data.get("glass")),
+            "is_custom": True,
+        }
+        q = data.get("quotes")
+        if isinstance(q, list):
+            cleaned["quotes"] = [str(x)[:80] for x in q[:6] if str(x).strip()]
+        bg = data.get("assets", {}).get("bg") if isinstance(data.get("assets"), dict) else None
+        if isinstance(bg, str) and bg.strip():
+            rel = bg.strip()
+            if rel.startswith("skin/") and ".." not in rel and len(rel) < 120:
+                cleaned["assets"] = {"bg": rel}
+        return cleaned, None
+
+    async def _skin_fetch_raw(self, repo, rel_path):
+        """从指定仓库按三级源+双跳拉取原始文件"""
+        import aiohttp
+        source_bases = [
+            f"https://raw.githubusercontent.com/{repo}/main",
+            f"https://raw.githubusercontent.com/{repo}/refs/heads/main",
+            f"https://cdn.jsdelivr.net/gh/{repo}@main",
+        ]
+        node = await self._get_optimal_dlc_node()
+
+        async def _do_fetch(url, use_node):
+            try:
+                async with aiohttp.ClientSession(trust_env=(use_node == "direct")) as session:
+                    async with session.get(url, timeout=aiohttp.ClientTimeout(total=25)) as resp:
+                        if resp.status == 200:
+                            return await resp.read()
+            except Exception:
+                pass
+            return None
+
+        for base in source_bases:
+            if "jsdelivr" in base:
+                content = await _do_fetch(f"{base}/{rel_path}", "direct")
+                if content is None and node and node != "direct":
+                    content = await _do_fetch(f"https://{node}/{base}/{rel_path}", node)
+            else:
+                url = f"{base}/{rel_path}"
+                if node and node != "direct":
+                    url = f"https://{node}/{url}"
+                content = await _do_fetch(url, node)
+                if content is None and node and node != "direct":
+                    content = await _do_fetch(f"{base}/{rel_path}", "direct")
+            if content:
+                return content
+        return None
+
+    async def page_skin_index(self):
+        """拉取皮肤源索引: 官方源 + 已订阅社区源, 合并返回 (不含官方内置三套)"""
+        try:
+            import json
+            sources = [self.OFFICIAL_SKIN_SOURCE]
+            try:
+                src_path = os.path.join(self._skins_dir(), "_sources.json")
+                if os.path.exists(src_path):
+                    with open(src_path, "r", encoding="utf-8-sig") as f:
+                        extra = json.load(f)
+                    if isinstance(extra, list):
+                        for r in extra:
+                            if isinstance(r, str) and r.strip() and r not in sources:
+                                sources.append(r.strip())
+            except Exception:
+                pass
+
+            merged = []
+            for repo in sources:
+                raw = await self._skin_fetch_raw(repo, "skin/index.json")
+                if not raw:
+                    continue
+                try:
+                    data = json.loads(raw.decode("utf-8-sig"))
+                    items = data.get("skins", []) if isinstance(data, dict) else []
+                except Exception:
+                    continue
+                for it in items:
+                    if isinstance(it, dict) and it.get("id"):
+                        it["_source"] = repo
+                        it["_official"] = (repo == self.OFFICIAL_SKIN_SOURCE)
+                        merged.append(it)
+
+            # 缓存合并索引供 skin_asset 动态白名单校验
+            try:
+                with open(os.path.join(self._skins_dir(), "_index_cache.json"), "w", encoding="utf-8") as f:
+                    json.dump(merged, f, ensure_ascii=False)
+            except Exception:
+                pass
+
+            from quart import jsonify
+            return jsonify({"status": "success", "data": merged, "sources": sources})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_skin_get(self):
+        """拉取并校验指定皮肤配置 JSON, 缓存本地后返回"""
+        try:
+            import json
+            import base64
+            from quart import jsonify, request
+            payload = await request.get_json(silent=True) or {}
+            sid = str(payload.get("id", "")).strip()
+            repo = str(payload.get("source", "")).strip() or self.OFFICIAL_SKIN_SOURCE
+            if not sid or not re.match(r"^[a-z0-9_]{1,40}$", sid):
+                return jsonify({"status": "error", "message": "Invalid skin id"}), 400
+            # 仓库地址白名单: 官方源或已在订阅列表内
+            sources = [self.OFFICIAL_SKIN_SOURCE]
+            try:
+                src_path = os.path.join(self._skins_dir(), "_sources.json")
+                if os.path.exists(src_path):
+                    with open(src_path, "r", encoding="utf-8-sig") as f:
+                        extra = json.load(f)
+                    if isinstance(extra, list):
+                        sources += [r.strip() for r in extra if isinstance(r, str) and r.strip()]
+            except Exception:
+                pass
+            if repo not in sources:
+                return jsonify({"status": "error", "message": "未订阅该皮肤源"}), 403
+                
+            # v4.1.2: 优先读取本地缓存，避免重复拉取
+            skin_dir = self._skins_dir()
+            local_json = os.path.join(skin_dir, f"{sid}.json")
+            if os.path.exists(local_json):
+                try:
+                    with open(local_json, "r", encoding="utf-8-sig") as f:
+                        cached_data = json.load(f)
+                    return jsonify({"status": "success", "data": cached_data})
+                except Exception:
+                    pass
+
+            raw = await self._skin_fetch_raw(repo, f"skin/{sid}.json")
+            if not raw:
+                return jsonify({"status": "error", "message": "皮肤配置拉取失败"}), 502
+            data = json.loads(raw.decode("utf-8-sig"))
+            cleaned, err = self._validate_skin_json(data)
+            if err:
+                return jsonify({"status": "error", "message": f"皮肤配置校验失败: {err}"}), 400
+
+            skin_dir = self._skins_dir()
+            with open(os.path.join(skin_dir, f"{sid}.json"), "w", encoding="utf-8") as f:
+                json.dump(cleaned, f, ensure_ascii=False, indent=2)
+            cleaned["_source"] = repo
+            return jsonify({"status": "success", "data": cleaned})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_skin_sources(self):
+        """读取已订阅皮肤源 (官方源固定返回)"""
+        try:
+            import json
+            from quart import jsonify
+            sources = [self.OFFICIAL_SKIN_SOURCE]
+            src_path = os.path.join(self._skins_dir(), "_sources.json")
+            if os.path.exists(src_path):
+                try:
+                    with open(src_path, "r", encoding="utf-8-sig") as f:
+                        extra = json.load(f)
+                    if isinstance(extra, list):
+                        sources += [r.strip() for r in extra if isinstance(r, str) and r.strip() and r != self.OFFICIAL_SKIN_SOURCE]
+                except Exception:
+                    pass
+            return jsonify({"status": "success", "data": sources})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_save_skin_sources(self):
+        """保存自定义皮肤源列表 (官方源不可移除, 最多 5 个社区源)"""
+        try:
+            import json
+            import re as _re
+            from quart import jsonify, request
+            payload = await request.get_json(silent=True) or {}
+            arr = payload.get("sources", [])
+            if not isinstance(arr, list):
+                return jsonify({"status": "error", "message": "Invalid sources"}), 400
+            cleaned = [self.OFFICIAL_SKIN_SOURCE]
+            for r in arr[:5]:
+                if not isinstance(r, str):
+                    continue
+                m = _re.match(r"github\.com[/:]([A-Za-z0-9_-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?(?:/|$)", r.strip())
+                if m:
+                    repo = f"{m.group(1)}/{m.group(2)}"
+                    if repo not in cleaned:
+                        cleaned.append(repo)
+            src_path = os.path.join(self._skins_dir(), "_sources.json")
+            with open(src_path, "w", encoding="utf-8") as f:
+                json.dump(cleaned[1:], f, ensure_ascii=False, indent=2)
+            return jsonify({"status": "success", "data": cleaned})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    # 皮肤资源注册表: 文件名 -> 图库仓库相对路径 (v4.0.03, 资源托管于 astrbot_plugin_chisa_still_eating_photo 仓库 skin/ 目录)
+    SKIN_ASSETS = {
+        "03.jpg": "skin/03.jpg",
+        "04.jpg": "skin/04.jpg",
+    }
+
+    async def page_skin_asset(self):
+        """皮肤资源下发: 本地缓存优先, 未缓存时走测速节点从图库仓库 skin/ 目录拉取 (v4.0.03 前瞻)"""
+        try:
+            import os
+            import base64
+            import mimetypes
+            import logging
+            import aiohttp
+            from quart import jsonify, request
+            from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+
+            payload_file = request.args.get("file", "").strip()
+            allowed = dict(self.SKIN_ASSETS)
+            # v4.0.08 动态白名单: 纳入索引缓存与本地皮肤 JSON 登记的背景资源
+            try:
+                idx_cache = os.path.join(self._skins_dir(), "_index_cache.json")
+                if os.path.exists(idx_cache):
+                    with open(idx_cache, "r", encoding="utf-8-sig") as f:
+                        arr = json.load(f)
+                    for it in arr if isinstance(arr, list) else []:
+                        bg = (it.get("bg") or "").strip() if isinstance(it, dict) else ""
+                        if bg.startswith("skin/") and "/" in bg[5:]:
+                            allowed[bg[5:]] = bg
+                for fn in os.listdir(self._skins_dir()):
+                    if fn.endswith(".json") and not fn.startswith("_"):
+                        with open(os.path.join(self._skins_dir(), fn), "r", encoding="utf-8-sig") as f:
+                            sd = json.load(f)
+                        bg = (sd.get("assets", {}) or {}).get("bg", "") if isinstance(sd, dict) else ""
+                        if isinstance(bg, str) and bg.startswith("skin/") and "/" in bg[5:]:
+                            allowed[bg[5:]] = bg
+            except Exception:
+                pass
+            if payload_file not in allowed:
+                return jsonify({"status": "error", "message": "Unknown skin asset"}), 404
+
+            try:
+                base_data_path = get_astrbot_data_path()
+            except ImportError:
+                base_data_path = "data"
+            skin_dir = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "skins"))
+            os.makedirs(skin_dir, exist_ok=True)
+            local_path = os.path.join(skin_dir, payload_file)
+
+            # 本地缓存命中 (force=1 时跳过, 强制重新下载)
+            force = request.args.get("force", "") in ("1", "true")
+            if not force and os.path.exists(local_path) and os.path.getsize(local_path) > 0:
+                media_type = mimetypes.guess_type(local_path)[0] or "image/jpeg"
+                with open(local_path, "rb") as f:
+                    data_url = f"data:{media_type};base64,{base64.b64encode(f.read()).decode('ascii')}"
+                return jsonify({"status": "success", "cached": True, "data_url": data_url})
+
+            # 三级源 + 节点/直连双跳拉取 (与商店目录同款容错)
+            owner, repo_name = "dddada123", "astrbot_plugin_chisa_still_eating_photo"
+            source_bases = [
+                f"https://raw.githubusercontent.com/{owner}/{repo_name}/main",
+                f"https://raw.githubusercontent.com/{owner}/{repo_name}/refs/heads/main",
+                f"https://cdn.jsdelivr.net/gh/{owner}/{repo_name}@main",
+            ]
+            node = await self._get_optimal_dlc_node()
+
+            async def _do_fetch(url, use_node):
+                try:
+                    async with aiohttp.ClientSession(trust_env=(use_node == "direct")) as session:
+                        async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+                            if resp.status == 200:
+                                return await resp.read()
+                except Exception:
+                    pass
+                return None
+
+            content = None
+            rel = self.SKIN_ASSETS[payload_file]
+            for base in source_bases:
+                if "jsdelivr" in base:
+                    content = await _do_fetch(f"{base}/{rel}", "direct")
+                    if content is None and node and node != "direct":
+                        content = await _do_fetch(f"https://{node}/{base}/{rel}", node)
+                else:
+                    url = f"{base}/{rel}"
+                    if node and node != "direct":
+                        url = f"https://{node}/{url}"
+                    content = await _do_fetch(url, node)
+                    if content is None and node and node != "direct":
+                        content = await _do_fetch(f"{base}/{rel}", "direct")
+                if content:
+                    break
+
+            if not content:
+                logging.warning(f"[Chisa Skin] ⚠️ 皮肤资源拉取失败: {rel} (node={node or 'direct'})")
+                return jsonify({"status": "error", "message": "Skin asset download failed"}), 502
+
+            if force and os.path.exists(local_path):
+                try:
+                    os.remove(local_path)
+                except Exception:
+                    pass
+            with open(local_path, "wb") as f:
+                f.write(content)
+            logging.info(f"[Chisa Skin] 🎨 皮肤资源已缓存{'(强制刷新)' if force else ''}: {payload_file} ({len(content)} bytes)")
+
+            data_url = "data:image/jpeg;base64," + base64.b64encode(content).decode("ascii")
+            return jsonify({"status": "success", "cached": False, "data_url": data_url})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_get_skin_pref(self):
+        """读取用户的皮肤偏好 (sandbox 下 localStorage 不可用, 改由后端持久化, v4.0.04)"""
+        try:
+            import os
+            import json
+            from quart import jsonify
+            pref_path = os.path.abspath(os.path.join(self._get_banner_dir(), "..", "skins", "_skin_pref.json"))
+            if os.path.exists(pref_path):
+                try:
+                    with open(pref_path, "r", encoding="utf-8-sig") as f:
+                        data = json.load(f)
+                    if data and data.get("skin_id"):
+                        import logging
+                        logging.info(f"[Chisa Skin] 📖 读取皮肤偏好: {data.get('skin_id')} blur={data.get('bg_blur')}")
+                        return jsonify({"status": "success", "data": data})
+                except Exception:
+                    pass
+            return jsonify({"status": "missing"}) # v4.1.4 修复: 避免触发前端异常捕获
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+    async def page_save_skin_pref(self):
+        """保存用户的皮肤偏好 (含毛玻璃力度)"""
+        try:
+            import os
+            import json
+            from quart import jsonify, request
+            payload = await request.get_json(silent=True) or {}
+            skin_id = str(payload.get("skin_id", "")).strip()[:40]
+            bg_blur = payload.get("bg_blur", 0)
+            try:
+                bg_blur = max(0, min(100, int(bg_blur)))
+            except Exception:
+                bg_blur = 0
+            if not skin_id:
+                return jsonify({"status": "error", "message": "Invalid skin id"}), 400
+            pref_path = os.path.abspath(os.path.join(self._get_banner_dir(), "..", "skins", "_skin_pref.json"))
+            os.makedirs(os.path.dirname(pref_path), exist_ok=True)
+            with open(pref_path, "w", encoding="utf-8") as f:
+                json.dump({"skin_id": skin_id, "bg_blur": bg_blur}, f, ensure_ascii=False)
+            import logging
+            logging.info(f"[Chisa Skin] 💾 皮肤偏好已保存: {skin_id} blur={bg_blur}")
+            return jsonify({"status": "success"})
+        except Exception as e:
+            from quart import jsonify
+            return jsonify({"status": "error", "message": str(e)}), 500
+
     async def page_store_banner(self):
         try:
             import os
@@ -2235,7 +2664,7 @@ class FlavorFusionUltimate(Star):
                     data_url = f"data:{media_type};base64,{base64.b64encode(raw_bytes).decode('ascii')}"
                 return jsonify({"status": "success", "data_url": data_url})
             else:
-                return jsonify({"status": "missing"}), 404
+                return jsonify({"status": "missing"}) # v4.1.4 修复: 避免触发前端异常捕获
         except Exception as e:
             from quart import jsonify
             return jsonify({"status": "error", "message": str(e)}), 500
@@ -2520,7 +2949,7 @@ class FlavorFusionUltimate(Star):
             full_path = os.path.join(cover_dir, filename)
             
             if not os.path.exists(full_path) or not os.path.isfile(full_path):
-                return jsonify({"status": "missing"}), 404
+                return jsonify({"status": "missing"}) # v4.1.4 修复: 避免触发前端异常捕获
                 
             media_type = mimetypes.guess_type(full_path)[0] or "image/jpeg"
             with open(full_path, "rb") as f:

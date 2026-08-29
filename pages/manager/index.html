@@ -6,21 +6,27 @@
   <title>千小妹还在吃 - 后厨仪表盘</title>
   <style>
     :root {
-      --bg: #121212;
-      --panel: rgba(30, 30, 30, 0.85);
-      --card: rgba(45, 45, 45, 0.75);
-      --text: #ffffff;
-      --muted: #a0a0a0;
-      --primary: #d32f2f;
-      --primary-hover: #f44336;
-      --line: #333333;
-      --shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
+      --hover-tint: rgba(255, 107, 74, 0.16);
+      --bg: #241009;
+      --panel: rgba(58, 26, 18, 0.42);
+      --card: rgba(74, 32, 22, 0.38);
+      --text: #ffece2;
+      --muted: #d9a08d;
+      --primary: #ff6b4a;
+      --primary-hover: #ff8a6b;
+      --line: rgba(255, 150, 120, 0.22);
+      --shadow: 0 10px 24px rgba(20, 5, 2, 0.5);
       --blur: blur(12px);
+      /* v4.0.01: 皮肤系统扩展变量 (夜间默认 / 日间) */
+      --surface: rgba(64, 28, 20, 0.45);
+      --surface-dark: rgba(44, 18, 12, 0.5);
+      --input-bg: #3a1a12;
+      --overlay: rgba(26, 9, 5, 0.3);
     }
     
     body {
       margin: 0;
-      background: var(--bg) url('https://raw.githubusercontent.com/dddada123/astrbot_plugin_chisa_still_eating_photo/main/assets/demo1.png') no-repeat center center fixed;
+      background: var(--bg) var(--bg-image, url('https://raw.githubusercontent.com/dddada123/astrbot_plugin_chisa_still_eating_photo/main/assets/demo1.png')) no-repeat center center fixed;
       background-size: cover;
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -29,10 +35,34 @@
     .bg-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(18, 18, 18, 0.7);
-      backdrop-filter: var(--blur);
-      -webkit-backdrop-filter: var(--blur);
+      background: var(--overlay);
+      backdrop-filter: var(--bg-blur, blur(0px));
+      -webkit-backdrop-filter: var(--bg-blur, blur(0px));
       z-index: -1;
+    }
+
+    /* v4.0.03 毛玻璃皮肤 (glass): 面板高透明 + backdrop-filter, 背景图透出 (参考 gsuid_hub glass-card) */
+    body.skin-glass header,
+    body.skin-glass .store-controls,
+    body.skin-glass .store-card,
+    body.skin-glass .char-block,
+    body.skin-glass .modal-content,
+    body.skin-glass .accordion,
+    body.skin-glass .status-toast {
+      backdrop-filter: blur(16px) saturate(1.25);
+      -webkit-backdrop-filter: blur(16px) saturate(1.25);
+    }
+    body.skin-glass .mascot-bubble {
+      backdrop-filter: blur(16px) saturate(1.25);
+      -webkit-backdrop-filter: blur(16px) saturate(1.25);
+      max-width: 340px;
+    }
+    body.skin-glass .tab-btn,
+    body.skin-glass .filter-btn,
+    body.skin-glass .network-select select,
+    body.skin-glass .btn-neutral {
+      backdrop-filter: blur(10px) saturate(1.15);
+      -webkit-backdrop-filter: blur(10px) saturate(1.15);
     }
 
     main {
@@ -86,8 +116,9 @@
       transition: all 0.2s;
     }
 
-    .tab-btn:hover { background: rgba(80, 80, 80, 0.8); }
-    .tab-btn.active { background: var(--primary); border-color: var(--primary-hover); }
+    .tab-btn:hover:not(.active) { background: var(--hover-tint); }
+    .tab-btn.active { color: white; }
+    .tab-btn.active { background: var(--primary); border-color: var(--primary-hover); color: white; }
 
     .section {
       display: none;
@@ -107,7 +138,7 @@
       padding: 15px;
       width: 100%;
       text-align: left;
-      border: none;
+      border: 1px solid var(--line);
       outline: none;
       font-size: 16px;
       font-weight: bold;
@@ -175,7 +206,7 @@
     .lazy-img.loaded { opacity: 1; }
 
     .img-card .img-name {
-      position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0, 0, 0, 0.8);
+      position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0, 0, 0, 0.8); color: #fff;
       font-size: 12px; padding: 4px; text-align: center; white-space: nowrap;
       overflow: hidden; text-overflow: ellipsis; z-index: 3; pointer-events: none;
     }
@@ -221,17 +252,17 @@
     .char-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .char-block-header h3 { margin: 0; }
     .char-lines {
-      width: 100%; height: 80px; background: #1e1e1e; color: #fff;
+      width: 100%; height: 80px; background: var(--input-bg); color: var(--text);
       border: 1px solid var(--line); border-radius: 4px; padding: 8px;
       margin-bottom: 10px; font-family: inherit; resize: vertical; box-sizing: border-box;
     }
 
 
     .mascot-bubble {
-      position: fixed; bottom: 220px; right: 50px; width: max-content; max-width: 220px;
+      position: fixed; bottom: 220px; right: 50px; width: max-content; max-width: 320px;
       background: rgba(255, 255, 255, 0.85); color: #000000; padding: 12px 16px;
       border-radius: 16px; box-shadow: 0 0 15px rgba(211, 47, 47, 0.7);
-      font-size: 14px; font-weight: bold; z-index: 1001; opacity: 0;
+      line-height: 1.55; font-size: 14px; font-weight: bold; z-index: 1001; opacity: 0;
       transform: translateY(10px) scale(0.9); transform-origin: bottom right;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none;
     }
@@ -258,48 +289,66 @@
     }
     .modal-content {
       background-color: var(--card); margin: 10% auto; padding: 20px;
-      border: 1px solid var(--line); border-radius: 12px; width: 80%; max-width: 600px; box-shadow: var(--shadow);
+      border: 1px solid var(--line); border-radius: 12px; width: 80%;
+        max-height: 86vh;
+        overflow-y: auto; max-width: 600px; box-shadow: var(--shadow);
     }
     .close { color: var(--muted); float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
     .close:hover, .close:focus { color: #fff; text-decoration: none; }
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
     .form-group input[type="text"], .form-group textarea, .form-group select {
-      width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid var(--line);
-      color: white; border-radius: 4px; box-sizing: border-box;
+      width: 100%; padding: 10px; background: var(--input-bg); border: 1px solid var(--line);
+      color: var(--text); border-radius: 4px; box-sizing: border-box;
     }
-    .form-group input[type="file"] { color: white; }
+    .form-group input[type="file"] { color: var(--text); }
 
     .status-toast {
       position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
       background: var(--primary); color: white; padding: 10px 20px;
       border-radius: 8px; z-index: 3000; font-weight: bold; box-shadow: var(--shadow);
       display: none; transition: opacity 0.3s;
-    }
-    .status-toast.success { background: #388e3c; }
-    .status-toast.error { background: var(--primary); }
+     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .status-toast.success { background: rgba(25, 118, 210, 0.88); }
+    .status-toast.error { background: rgba(183, 28, 28, 0.88); }
     .modal-buttons { display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px; }
   
     /* ========================================= */
     /* DLC Store Layout Styles */
     /* ========================================= */
-    .store-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid var(--line); flex-wrap: wrap; gap: 10px; }
+    .store-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: var(--surface-dark); padding: 15px; border-radius: 8px; border: 1px solid var(--line); flex-wrap: wrap; gap: 10px; }
     .network-select { display: flex; align-items: center; color: var(--muted); font-size: 14px;}
-    .network-select select { background: #2a2a2a; color: white; border: 1px solid var(--line); padding: 8px; border-radius: 4px; margin-left: 10px; outline: none; }
+    .network-select select { background: var(--surface); color: var(--text); border: 1px solid var(--line); padding: 8px; border-radius: 4px; margin-left: 10px; outline: none; }
     .store-actions { display: flex; gap: 10px; }
     
     .store-filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-    .filter-btn { background: #2a2a2a; border: 1px solid var(--line); color: var(--muted); padding: 6px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.2s ease; }
-    .filter-btn.active, .filter-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    .filter-btn { background: var(--surface); border: 1px solid var(--line); color: var(--muted); padding: 6px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.2s ease; }
+    .filter-btn:hover:not(.active) { background: var(--hover-tint); color: var(--text); border-color: var(--primary); }
+    .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    button.btn.btn-neutral { background: var(--surface) !important; color: var(--text) !important; border: 1px solid var(--line); }
+    button.btn.btn-neutral:hover { background: var(--hover-tint) !important; color: var(--text) !important; border-color: var(--primary); }
+    .store-tab-btn { background: var(--surface) !important; color: var(--text) !important; }
+    /* v4.0.07 按钮三态: 常驻不亮 / hover 灰度微光 / :active 按下高亮松开恢复 */
+    button.btn.btn-neutral:active,
+    .batch-toggle-btn:active:not(.active-batch),
+    .store-tab-btn:active { background: var(--primary) !important; color: white !important; border-color: var(--primary); }
+    .batch-toggle-btn { background: var(--surface) !important; color: var(--text) !important; border: 1px solid var(--line); }
+    .batch-toggle-btn:hover:not(.active-batch) { background: var(--hover-tint) !important; border-color: var(--primary); }
+    .btn-ghost { background: transparent !important; color: var(--muted) !important; border: 1px dashed var(--line); }
+    .btn-ghost:hover { background: var(--hover-tint) !important; color: var(--text) !important; border-color: var(--primary); }
+    .btn-danger-outline { background: transparent !important; color: var(--primary) !important; border: 1px solid var(--primary) !important; }
+    .btn-danger-outline:hover { background: var(--primary) !important; color: white !important; }
+    .store-tab-btn.active { background: var(--primary) !important; color: white !important; }
+    .store-tab-btn:hover:not(.active) { background: var(--hover-tint) !important; }
     
     .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-    .store-card { background: #1a1a1a; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; transition: transform 0.2s; display: flex; flex-direction: column;}
+    .store-card { background: var(--surface-dark); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; transition: transform 0.2s; display: flex; flex-direction: column;}
     .store-card:hover { transform: translateY(-5px) !important; border-color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-    .store-card-img-placeholder { height: 160px; background: #2a2a2a; display: flex; align-items: center; justify-content: center; color: var(--muted); font-family: 'Consolas', 'Courier New', monospace; border-bottom: 1px solid var(--line); font-size: 20px; font-weight: bold; letter-spacing: 1px;}
+    .store-card-img-placeholder { height: 160px; background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--muted); font-family: 'Consolas', 'Courier New', monospace; border-bottom: 1px solid var(--line); font-size: 20px; font-weight: bold; letter-spacing: 1px;}
     .store-card-info { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; }
-    .store-card-title { font-size: 18px; font-weight: bold; color: white; margin-bottom: 5px; }
+    .store-card-title { font-size: 18px; font-weight: bold; color: var(--text); margin-bottom: 5px; }
     .store-card-meta { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
-    .store-card-desc { font-size: 13px; color: #ccc; margin-bottom: 15px; line-height: 1.5; flex-grow: 1; }
+    .store-card-desc { font-size: 13px; color: var(--muted); margin-bottom: 15px; line-height: 1.5; flex-grow: 1; }
     .store-download-btn { width: 100%; background: rgba(226, 172, 107, 0.1); color: var(--primary); border: 1px solid var(--primary); margin-top: auto;}
     .store-download-btn:hover { background: var(--primary); color: #121212; }
 
@@ -325,35 +374,41 @@
   <main>
     <header>
       <div>
-        <h1>🔪 千小妹跨次元后厨</h1>
+        <h1><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px; margin-right:8px;"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>千小妹跨次元后厨</h1>
         <div class="subtitle" style="display:flex; align-items:center; gap:10px;">
-        <span>v4.0.0 | 高性能流式数据大屏</span>
+        <span>v4.1.8 | 高性能流式数据大屏</span>
         <span style="color:var(--muted);">|</span>
-        <button class="btn btn-small" style="background:transparent; border:1px dashed var(--line); color:var(--muted); padding:3px 8px; font-size:12px; cursor:pointer;" onclick="openSkinModal()">🎨 主题皮肤: 默认 (红黑)</button>
+        <button class="btn btn-small btn-ghost" style="padding:3px 8px; font-size:12px; cursor:pointer;" id="skin-switch-btn" onclick="openSkinModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:3px;"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>主题皮肤: 红枫·凝露</button>
+        <span style="display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:12px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>毛玻璃
+            <input type="range" id="bgBlurRange" min="0" max="100" value="0" style="width:110px; accent-color: var(--primary); cursor:pointer;" oninput="setBgBlur(this.value, false)">
+            <span id="bgBlurVal" style="width:26px; text-align:right;">0</span>
+            <button class="btn btn-small btn-ghost" style="padding:2px 6px; font-size:11px; margin-left:4px; border:1px solid var(--line);" onclick="saveBlurPref()">保存</button>
+        </span>
       </div>
       </div>
-      <button class="btn" onclick="fetchData()">🔄 刷新本地数据</button>
+      <button class="btn btn-neutral" onclick="fetchData()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>刷新本地数据</button>
     </header>
 
     <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchTab('tab-companions', this)">🏃 干饭人小队</button>
-      <button class="tab-btn" onclick="switchTab('tab-chefs', this)">👨‍🍳 专属大厨</button>
-      <button class="tab-btn" onclick="switchTab('tab-meme', this)">🌸 导游图库</button>
-      <button class="tab-btn" onclick="switchTab('tab-food', this)">🍔 食物总仓</button>
-      <button class="tab-btn" onclick="switchTab('tab-drink', this)">🧋 饮品仓库</button>
-      <button class="tab-btn" onclick="switchTab('tab-dark', this)">☠️ 黑暗料理</button>
-      <button class="tab-btn" onclick="switchTab('tab-dlc', this)">✂️ 千小妹商会</button>
+      <button class="tab-btn active" onclick="switchTab('tab-companions', this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>干饭人小队</button>
+      <button class="tab-btn" onclick="switchTab('tab-chefs', this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>专属大厨</button>
+      <button class="tab-btn" onclick="switchTab('tab-meme', this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>导游图库</button>
+      <button class="tab-btn" onclick="switchTab('tab-food', this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>食物总仓</button>
+      <button class="tab-btn" onclick="switchTab('tab-drink', this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>饮品仓库</button>
+      <button class="tab-btn" onclick="switchTab('tab-dark', this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>黑暗料理</button>
+      <button class="tab-btn" onclick="switchTab('tab-dlc', this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>千小妹商会</button>
     </div>
 
     <!-- Sections -->
     <div id="tab-companions" class="section active">
       <div class="controls">
         <button class="btn btn-small batch-toggle-btn" onclick="toggleBatchMode()">批量管理</button>
-        <button class="btn btn-small" onclick="openAddGanfanrenModal()">+ 新增干饭人</button>
+        <button class="btn btn-small btn-neutral" onclick="openAddGanfanrenModal()">+ 新增干饭人</button>
       </div>
       
       <div style="background: rgba(33, 150, 243, 0.1); border-left: 4px solid #2196F3; padding: 12px 15px; margin-bottom: 20px; border-radius: 4px; font-size: 14px;">
-        💡 <strong>出场调度指南：</strong>若要指定让哪几位干饭人出场抢饭，请前往 AstrBot 控制台左侧的 <b>[插件配置 -> astrbot_plugin_chisa_still_eating]</b> 基础设置页面中填写干饭人的名字。（不填则默认全员随机抽取）
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.4 1 2.3h6c0-.9.4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg> <strong>出场调度指南：</strong>若要指定让哪几位干饭人出场抢饭，请前往 AstrBot 控制台左侧的 <b>[插件配置 -> astrbot_plugin_chisa_still_eating]</b> 基础设置页面中填写干饭人的名字。（不填则默认全员随机抽取）
       </div>
 
       <p style="color:var(--muted)">管理会截胡美食的异界旅伴，支持编写独立语录与立绘。</p>
@@ -363,7 +418,7 @@
     <div id="tab-chefs" class="section">
       <div class="controls">
         <button class="btn btn-small batch-toggle-btn" onclick="toggleBatchMode()">批量管理</button>
-        <button class="btn btn-small" onclick="openUploadModal('chefs')">+ 上传厨师</button>
+        <button class="btn btn-small btn-neutral" onclick="openUploadModal('chefs')">+ 上传厨师</button>
       </div>
       <div class="image-grid" id="chefs-grid"><div class="coming-soon">正在加载数据...</div></div>
     </div>
@@ -371,15 +426,15 @@
     
     <div id="tab-dlc" class="section">
       <!-- 动态商店 Banner -->
-      <div class="store-banner-container" style="position: relative; width: 100%; aspect-ratio: 7 / 1; min-height: 120px; max-height: 240px; border-radius: 8px; margin-bottom: 20px; overflow: hidden; border: 1px solid var(--line); background: #1a1a1a;">
+      <div class="store-banner-container" style="position: relative; width: 100%; aspect-ratio: 7 / 1; min-height: 120px; max-height: 240px; border-radius: 8px; margin-bottom: 20px; overflow: hidden; border: 1px solid var(--line); background: var(--surface-dark);">
          <img id="store-banner-img" src="./banner.jpg" alt="Store Banner" onerror="this.style.display='none'; var fb=document.getElementById('store-banner-fallback'); if(fb) fb.style.display='flex';" style="width: 100%; height: 100%; object-fit: cover; display: block;">
-         <div id="store-banner-fallback" style="display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); font-size: 16px; letter-spacing: 1px; border: 1px dashed var(--line); border-radius: 8px; background: #2a2a2a;">
+         <div id="store-banner-fallback" style="display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); font-size: 16px; letter-spacing: 1px; border: 1px dashed var(--line); border-radius: 8px; background: var(--surface);">
             <div style="font-size: 24px; color: #555;">🏪 欢迎光临创意工坊</div>
          </div>
          <div id="store-banner-overlay" style="display: none; position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.85), transparent); padding: 30px 15px 10px 15px; box-sizing: border-box; flex-direction: column; justify-content: flex-end;">
             <h2 id="store-banner-name" style="margin: 0 0 6px 0; color: #fff; font-size: 18px; text-shadow: 1px 1px 4px rgba(0,0,0,0.8);"></h2>
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <span style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 12px; font-size: 11px; color: #fff; backdrop-filter: blur(4px);">✍️ <span id="store-banner-author"></span></span>
+                <span style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 12px; font-size: 11px; color: #fff; backdrop-filter: blur(4px);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span id="store-banner-author"></span></span>
                 <span id="store-banner-desc" style="color: #eee; font-size: 12px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%;"></span>
             </div>
          </div>
@@ -391,35 +446,36 @@
               <div class="network-select">
                   <label>下载节点引擎: </label>
                   <select id="dlc-node">
-                      <option value="smart">🚀 智能测速国内镜像 (国内免梯推荐)</option>
-                      <option value="direct">🌐 Github 原生拉取 (海外/代理专属)</option>
-                      <option value="gh-proxy.com">⚡ gh-proxy.com</option>
-                      <option value="hk.gh-proxy.com">⚡ hk.gh-proxy.com</option>
-                      <option value="gh.dpik.top">⚡ gh.dpik.top</option>
-                      <option value="edgeone.gh-proxy.com">⚡ edgeone.gh-proxy.com</option>
+                      <option value="smart">智能测速国内镜像 (国内免梯推荐)</option>
+                      <option value="direct">Github 原生拉取 (海外/代理专属)</option>
+                      <option value="gh-proxy.com">gh-proxy.com (推荐)</option>
+                      <option value="hk.gh-proxy.com">hk.gh-proxy.com</option>
+                      <option value="gh.dpik.top">gh.dpik.top</option>
+                      <option value="edgeone.gh-proxy.com">edgeone.gh-proxy.com</option>
                   </select>
+                  <div style="font-size: 12px; color: var(--muted); margin-top: 6px;">下载不顺利？建议锁定 gh-proxy.com 镜像后重试</div>
               </div>
               <div class="store-actions" style="display: flex; gap: 10px;">
                   <!-- 源切换按钮挪到这里，和获取按钮同级 -->
-                  <div class="top-store-switch" style="display: flex; gap: 0px; background: #1a1a1a; border: 1px solid var(--line); border-radius: 4px; overflow: hidden;">
-                      <button class="btn btn-small" id="btn-official-store" style="background: var(--primary); border-radius: 0; border: none;" onclick="switchStoreType('official')">🛒 千小妹严选</button>
-                      <button class="btn btn-small" id="btn-custom-store" style="background: #333; border-radius: 0; border: none; border-left: 1px solid var(--line);" onclick="switchStoreType('custom')">🌐 创意工坊</button>
+                  <div class="top-store-switch" style="display: flex; gap: 0px; background: var(--surface-dark); border: 1px solid var(--line); border-radius: 4px; overflow: hidden;">
+                      <button class="btn btn-small store-tab-btn active" id="btn-official-store" style="border-radius: 0; border: none;" onclick="switchStoreType('official')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>千小妹严选</button>
+                      <button class="btn btn-small store-tab-btn" id="btn-custom-store" style="border-radius: 0; border: none; border-left: 1px solid var(--line);" onclick="switchStoreType('custom')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>创意工坊</button>
                   </div>
-                  <button class="btn" style="background: #e53935;" onclick="fetchStoreIndex()">🔄 刷新货架</button>
-                  <button class="btn" style="background: #43a047;" onclick="fetchStoreCovers('incr')">🖼️ 橱窗图增量刷新</button>
-                  <button class="btn" style="background: #00897b;" onclick="fetchStoreCovers('full')">🧹 橱窗图全量刷新</button>
+                  <button class="btn btn-neutral" onclick="fetchStoreIndex()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>刷新货架</button>
+                  <button class="btn btn-neutral" onclick="fetchStoreCovers('incr')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>橱窗图增量刷新</button>
+                  <button class="btn btn-neutral" onclick="fetchStoreCovers('full')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>橱窗图全量刷新</button>
               </div>
           </div>
       </div>
       
       <div class="store-filters">
-          <button class="filter-btn active" onclick="filterStore('all', this)">📦 全部资源</button>
-          <button class="filter-btn" onclick="filterStore('gf', this)">🏃 干饭人</button>
-          <button class="filter-btn" onclick="filterStore('cf', this)">👨‍🍳 大厨</button>
-          <button class="filter-btn" onclick="filterStore('gd', this)">🌸 导游MEME</button>
-          <button class="filter-btn" onclick="filterStore('fd', this)">🍔 食物总仓</button>
-          <button class="filter-btn" onclick="filterStore('dr', this)">🧋 饮品仓库</button>
-          <button class="filter-btn" onclick="filterStore('dk', this)">☠️ 黑暗料理</button>
+          <button class="filter-btn active" onclick="filterStore('all', this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>全部资源</button>
+          <button class="filter-btn" onclick="filterStore('gf', this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>干饭人</button>
+          <button class="filter-btn" onclick="filterStore('cf', this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>大厨</button>
+          <button class="filter-btn" onclick="filterStore('gd', this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>导游MEME</button>
+          <button class="filter-btn" onclick="filterStore('fd', this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>食物总仓</button>
+          <button class="filter-btn" onclick="filterStore('dr', this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>饮品仓库</button>
+          <button class="filter-btn" onclick="filterStore('dk', this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>黑暗料理</button>
       </div>
       
       <div id="store-content-area" class="store-grid"></div>
@@ -451,7 +507,7 @@
     <div>当前处于批量选择模式 <span style="color:var(--muted); font-size:13px; margin:0 8px;">(💡 提示：按住鼠标滑动可快速多选)</span> | 已选定 <span id="batchCount" style="color:var(--primary); font-size:20px; font-weight:bold;">0</span> 张图片</div>
     <div>
         <button class="btn" style="background:#555; margin-right:10px;" onclick="toggleBatchMode()">取消</button>
-        <button class="btn" onclick="executeBatchDelete()">🗑️ 删除选定项</button>
+        <button class="btn" onclick="executeBatchDelete()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>删除选定项</button>
     </div>
   </div>
 
@@ -523,27 +579,43 @@
   </div>
 
   
-    <!-- UI Skin Modal Skeleton -->
+    <!-- UI Skin Modal -->
   <div id="skinModal" class="modal">
     <div class="modal-content" style="max-width: 400px; text-align: center;">
       <span class="close" onclick="document.getElementById('skinModal').style.display='none'">&times;</span>
-      <h3 style="margin-top: 0; color: var(--primary);">🎨 跨次元后厨 - 主题装扮</h3>
+      <h3 style="margin-top: 0; color: var(--primary);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:5px;"><circle cx="12" cy="12" r="10"/><circle cx="8.5" cy="10.5" r="1"/><circle cx="15.5" cy="10.5" r="1"/><circle cx="12" cy="15.5" r="1"/></svg>跨次元后厨 - 主题装扮</h3>
       <p style="color: var(--muted); font-size: 13px; margin-bottom: 20px;">
-        在这里可以切换通过 DLC 商城下载的第三方皮肤。<br>目前仅提供结构展示，核心引擎正在规划中...
+        默认主题为「红枫·凝露」毛玻璃风格。全新「秧秧·玄翎」蓝黑毛玻璃已上线；长夜·执剪为经典夜间配色，破晓·引线适合采光良好的环境。顶部滑块可调节背景毛玻璃力度。
       </p>
-      
-      <div style="display:flex; flex-direction:column; gap:10px;">
-          <div style="padding: 15px; background: #2a2a2a; border: 1px solid var(--primary); border-radius: 8px; display:flex; justify-content:space-between; align-items:center;">
-              <span style="color:white; font-weight:bold;">● 默认主题 (纯血红黑)</span>
-              <span style="color:var(--primary); font-size:12px;">✅ 正在使用</span>
+      <div style="text-align: right; margin: -10px 0 8px 0;">
+          <button class="btn btn-small btn-neutral" style="font-size: 12px; margin-right: 5px; opacity: 0.6; cursor: not-allowed;" onclick="fetchSkinIndex()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:3px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>暂未开放</button>
+          <button class="btn btn-small btn-neutral" style="font-size: 12px;" onclick="redownloadSkinBg(event)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:3px;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>重新下载背景</button>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px;" id="skinCardArea">
+          <div id="skin-card-maple_dew" onclick="applySkin('maple_dew')" style="padding: 15px; background: var(--surface); border: 2px solid var(--primary); border-radius: 8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+              <span style="font-weight:bold;">
+                  <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #ff6b4a 50%, #5a1e12 50%); vertical-align:-2px; margin-right:8px; border:1px solid #a66;"></span>红枫·凝露 <span style="font-size:11px; color:var(--muted);">默认 · 毛玻璃</span>
+              </span>
+              <span class="skin-state" style="color:var(--primary); font-size:12px;">✓ 正在使用</span>
           </div>
-          <div style="padding: 15px; background: #1a1a1a; border: 1px dashed var(--line); border-radius: 8px; display:flex; justify-content:space-between; align-items:center; color: var(--muted);">
-              <span>● [zt0001] 猩红之夜 (未下载)</span>
-              <button class="btn btn-small" style="background:#444;" disabled>使用</button>
+          <div id="skin-card-yy_xuanling" onclick="applySkin('yy_xuanling')" style="padding: 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+              <span style="font-weight:bold;">
+                  <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #4aa3ff 50%, #0a1220 50%); vertical-align:-2px; margin-right:8px; border:1px solid #6a9;"></span>秧秧·玄翎 <span style="font-size:11px; color:var(--muted);">毛玻璃 · 新上线</span>
+              </span>
+              <span class="skin-state" style="color:var(--muted); font-size:12px;">点击使用</span>
           </div>
-          <div style="padding: 15px; background: #1a1a1a; border: 1px dashed var(--line); border-radius: 8px; display:flex; justify-content:space-between; align-items:center; color: var(--muted);">
-              <span>● [zt0002] 清凉薄荷 (未下载)</span>
-              <button class="btn btn-small" style="background:#444;" disabled>使用</button>
+          <div id="skin-card-chisa_red_black" onclick="applySkin('chisa_red_black')" style="padding: 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+              <span style="font-weight:bold;">
+                  <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #d32f2f 50%, #121212 50%); vertical-align:-2px; margin-right:8px; border:1px solid #555;"></span>长夜·执剪 <span style="font-size:11px; color:var(--muted);">夜间</span>
+              </span>
+              <span class="skin-state" style="color:var(--muted); font-size:12px;">点击使用</span>
+          </div>
+          <div id="skin-card-chisa_red_white" onclick="applySkin('chisa_red_white')" style="padding: 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+              <span style="font-weight:bold;">
+                  <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #c62828 50%, #f7f5f2 50%); vertical-align:-2px; margin-right:8px; border:1px solid #bbb;"></span>破晓·引线 <span style="font-size:11px; color:var(--muted);">日间</span>
+              </span>
+              <span class="skin-state" style="color:var(--muted); font-size:12px;">点击使用</span>
           </div>
       </div>
     </div>
@@ -552,7 +624,285 @@
   <script>
     function openSkinModal() {
         document.getElementById('skinModal').style.display='flex';
+        renderSkinModalState();
     }
+
+    /* ===== 皮肤系统 =====
+       官方四套: 红枫·凝露(毛玻璃默认) / 秧秧·玄翎(毛玻璃) / 长夜·执剪(夜间) / 破晓·引线(日间)。
+       皮肤偏好(含背景毛玻璃力度)自动持久化到后端, 刷新后保持用户选择。 */
+    var SKIN_REGISTRY = {
+        "chisa_red_black": {
+            name: "长夜·执剪",
+            vars: {
+                "--hover-tint": "rgba(211, 47, 47, 0.16)",
+                "--bg": "#121212", "--panel": "rgba(30, 30, 30, 0.85)", "--card": "rgba(45, 45, 45, 0.75)",
+                "--text": "#ffffff", "--muted": "#a0a0a0", "--primary": "#d32f2f", "--primary-hover": "#f44336",
+                "--line": "#333333", "--shadow": "0 10px 24px rgba(0, 0, 0, 0.6)",
+                "--surface": "#2a2a2a", "--surface-dark": "#1a1a1a", "--input-bg": "#1e1e1e",
+                "--overlay": "rgba(18, 18, 18, 0.7)"
+            }
+        },
+        "yy_xuanling": {
+            name: "秧秧·玄翎",
+            glass: true,
+            remoteBg: "04.jpg",
+            quotes: ["我多想和你一起到远方去 去看最无垠的大地♪", "牵绊怎会不言语 音律怎会没回应 只是答案它藏在风里♪"],
+            vars: {
+                "--hover-tint": "rgba(74, 163, 255, 0.16)",
+                "--bg": "#0a1220", "--panel": "rgba(18, 32, 54, 0.42)", "--card": "rgba(26, 44, 70, 0.38)",
+                "--text": "#e2eeff", "--muted": "#8fa8cc", "--primary": "#4aa3ff", "--primary-hover": "#73bdff",
+                "--line": "rgba(110, 170, 255, 0.22)", "--shadow": "0 10px 24px rgba(2, 8, 18, 0.5)",
+                "--surface": "rgba(22, 38, 62, 0.45)", "--surface-dark": "rgba(14, 26, 44, 0.5)",
+                "--input-bg": "#16263e", "--overlay": "rgba(6, 12, 24, 0.3)"
+            }
+        },
+        "chisa_red_white": {
+            name: "破晓·引线",
+            vars: {
+                "--hover-tint": "rgba(198, 40, 40, 0.10)",
+                "--bg": "#f7f5f2", "--panel": "rgba(255, 255, 255, 0.92)", "--card": "rgba(242, 235, 227, 0.95)",
+                "--text": "#212121", "--muted": "#6e6e6e", "--primary": "#c62828", "--primary-hover": "#e53935",
+                "--line": "#e3ded8", "--shadow": "0 10px 24px rgba(120, 40, 40, 0.14)",
+                "--surface": "#ffffff", "--surface-dark": "#fdfbf8", "--input-bg": "#ffffff",
+                "--overlay": "rgba(250, 246, 240, 0.72)"
+            }
+        },
+        /* v4.0.03: 红枫·凝露 - 毛玻璃皮肤 (背景图经 skin_asset 接口按测速路径下载并缓存本地) */
+        "maple_dew": {
+            name: "红枫·凝露",
+            glass: true,
+            remoteBg: "03.jpg",
+            vars: {
+                "--hover-tint": "rgba(255, 107, 74, 0.16)",
+                "--bg": "#241009", "--panel": "rgba(58, 26, 18, 0.42)", "--card": "rgba(74, 32, 22, 0.38)",
+                "--text": "#ffece2", "--muted": "#d9a08d", "--primary": "#ff6b4a", "--primary-hover": "#ff8a6b",
+                "--line": "rgba(255, 150, 120, 0.22)", "--shadow": "0 10px 24px rgba(20, 5, 2, 0.5)",
+                "--surface": "rgba(64, 28, 20, 0.45)", "--surface-dark": "rgba(44, 18, 12, 0.5)",
+                "--input-bg": "#3a1a12", "--overlay": "rgba(26, 9, 5, 0.3)"
+            }
+        }
+    };
+    var currentSkinId = "maple_dew";
+
+    function getSkinDef(id) { return SKIN_REGISTRY[id]; }
+
+    var _chisa_applying_skin = false;
+    function applySkin(skinId, skipSave) {
+        if (_chisa_applying_skin) return;
+        _chisa_applying_skin = true;
+        var skin = getSkinDef(skinId);
+        if (!skin) { _chisa_applying_skin = false; return; }
+        var root = document.documentElement;
+        for (var k in skin.vars) {
+            root.style.setProperty(k, skin.vars[k]);
+        }
+        // v4.0.03: 毛玻璃标记与远程背景 (先应用面板配色, 背景图异步渐进加载)
+        document.body.classList.remove("skin-glass");
+        if (skin.glass) document.body.classList.add("skin-glass");
+        if (skin.remoteBg) {
+            var sdk = getSdk();
+            if (sdk) {
+                sdk.apiGet("skin_asset", { file: skin.remoteBg }).then(function(res) {
+                    var d = parseSdkResponse(res);
+                    if (d && d.status === "success" && d.data_url) {
+                        root.style.setProperty("--bg-image", "url('" + d.data_url + "')");
+                    }
+                }).catch(function() {});
+            }
+        } else {
+            root.style.removeProperty("--bg-image");
+        }
+        currentSkinId = skinId;
+        renderSkinModalState();
+        var skinBtn = document.getElementById("skin-switch-btn");
+        if (skinBtn) skinBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:3px;"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>主题皮肤: ' + skin.name;
+        // v4.0.04: 皮肤偏好持久化 (后端保存, sandbox 下 localStorage 不可用)
+        if (!skipSave) {
+            // 双通道: localStorage 可用环境即时生效; 后端为跨刷新主通道
+            safeStorageSet("chisa_skin_id", skinId);
+            var sdkPs = getSdk();
+            if (sdkPs) {
+                var blurVal = document.getElementById("bgBlurRange");
+                sdkPs.apiPost("save_skin_pref", { skin_id: skinId, bg_blur: blurVal ? parseInt(blurVal.value, 10) || 0 : 0})
+                    .then(function() { console.log("[Chisa Skin] 偏好已保存:", skinId); })
+                    .catch(function() {
+                        console.warn("[Chisa Skin] 偏好保存失败:", skinId);
+                        showToast("皮肤偏好保存失败，刷新后可能恢复默认", "error");
+                    });
+            }
+        }
+        if (skin.quotes && skin.quotes.length) {
+            showMascotBubble(skin.quotes[Math.floor(Math.random() * skin.quotes.length)]);
+        } else if (skinId === "chisa_red_white") {
+            showMascotBubble("破晓·引线已就位！清爽的日间模式最适合干饭啦~");
+        } else if (skinId === "yy_xuanling") {
+            showMascotBubble("秧秧·玄翎已就位！风里都藏着答案的味道呢~");
+        } else if (skinId === "maple_dew") {
+            showMascotBubble("红枫·凝露已就位！枫叶正在为你飘落哦~");
+        } else {
+            showMascotBubble("长夜·执剪归来！这才是千咲的本体配色嘛~");
+        }
+    
+        var sdkLogger = getSdk();
+        if (sdkLogger) {
+            sdkLogger.apiPost("frontend_log", { msg: "🎨 成功在前端应用皮肤: " + skinId + " (skipSave=" + skipSave + ")" }).catch(function(){});
+        }
+        
+        _chisa_applying_skin = false;
+    }
+
+    function renderSkinModalState() {
+        var cards = document.querySelectorAll("#skinCardArea .skin-state");
+        for (var i = 0; i < cards.length; i++) {
+            var card = cards[i].parentElement;
+            var cardId = card.id ? card.id.replace("skin-card-", "") : "";
+            var active = (cardId === currentSkinId);
+            cards[i].textContent = active ? "✓ 正在使用" : "点击使用";
+            cards[i].style.color = active ? "var(--primary)" : "var(--muted)";
+            card.style.border = active ? "2px solid var(--primary)" : "1px solid var(--line)";
+        }
+    }
+
+    // v4.1.7: 背景毛玻璃力度 (滑块0-100，实际映射到0-20px)
+    function setBgBlur(val, save) {
+        var raw = parseInt(val, 10) || 0;
+        if (raw < 0) raw = 0;
+        if (raw > 100) raw = 100;
+        var px = raw / 5; // 0-100 映射到 0-20px (解决毛玻璃爆炸和精度下降问题)
+        document.documentElement.style.setProperty("--bg-blur", "blur(" + px + "px)");
+        var lbl = document.getElementById("bgBlurVal");
+        if (lbl) lbl.textContent = raw;
+        var rng = document.getElementById("bgBlurRange");
+        if (rng && rng.value !== String(raw)) rng.value = raw;
+        if (save && currentSkinId) {
+            saveBlurPref();
+        }
+    }
+    
+    // v4.1.7: 独立的手动保存函数
+    function saveBlurPref() {
+        if (!currentSkinId) return;
+        var sdk = getSdk();
+        if (sdk) {
+            var rng = document.getElementById("bgBlurRange");
+            var val = rng ? parseInt(rng.value, 10) || 0 : 0;
+            showToast("正在保存皮肤偏好...", "");
+            sdk.apiPost("save_skin_pref", { skin_id: currentSkinId, bg_blur: val })
+                .then(function() { showToast("偏好保存成功！", "success"); })
+                .catch(function() { showToast("偏好保存失败", "error"); });
+        }
+    }
+
+    // v4.0.04: 初始化皮肤 - 后端有偏好则恢复用户选择, 否则默认红枫·凝露
+    var _skinInitLock = false;
+    function initSkinFromPref(onComplete) {
+        if (_skinInitLock) { if (onComplete) onComplete(); return; }
+        _skinInitLock = true;
+        
+        var finish = function() {
+            if (onComplete) {
+                var cb = onComplete;
+                onComplete = null;
+                cb();
+            }
+        };
+
+        var fallback = function(reason) {
+            console.warn("[Chisa Skin] 触发兜底加载, 理由:", reason);
+            var localId = safeStorageGet("chisa_skin_id");
+            if (localId && SKIN_REGISTRY[localId]) {
+                applySkin(localId, true);
+            } else {
+                applySkin("maple_dew", true);
+            }
+            finish();
+        };
+
+        var sdk = getSdk();
+        if (!sdk) { fallback("SDK未就绪"); return; }
+        
+        // 废除 800ms 重试与花里胡哨的判断，直接“鸭子类型”暴力抓取！
+        sdk.apiGet("skin_pref", {}).then(function(res) {
+            var data = parseSdkResponse(res);
+            
+            // 极简提取：不管是包在哪一层，只要找到 skin_id，就是成功！
+            var sid = null;
+            var blur = 0;
+            
+            if (data && data.skin_id) {
+                sid = data.skin_id;
+                blur = data.bg_blur;
+            } else if (data && data.data && data.data.skin_id) {
+                sid = data.data.skin_id;
+                blur = data.data.bg_blur;
+            }
+            
+            if (sid && typeof sid === "string") {
+                console.log("[Chisa Skin] 🎯 成功抓取到持久化偏好:", sid, "blur:", blur);
+                if (SKIN_REGISTRY[sid]) {
+                    // 已知皮肤，直接用！
+                    if (typeof blur !== "undefined") setBgBlur(blur, false);
+                    applySkin(sid, true);
+                    finish();
+                } else {
+                    // 未知皮肤，尝试网络拉取配置 (一次过，不重试)
+                    sdk.apiPost("skin_get", { id: sid }).then(function(res2) {
+                        var sData = parseSdkResponse(res2);
+                        if (sData && sData.skin_id) {
+                            SKIN_REGISTRY[sid] = sData;
+                            if (typeof blur !== "undefined") setBgBlur(blur, false);
+                            applySkin(sid, true);
+                        } else if (sData && sData.data && sData.data.skin_id) {
+                            SKIN_REGISTRY[sid] = sData.data;
+                            if (typeof blur !== "undefined") setBgBlur(blur, false);
+                            applySkin(sid, true);
+                        } else {
+                            fallback("未知皮肤拉取配置失败");
+                            return;
+                        }
+                        finish();
+                    }).catch(function(e) {
+                        fallback("未知皮肤拉取网络异常");
+                    });
+                }
+            } else {
+                // 没有找到有效的 skin_id，说明没存过偏好或者是损坏的数据
+                fallback("未找到有效皮肤偏好数据");
+            }
+        }).catch(function(e) {
+            fallback("网络拉取偏好异常");
+        });
+    }
+
+    // v4.0.08: 拉取皮肤仓库索引并渲染创意工坊皮肤分区 (v4.1.2: 暂未开放)
+    function fetchSkinIndex() {
+        showToast("在线皮肤功能暂未开放", "info");
+    }
+
+    // v4.1.0: 强制重新下载当前皮肤的背景图 (走当前下载引擎, 覆盖本地缓存)
+    function redownloadSkinBg(ev) {
+        if (ev) ev.stopPropagation();
+        var skin = getSkinDef(currentSkinId);
+        if (!skin || !skin.remoteBg) {
+            showToast("当前皮肤为纯色主题，无需下载背景哦~", "");
+            return;
+        }
+        var sdk = getSdk();
+        if (!sdk) return;
+        showToast("正在按当前下载引擎重新拉取背景...", "");
+        sdk.apiGet("skin_asset", { file: skin.remoteBg, force: "1" }).then(function(res) {
+            var d = parseSdkResponse(res);
+            if (d && d.status === "success" && d.data_url) {
+                document.documentElement.style.setProperty("--bg-image", "url('" + d.data_url + "')");
+                showToast("背景已重新下载并应用！", "success");
+            } else {
+                showToast("背景重新下载失败，请检查网络或切换节点重试", "error");
+            }
+        }).catch(function() {
+            showToast("背景重新下载失败", "error");
+        });
+    }
+
   </script>
 
   <!-- Rename Modal -->
@@ -562,8 +912,8 @@
       <h2>重命名图片</h2>
       <p style="color:var(--muted); font-size:14px;">请输入新文件名，会直接修改本地文件。</p>
       <div style="display: flex; gap: 10px; margin-top: 15px;">
-        <input type="text" id="rnName" style="flex: 3; padding: 10px; background: #1e1e1e; border: 1px solid var(--line); color: white; border-radius: 4px;" placeholder="新文件名">
-        <input type="text" id="rnExt" style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid var(--line); color: white; border-radius: 4px;" placeholder=".jpg">
+        <input type="text" id="rnName" style="flex: 3; padding: 10px; background: var(--input-bg); border: 1px solid var(--line); color: var(--text); border-radius: 4px;" placeholder="新文件名">
+        <input type="text" id="rnExt" style="flex: 1; padding: 10px; background: var(--input-bg); border: 1px solid var(--line); color: var(--text); border-radius: 4px;" placeholder=".jpg">
       </div>
       <div class="modal-buttons">
         <button class="btn" style="background:#555;" onclick="closeRenameModal()">取消</button>
@@ -647,9 +997,9 @@
     }
 
     // 页面加载后从后端拉取书架，填充内存缓存
-    function loadWorkshopHistoryFromBackend() {
+    function loadWorkshopHistoryFromBackend(onComplete) {
         var sdk = getSdk();
-        if (!sdk) return;
+        if (!sdk) { if (onComplete) onComplete(); return; }
         sdk.apiGet("workshop_bookmarks", {}).then(function(res) {
             var data = parseSdkResponse(res);
             var arr = null;
@@ -659,7 +1009,10 @@
                 workshopHistoryCache = arr;
                 if (typeof renderWorkshopChips === 'function') renderWorkshopChips();
             }
-        }).catch(function() {});
+            if (onComplete) onComplete();
+        }).catch(function() {
+            if (onComplete) onComplete();
+        });
     }
 
     function addWorkshopToHistory(url, name) {
@@ -743,6 +1096,39 @@
     }
     function safeStorageRemove(key) {
         try { localStorage.removeItem(key); } catch (e) {}
+    }
+
+    /* v4.0.01 内联 SVG 图标库 (feather 风格, stroke=currentColor 随主题变色, 零外部依赖) */
+    function svgIcon(name, size) {
+        size = size || 15;
+        var P = {
+            users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+            chef: '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+            smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+            food: '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>',
+            cup: '<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>',
+            bolt: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+            store: '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+            cart: '<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>',
+            globe: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+            refresh: '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+            image: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+            clouddl: '<polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/>',
+            download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+            bookmark: '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+            link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+            droplet: '<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>',
+            trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+            upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+            star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+            waves: '<path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 2.5 0 2.5 2 5 2 1.3 0 1.9-.5 2.5-1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 2.5 0 2.5 2 5 2 1.3 0 1.9-.5 2.5-1"/>',
+            cpu: '<rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>',
+            edit: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+            pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+            book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'
+        };
+        var body = P[name] || P.store;
+        return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;">' + body + '</svg>';
     }
 
 
@@ -1273,10 +1659,16 @@
             } else if (isMissing) {
                 updateStoreBanner(null);
                 if (container) {
-                    var emptyMsg = currentStoreType === 'custom' 
-                        ? '👆 请在上方输入仓库地址并点击连接，获取第三方作者的 DLC 列表！'
-                        : '<div style="font-size: 24px; margin-bottom: 20px;">📦 未找到本地缓存的商品目录</div><button class="btn" style="padding: 10px 20px; font-size: 16px;" onclick="fetchStoreIndex()">🔄 点击刷新货架</button><div style="color: var(--muted); font-size: 12px; margin-top: 20px;">货架拉取成功后会永久保存在 plugin_data 中。</div>';
-                    container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: var(--muted);">' + emptyMsg + '</div>';
+                    var emptyMsg = currentStoreType === 'custom'
+                        ? (currentRepoId === DEMO_WORKSHOP_REPO_ID
+                            ? '🌐 官方演示工坊尚未缓存，点击下方按钮立即拉取体验！'
+                            : '👆 请在上方输入仓库地址并点击连接，获取第三方作者的 DLC 列表！')
+                        : '<div style="font-size: 24px; margin-bottom: 20px;">📦 未找到本地缓存的商品目录</div><button class="btn" style="padding: 10px 20px; font-size: 16px;" onclick="fetchStoreIndex()">' + svgIcon('refresh', 16) + '点击刷新货架</button><div style="color: var(--muted); font-size: 12px; margin-top: 20px;">货架拉取成功后会永久保存在 plugin_data 中。</div>';
+                    var ctaHtml = '';
+                    if (currentStoreType === 'custom') {
+                        ctaHtml = '<button class="btn" style="padding: 10px 20px; font-size: 16px; margin-top: 20px;" onclick="fetchStoreIndex()">' + svgIcon('link', 16) + '连接并拉取目录</button>';
+                    }
+                    container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: var(--muted);">' + emptyMsg + ctaHtml + '</div>';
                 }
             } else {
                 if (container) {
@@ -1403,7 +1795,7 @@
             var safeHash = escapeHTML(item.sha256);
             
             htmlStr += '<div class="store-card fade-in" style="opacity:0; transform:translateY(15px); transition: opacity 0.5s ease, transform 0.5s ease;">' +
-                '<div style="height: 130px; background: #2a2a2a; border-bottom: 1px solid var(--line); overflow: hidden; position: relative; display:flex; align-items:center; justify-content:center;">' +
+                '<div style="height: 130px; background: var(--surface); border-bottom: 1px solid var(--line); overflow: hidden; position: relative; display:flex; align-items:center; justify-content:center;">' +
                     '<img class="store-card-img" src="./hello.jpg" data-cover="' + safeId + '.' + safeExt + '" style="width: 100%; height: 100%; object-fit: cover; transition: opacity 0.4s ease;" ' +
                          'onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">' +
                     '<div style="display:none; width:100%; height:100%; align-items:center; justify-content:center; color:#d9a5a5; font-family:\'Consolas\', \'Courier New\', monospace; font-size:20px; font-weight:bold; letter-spacing:1px; background:#2e1a1a;">' +
@@ -1414,14 +1806,14 @@
                     '<div class="store-card-title" style="margin-bottom: 12px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; width: 100%;">' + parseTitleTag(safeTitle) + '</div>' +
                     '<div class="store-card-meta" style="font-size: 11px; margin-bottom: 8px; color: var(--muted); line-height: 1.6;">' +
                         '作者: ' + safeAuthor + ' | 大小: ' + safeSize + '<br>' +
-                        '编号: <span style="color:#d9a5a5; font-family: monospace;">[' + safeId + ']</span>' +
+                        '编号: <span style="color: var(--primary); font-family: monospace;">[' + safeId + ']</span>' +
                     '</div>' +
                     '<div class="store-card-desc" style="font-size: 12px; margin-bottom: 10px;">' + safeDesc + '</div>' +
                     '';
             var isDownloaded = false;
             for(var k=0; k<downloadedRecords.length; k++){ if(downloadedRecords[k] === item.id) { isDownloaded = true; break; } }
-            var btnStyle = isDownloaded ? 'background: rgba(25, 135, 84, 0.15); color: #198754; border-color: #157347;' : '';
-            var btnText = isDownloaded ? '🔄 重新下载' : '⬇️ 下载部署';
+            var btnStyle = isDownloaded ? 'background: rgba(25, 118, 210, 0.15); color: #1976d2; border-color: #1565c0;' : '';
+            var btnText = isDownloaded ? (svgIcon('refresh', 13) + '重新下载') : (svgIcon('download', 13) + '下载部署');
             htmlStr += '<button class="btn store-download-btn" style="padding: 6px; font-size: 12px; ' + btnStyle + '" onclick="downloadDLC(\'' + safeId + '\', \'' + safeHash + '\', \'' + safeSize + '\')">' + btnText + '</button>' +
                 '</div>' +
             '</div>';
@@ -1613,6 +2005,10 @@
     var currentRepoId = "";
     // 工坊会话内存态: sandbox 下 localStorage 不可用，用内存变量保持"两端商店同时存在"的切换体验
     var customLastUrl = "";   // 本次会话最近一次成功连接的工坊地址
+    // v4.0.01: 官方演示工坊 (新用户点进创意工坊即可一键体验完整流程)
+    var DEMO_WORKSHOP_URL = "https://github.com/dddada123/chisa_dlc_store_test01";
+    var DEMO_WORKSHOP_REPO_ID = "dddada123_chisa_dlc_store_test01";
+    var DEMO_WORKSHOP_NAME = "千小妹演示工坊";
 
     function getCustomRepoUrl() {
         var el = document.getElementById("custom-repo-url");
@@ -1628,8 +2024,9 @@
             var data = parseSdkResponse(res);
             if (data && data.status === 'success' && data.data && data.data.repo_id) {
                 var el = document.getElementById("custom-repo-url");
-                // 仅当用户尚未手动输入其他仓库时才自动恢复
-                if (currentStoreType === 'custom' && !customLastUrl && (!el || !el.value.trim())) {
+                // 仅当用户尚未手动输入其他仓库 (或输入框仍是演示默认值) 时才自动恢复
+                var elEmpty = !el || !el.value.trim() || el.value.trim() === DEMO_WORKSHOP_URL;
+                if (currentStoreType === 'custom' && !customLastUrl && elEmpty) {
                     customLastUrl = data.data.url || "";
                     if (el) el.value = customLastUrl;
                     currentRepoId = data.data.repo_id;
@@ -1668,8 +2065,8 @@
 
     function switchStoreType(type) {
         currentStoreType = type;
-        document.getElementById('btn-official-store').style.background = type === 'official' ? '#c62828' : '#333';
-        document.getElementById('btn-custom-store').style.background = type === 'custom' ? '#1976d2' : '#333';
+        document.getElementById('btn-official-store').classList.toggle('active', type === 'official');
+        document.getElementById('btn-custom-store').classList.toggle('active', type === 'custom');
         // v3.9.3: 千小妹气泡 - 商店切换引导
         triggerMascotQuote(type === 'custom' ? 'shop_custom' : 'shop_official');
 
@@ -1686,50 +2083,54 @@
         }
 
         if (type === 'custom') {
-            // 状态恢复优先级: 会话内存态 > localStorage (sandbox 下不可用) > 后端 last_repo (异步兜底)
+            // 状态恢复优先级: 会话内存态 > localStorage (sandbox 下不可用) > 演示工坊默认值 > 后端 last_repo (异步兜底)
             var customUrl = customLastUrl || safeStorageGet("chisa_custom_repo") || "";
             if (customUrl) {
                 var match = customUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
                 if (match) currentRepoId = match[1] + "_" + match[2];
                 else currentRepoId = customUrl.replace(/[^a-zA-Z0-9_-]/g, "_");
             } else {
-                currentRepoId = "";
+                // v4.0.01: 无任何历史仓库时默认引导到官方演示工坊，点「连接并拉取目录」即可体验
+                currentRepoId = DEMO_WORKSHOP_REPO_ID;
             }
             wsHeader.style.display = 'flex';
-            wsHeader.innerHTML = 
+            wsHeader.innerHTML =
                 '<div style="background: rgba(33, 150, 243, 0.05); border: 1px solid rgba(33, 150, 243, 0.2); border-radius: 8px; overflow: hidden;">' +
                     '<div onclick="toggleWsPanel(\'ws-connect-body\', \'ws-connect-icon\')" style="padding: 12px 20px; background: rgba(33, 150, 243, 0.1); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #90caf9;">' +
-                        '<span>🚀 连接创意工坊</span>' +
+                        '<span>' + svgIcon('link', 15) + '连接创意工坊</span>' +
                         '<span id="ws-connect-icon" style="transition: transform 0.2s;">▼</span>' +
                     '</div>' +
                     '<div id="ws-connect-body" style="padding: 20px; display: block;">' +
-                        '<p style="color:var(--muted); font-size:13px; margin-top:0; margin-bottom: 15px;">粘贴社区作者分享的完整仓库地址 (如: https://github.com/作者名/仓库名)，即可接入并下载他们的作品！</p>' +
+                        '<p style="color:var(--muted); font-size:13px; margin-top:0; margin-bottom: 15px;">粘贴社区作者分享的完整仓库地址，即可接入并下载他们的作品！还没有目标？官方演示工坊 <span style="color:#90caf9;">' + DEMO_WORKSHOP_URL + '</span> 已为你填好，直接点击「连接并拉取目录」即可体验完整流程~</p>' +
                         '<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">' +
-                            '<input type="text" id="custom-repo-url" placeholder="https://github.com/YourName/RepoName" style="flex: 1; min-width: 220px; padding: 10px 12px; background: #111; color: #fff; border: 1px solid #444; border-radius: 4px; font-size: 14px;">' +
-                            '<button class="btn" style="background:#1976d2; padding: 10px 20px; font-size: 14px;" onclick="fetchStoreIndex()">连接并拉取目录</button>' +
-                            '<button class="btn" style="background:#546e7a; padding: 10px 20px; font-size: 14px;" onclick="saveWorkshopBookmark()">📌 存入书架</button>' +
+                            '<input type="text" id="custom-repo-url" placeholder="https://github.com/YourName/RepoName" style="flex: 1; min-width: 220px; padding: 10px 12px; background: var(--input-bg); color: var(--text); border: 1px solid #444; border-radius: 4px; font-size: 14px;">' +
+                            '<button class="btn btn-neutral" style="padding: 10px 20px; font-size: 14px;" onclick="fetchStoreIndex()">' + svgIcon('link', 14) + '连接并拉取目录</button>' +
+                            '<button class="btn btn-neutral" style="padding: 10px 20px; font-size: 14px;" onclick="saveWorkshopBookmark()">' + svgIcon('bookmark', 14) + '存入书架</button>' +
                         '</div>' +
                     '</div>' +
                 '</div>' +
                 '<div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed #444; border-radius: 8px; overflow: hidden;">' +
                     '<div onclick="toggleWsPanel(\'ws-bookshelf-body\', \'ws-bookshelf-icon\')" style="padding: 10px 20px; background: rgba(0, 0, 0, 0.2); cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #aaa; font-size: 14px;">' +
-                        '<span>📚 我的工坊书架 (最多保存15个)</span>' +
+                        '<span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>我的工坊书架 (最多保存15个)</span>' +
                         '<span id="ws-bookshelf-icon" style="transition: transform 0.2s;">▼</span>' +
                     '</div>' +
                     '<div id="ws-bookshelf-body" style="padding: 15px; display: block;">' +
                         '<div id="workshop-chips" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>' +
                     '</div>' +
                 '</div>';
-            
+
             var savedRepo = safeStorageGet("chisa_custom_repo");
             var inputVal = customLastUrl || savedRepo || "";
             if (inputVal) {
                 document.getElementById("custom-repo-url").value = inputVal;
+            } else {
+                // v4.0.01: 预填官方演示工坊，点进即可体验
+                document.getElementById("custom-repo-url").value = DEMO_WORKSHOP_URL;
             }
             if (typeof renderWorkshopChips === 'function') {
                 renderWorkshopChips();
             }
-            // 无任何已保存仓库时，异步尝试从后端恢复最近一次成功连接的工坊
+            // 无任何已保存仓库时，异步尝试从后端恢复最近一次成功连接的工坊 (仅当输入框仍是演示默认值时才覆盖)
             if (!inputVal) {
                 restoreLastCustomRepo();
             }
@@ -1818,9 +2219,9 @@
                 var tagName = tag.replace(/【|】/g, '');
                 
                 
-                return '<div style="background: rgba(217, 165, 165, 0.08); border: 1px solid rgba(217, 165, 165, 0.2); border-radius: 6px; padding: 10px 5px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">' +
-                       '<div style="margin-bottom: 8px; width: 100%; display: flex; justify-content: center;"><span style="background: rgba(217, 165, 165, 0.2); padding: 3px 10px; border-radius: 4px; font-size: 11px; color: #d9a5a5; font-weight: bold; letter-spacing: 0.5px;">' + emoji + ' ' + tagName + '</span></div>' +
-                       '<div style="font-size: 15px; font-weight: bold; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.3; color: white;">' + rest + '</div>' +
+                return '<div style="background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 5px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">' +
+                       '<div style="margin-bottom: 8px; width: 100%; display: flex; justify-content: center;"><span style="background: rgba(211, 47, 47, 0.14); color: var(--primary); padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">' + emoji + ' ' + tagName + '</span></div>' +
+                       '<div style="font-size: 15px; font-weight: bold; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.3; color: var(--text);">' + rest + '</div>' +
                        '</div>';
 
 
@@ -1828,8 +2229,8 @@
         }
         
         
-        return '<div style="background: rgba(217, 165, 165, 0.08); border: 1px solid rgba(217, 165, 165, 0.2); border-radius: 6px; padding: 10px 5px; width: 100%; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center;">' +
-               '<div style="font-size: 15px; font-weight: bold; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.3; color: white;">' + title + '</div>' +
+        return '<div style="background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 5px; width: 100%; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center;">' +
+               '<div style="font-size: 15px; font-weight: bold; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.3; color: var(--text);">' + title + '</div>' +
                '</div>';
 
 
@@ -1837,8 +2238,38 @@
 
     function parseSdkResponse(res) {
         var data = res;
-        if (typeof data === "string") { try { data = JSON.parse(data); } catch (e) {} }
-        if (data && data.status === "ok" && Object.prototype.hasOwnProperty.call(data, "data")) data = data.data; 
+        
+        // Phase 1: 暴力脱去所有可能的字符串外壳，直到它变成对象
+        var maxDepth = 5;
+        while (typeof data === "string" && maxDepth > 0) {
+            try { data = JSON.parse(data); } catch (e) { break; }
+            maxDepth--;
+        }
+        
+        // Phase 2: 如果这是一个 AstrBot 标准的包裹层 (status="ok" / code=200)，将其脱壳
+        if (data && typeof data === "object" && (data.status === "ok" || data.code === 200) && Object.prototype.hasOwnProperty.call(data, "data")) {
+            data = data.data;
+            // 脱壳后，再暴力解一次字符串
+            var depth2 = 5;
+            while (typeof data === "string" && depth2 > 0) {
+                try { data = JSON.parse(data); } catch (e) { break; }
+                depth2--;
+            }
+        }
+        
+        // Phase 3: 针对 Quart jsonify 自动把整个字典包成字符串的情况 (或者 data 内部字段是字符串的情况)
+        if (data && typeof data === "object") {
+            if (typeof data.data === "string" && (data.data.trim().charAt(0) === "{" || data.data.trim().charAt(0) === "[")) {
+                try { 
+                    data.data = JSON.parse(data.data);
+                    console.log("[Chisa Skin] 🛡️ 成功修复了内部被字符串化的 data 属性！");
+                } catch (e) {}
+            }
+            
+            // 某些情况下，我们期望直接得到一个 status: "success" 的对象
+            // 但是如果是纯字符串被解析出来的，可能它没有 status。这里保持宽容。
+        }
+        
         return data;
     }
 
@@ -1945,6 +2376,8 @@
         if (isBatchMode) {
             showMascotBubble("那个...如果有很多记录要处理，按住鼠标滑动就可以快速多选哦，不用一个个点啦~");
         }
+    
+        _chisa_applying_skin = false;
     }
 
         function updateBatchUI() {
@@ -2075,13 +2508,21 @@
     }
 
     var worldLabels = {
-        'common': '🌍 地球 (common)',
-        'world1': '🌊 鸣潮 (world1)',
-        'world2': '✨ 原神 (world2)',
-        'world3': '🏭 终末地 (world3)',
-        'world4': '🌌 自定义 (world4)',
-        'world5': '🌌 自定义 (world5)'
+        'common': '地球 (common)',
+        'world1': '鸣潮 (world1)',
+        'world2': '原神 (world2)',
+        'world3': '终末地 (world3)',
+        'world4': '自定义 (world4)',
+        'world5': '自定义 (world5)'
     };
+    var worldIcons = {
+        'common': 'globe',
+        'world1': 'waves',
+        'world2': 'star',
+        'world3': 'cpu',
+        'world4': 'edit',
+        'world5': 'edit'
+    };;
 
     
     var moodLabels = {
@@ -2104,8 +2545,8 @@
         var btn = document.createElement('button');
         btn.className = 'accordion';
         btn.id = 'acc-meme-' + w;
-        btn.innerHTML = '<span class="accordion-title">' + worldLabels[w] + '</span>' + 
-                        '<span class="accordion-actions"><button class="btn btn-small" onclick="openUploadModal(\'memes\', \'' + w + '\'); event.stopPropagation();">上传</button></span>';
+        btn.innerHTML = '<span class="accordion-title">' + svgIcon(worldIcons[w] || 'globe', 15) + worldLabels[w] + '</span>' + 
+                        '<span class="accordion-actions"><button class="btn btn-small btn-neutral" onclick="openUploadModal(\'memes\', \'' + w + '\'); event.stopPropagation();">上传</button></span>';
         
         var panel = document.createElement('div');
         panel.className = 'panel';
@@ -2174,8 +2615,8 @@
         var btn = document.createElement('button');
         btn.className = 'accordion';
         btn.id = 'acc-' + catName + '-' + w;
-        btn.innerHTML = '<span class="accordion-title">' + worldLabels[w] + '</span>' + 
-                        '<span class="accordion-actions"><button class="btn btn-small" onclick="openUploadModal(\'' + dirName + '\', \'' + w + '\'); event.stopPropagation();">上传</button></span>';
+        btn.innerHTML = '<span class="accordion-title">' + svgIcon(worldIcons[w] || 'globe', 15) + worldLabels[w] + '</span>' + 
+                        '<span class="accordion-actions"><button class="btn btn-small btn-neutral" onclick="openUploadModal(\'' + dirName + '\', \'' + w + '\'); event.stopPropagation();">上传</button></span>';
         
         var panel = document.createElement('div');
         panel.className = 'panel';
@@ -2239,8 +2680,8 @@
         btn.id = 'acc-gf-' + charName;
         btn.innerHTML = '<span class="accordion-title">' + charName + '</span>' + 
                         '<span class="accordion-actions">' +
-                        '<button class="btn btn-small" style="background:#555; margin-right:5px;" onclick="openUploadModal(\'ganfanren\', \'\', \'' + charName + '\'); event.stopPropagation();">上传立绘</button>' +
-                        '<button class="btn btn-small" style="background:#d62828;" onclick="deleteGanfanren(\'' + charName + '\'); event.stopPropagation();">🗑️ 删除角色</button>' +
+                        '<button class="btn btn-small btn-neutral" style="margin-right:5px;" onclick="openUploadModal(\'ganfanren\', \'\', \'' + charName + '\'); event.stopPropagation();">上传立绘</button>' +
+                        '<button class="btn btn-small btn-danger-outline" onclick="deleteGanfanren(\'' + charName + '\'); event.stopPropagation();"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:3px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>删除角色</button>' +
                         '</span>';
         
         var panel = document.createElement('div');
@@ -2249,7 +2690,7 @@
         
         var taContainer = document.createElement('div');
         taContainer.style.marginBottom = '10px';
-        taContainer.innerHTML = '<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>专属截胡语录：</span><button class="btn btn-small" onclick="saveGanfanrenWords(\'' + charName + '\')">保存语录</button></div>';
+        taContainer.innerHTML = '<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>专属截胡语录：</span><button class="btn btn-small btn-neutral" onclick="saveGanfanrenWords(\'' + charName + '\')">保存语录</button></div>';
         
         var ta = document.createElement('textarea');
         ta.className = 'char-lines';
@@ -2430,8 +2871,12 @@
                 astrSdk = sdk;
                 sdk.ready().then(function() {
                     loadMascot();
-                    fetchData();
-                    loadWorkshopHistoryFromBackend();  // v3.9.26: 书架从后端恢复
+                    // v4.1.7 改造为流水线式 (Pipeline) 顺次加载，彻底杜绝高并发导致前端 SDK 响应串线
+                    initSkinFromPref(function() {
+                        loadWorkshopHistoryFromBackend(function() {
+                            fetchData();
+                        });
+                    });
                 }).catch(function(e) { console.error("SDK Ready failed", e); });
             } else {
                 attempts++;

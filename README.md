@@ -5,12 +5,12 @@
 # 🚀 🍱 千小妹还在吃 (Chisa Still Eating)
 [![AstrBot](https://img.shields.io/badge/Framework-AstrBot-🚀_purple.svg)](https://github.com/Soulter/AstrBot)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-4.0.0-ff69b4.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-4.1.8-ff69b4.svg)](CHANGELOG.md)
 
 一个为 [AstrBot](https://github.com/Soulter/AstrBot) 深度定制的跨次元多世界干饭系统。
 每天都在纠结吃什么？那就让异次元的向导们来帮你随机摇号吧！把食物图片扔进对应的文件夹，它就会自动变成菜单里的美味！通过完美的分类引擎，为你的群聊带来极具情感连接和随机惊喜的沉浸式"吃什么"体验！
 
-当前版本：**4.0.0** 🎉 大型 DLC「创意工坊」已正式开放！ | 作者：Rua432
+当前版本：**4.1.8** 🎉 官方四套皮肤正式上线 & 图库创意工坊已开放！ | 作者：Rua432
 
 <div align="center">
   <img src="https://count.getloli.com/@chisa_still_eating?name=chisa_still_eating&theme=asoul&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto">
@@ -21,7 +21,29 @@
 
 ---
 
-## 🏬 千小妹商会 & 创意工坊 (4.0.0 新登场 🎉)
+## 🎨 全新主题装扮系统 & 创意工坊 (4.1.8)
+
+千小妹跨次元后厨现已实装 **四套官方皮肤** 以及高自由度的毛玻璃模糊度调节（0-100级细腻平滑映射），你的大屏，由你定义！
+并且完美支持 **皮肤偏好持久化**：不管是在不同的设备打开，还是断网刷新，你的皮肤设置都会被完美记忆。
+
+### 🍁 红枫·凝露 (新增默认)
+枫叶暖橙 × 深红棕，红枫千小妹美图，温暖而治愈的秋日气息。
+![红枫·凝露](https://s1.imagehub.cc/images/2026/08/29/75dea959c0710669fe88f38e3e7b7dc6.jpg)
+
+### 🌊 秧秧·玄翎 (新增)
+深邃蓝黑配色，契合秧秧的角色调性。风里都藏着答案的味道呢~
+![秧秧·玄翎](https://s1.imagehub.cc/images/2026/08/29/76ca35be8359a178fa4a22b279d055da.jpg)
+
+### 🌙 长夜·执剪 (经典夜间)
+千咲本体配色的纯色夜间主题，适合喜欢纯粹黑红极客风的厨师。
+
+### ☀️ 破晓·引线 (清爽日间)
+纯白清爽的日间模式，适合采光良好的环境，看着它干饭食欲大增！
+
+---
+
+## 🏬 千小妹商会 & 创意工坊
+
 
 **4.0.0 大型 DLC「创意工坊」正式开放！** 为了让各地图包创作者能够直接把自己的作品送到玩家手中，我们在 WebUI 中实装了完整的 **「千小妹商会」** 双商店生态：
 
@@ -36,6 +58,17 @@
 <div align="center">
   <img src="https://s1.imagehub.cc/images/2026/08/28/54344d88881832a63bc5bf405c1d5724.png" alt="创意工坊书签快速切换" width="800">
 </div>
+
+### 🎨 官方皮肤四套上线（4.1.0）
+
+| 皮肤 | 风格 |
+| --- | --- |
+| 🍁 红枫·凝露 | 毛玻璃 · 默认 |
+| 🌊 秧秧·玄翎 | 毛玻璃 · 蓝黑配色 |
+| 🌙 长夜·执剪 | 经典夜间 |
+| ☀️ 破晓·引线 | 清爽日间 |
+
+在 WebUI「主题皮肤」中一键切换，支持**背景毛玻璃力度 100 级无级调节**、**偏好自动保存**、**背景一键重新下载**。切换皮肤时千小妹会用专属台词向你播报哦~
 
 ### 🖥️ WEBUI 沉浸式云端商城
 - **美观的橱窗展示**：商品支持动态徽章、封面惰性加载，多分类清晰排版。
@@ -276,6 +309,6 @@ data/plugin_data/astrbot_plugin_chisa_still_eating/
 如果你觉得这个跨次元点餐系统给你的群聊或社区带来了快乐，欢迎随缘打赏，就当请作者喝杯奶茶或者买个甜甜圈啦~ ❤️
 
 <div align="left">
-  <img src="assets/wechat_pay.png" width="200" height="200" alt="微信赞助码" style="margin-right: 20px;">
-  <img src="assets/alipay.png" width="200" height="200" alt="支付宝赞助码">
+  <img src="https://raw.githubusercontent.com/dddada123/astrbot_plugin_chisa_still_eating/main/assets/wechat_pay.png" width="200" height="200" alt="微信赞助码" style="margin-right: 20px;">
+  <img src="https://raw.githubusercontent.com/dddada123/astrbot_plugin_chisa_still_eating/main/assets/alipay.png" width="200" height="200" alt="支付宝赞助码">
 </div>
