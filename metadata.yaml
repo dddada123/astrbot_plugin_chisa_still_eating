@@ -2,7 +2,7 @@ name: astrbot_plugin_chisa_still_eating
 display_name: 千小妹还在吃
 short_desc: 跨次元干饭与厨师羁绊召唤插件。内置 WebUI、千小妹商会及官方/第三方皮肤工坊。
 desc: 带有情绪记忆的跨次元干饭插件。支持多世界美食乱斗、专属厨师立绘及干饭人随机截胡！内置高级可视化 WebUI、「千小妹商会」和皮肤工坊，支持官方皮肤源与第三方 GitHub 自定义源、图包一键进货、皮肤背景缓存及偏好恢复。具备群聊防重与合并转发防刷屏机制，免配置开箱即食。
-version: "4.2.3"
+version: "4.2.4"
 author: Rua432
 repo: https://github.com/dddada123/astrbot_plugin_chisa_still_eating
 social_link: https://space.bilibili.com/501751
