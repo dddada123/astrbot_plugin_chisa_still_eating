@@ -18,9 +18,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "4.2.2"
+__version__ = "4.2.3"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "4.2.2", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "4.2.3", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -79,15 +79,19 @@ class FlavorFusionUltimate(Star):
         temp_zip_path = ""
         
         try:
-            import hashlib
-            import zipfile
             import os
-            import aiohttp
             import asyncio
             
-            node = await self._get_optimal_dlc_node()
+            if not re.fullmatch(r"[a-z]{2}\d{4}", str(dlc_id or ""), re.IGNORECASE):
+                raise ValueError("Invalid DLC ID")
+            sha256_hash_str = str(sha256_hash_str or "").strip().lower()
+            if sha256_hash_str and not re.fullmatch(r"[0-9a-f]{64}", sha256_hash_str):
+                raise ValueError("Invalid SHA-256")
+            node = str(await self._get_optimal_dlc_node() or "direct").strip().lower()
             if node == "failed":
                 raise Exception("所有测速节点均无响应")
+            if node not in ("direct", "") and node not in self.SKIN_MIRROR_NODES:
+                raise ValueError("Invalid download node")
                 
             url = f"https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/Chisa_Dlc_Store/{dlc_id}.zip"
             if node != "direct":
@@ -103,38 +107,23 @@ class FlavorFusionUltimate(Star):
             temp_zip_path = os.path.join(target_extract_dir, f"{dlc_id}_temp.zip")
             os.makedirs(target_extract_dir, exist_ok=True)
             
-            async with aiohttp.ClientSession(trust_env=(node == "direct")) as session:
-                async with session.get(url, timeout=aiohttp.ClientTimeout(total=300)) as resp:
-                    if resp.status != 200:
-                        raise Exception(f"HTTP {resp.status}")
-                    
-                    total = int(resp.headers.get('Content-Length', 0))
-                    if total > 0:
-                        self.download_total_bytes = total
-                        
-                    hasher = hashlib.sha256()
-                    with open(temp_zip_path, 'wb') as f:
-                        async for chunk in resp.content.iter_chunked(8192):
-                            f.write(chunk)
-                            hasher.update(chunk)
-                            self.downloaded_bytes += len(chunk)
-                            
-                    actual_sha256 = hasher.hexdigest()
+            actual_sha256, total = await self._download_allowed_https_file(
+                url,
+                temp_zip_path,
+                max_bytes=512 * 1024 * 1024,
+                trust_env=(node in ("direct", "")),
+                timeout_seconds=300,
+            )
+            self.download_total_bytes = max(total, 1)
+            self.downloaded_bytes = total
                     
             if sha256_hash_str and actual_sha256 != sha256_hash_str:
                 if os.path.exists(temp_zip_path):
                     os.remove(temp_zip_path)
                 raise Exception(f"校验失败! 预期 {sha256_hash_str[:8]} 但得到 {actual_sha256[:8]}")
                 
-            def extract_safe(z_path, t_dir):
-                with zipfile.ZipFile(z_path, 'r') as z_ref:
-                    for z_info in z_ref.filelist:
-                        if ".." in z_info.filename or z_info.filename.startswith("/") or z_info.filename.startswith("\\"):
-                            raise Exception("Unsafe path in ZIP")
-                    z_ref.extractall(t_dir)
-                    
             try:
-                await asyncio.to_thread(extract_safe, temp_zip_path, target_extract_dir)
+                await asyncio.to_thread(self._extract_dlc_zip_safe, temp_zip_path, target_extract_dir)
                 import logging
                 logging.info(f"[Chisa DLC] 📦 DLC [{dlc_id}] 解压成功！")
             except Exception as e:
@@ -186,98 +175,26 @@ class FlavorFusionUltimate(Star):
         self.downloaded_bytes = 0
         self.download_msg = "正在从远程拉取图库源文件 (约 99.2MB)，请耐心等待..."
         
-        import concurrent.futures
-        import time
-        import requests
-        import hashlib
-        import zipfile
+        import asyncio
         import shutil
 
-        logging.info("[ChisaEating] 🚀 开始图库部署准备...检测到国内网络环境，启动多线程智能测速引擎。")
-        logging.info("[ChisaEating] 📡 正在并发探测 4 个 Github 加速节点 (Timeout=10s)...")
-
+        logging.info("[ChisaEating] 🚀 开始图库部署准备，使用受限节点和逐跳校验下载器。")
         base_url = "https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/Chisa_Dlc_Store/fd0000.zip"
-        mirrors = [
-            f"https://gh-proxy.com/{base_url}",
-            f"https://hk.gh-proxy.com/{base_url}",
-            f"https://edgeone.gh-proxy.com/{base_url}",
-            f"https://gh.dpik.top/{base_url}"
-        ]
-
-        def test_speed(url):
-            start = time.time()
-            try:
-                r = requests.get(url, stream=True, timeout=30, proxies={"http": None, "https": None})
-                r.raise_for_status()
-                latency = int((time.time() - start) * 1000)
-                r.close()
-                return url, latency
-            except:
-                return url, float('inf')
-
-        results = {}
-        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-            future_to_url = {executor.submit(test_speed, url): url for url in mirrors}
-            
-            # 第一阶段：只等 10 秒
-            done, not_done = concurrent.futures.wait(future_to_url.keys(), timeout=10)
-            
-            valid_results = {}
-            for future in done:
-                url = future_to_url[future]
-                try:
-                    _, lat = future.result()
-                    results[url] = lat
-                    if lat != float('inf'):
-                        valid_results[url] = lat
-                except:
-                    results[url] = float('inf')
-                    
-            if not valid_results and not_done:
-                logging.info("[ChisaEating] ⏳ 10秒内未捕获到极速节点，自动进入最高 30 秒深度探测模式...")
-                done2, not_done2 = concurrent.futures.wait(not_done, timeout=20)
-                for future in done2:
-                    url = future_to_url[future]
-                    try:
-                        _, lat = future.result()
-                        results[url] = lat
-                        if lat != float('inf'):
-                            valid_results[url] = lat
-                    except:
-                        results[url] = float('inf')
-                for future in not_done2:
-                    url = future_to_url[future]
-                    results[url] = float('inf')
-            else:
-                for future in not_done:
-                    url = future_to_url[future]
-                    results[url] = float('inf')
-
-        logging.info("[ChisaEating] 📊 节点测速报告 (TTFB):")
-        best_url = None
-        best_latency = float('inf')
-        for url in mirrors:
-            lat = results.get(url, float('inf'))
-            hostname = url.split('/')[2]
-            if lat != float('inf'):
-                logging.info(f"    👉 [{hostname}] 响应延迟: {lat}ms")
-                if lat < best_latency:
-                    best_latency = lat
-                    best_url = url
-            else:
-                logging.info(f"    👉 [{hostname}] 状态: 🔴 超时/连通失败/过慢被弃用")
-
+        try:
+            best_node = str(asyncio.run(self._get_optimal_dlc_node()) or "direct").strip().lower()
+        except Exception as exc:
+            logging.warning(f"[ChisaEating] 节点测速失败，回退官方直连: {exc}")
+            best_node = "direct"
+        if best_node not in ("direct", "") and best_node not in self.SKIN_MIRROR_NODES:
+            best_node = "direct"
         urls_to_try = []
-        if best_url:
-            hostname = best_url.split('/')[2]
-            logging.info(f"[ChisaEating] 👑 测速决议：最优节点锁定为 [{hostname}] ({best_latency}ms)。")
-            logging.info("[ChisaEating] ⚡ 强制屏蔽全局代理 (Proxies disabled)，使用物理宽带直连开始高速下载！")
-            urls_to_try.append({"url": best_url, "proxies": {"http": None, "https": None}, "desc": f"节点 [{hostname}]"})
-        else:
-            logging.warning("[ChisaEating] ❌ 警告：所有国内加速镜像均无法连通（全部超时）！")
-
-        logging.info("[ChisaEating] 🔄 加入 Github 官方直连节点作为兜底...")
-        urls_to_try.append({"url": base_url, "proxies": None, "desc": "Github 官方节点 (遵循全局代理)"})
+        if best_node not in ("direct", ""):
+            urls_to_try.append({
+                "url": f"https://{best_node}/{base_url}",
+                "trust_env": False,
+                "desc": f"节点 [{best_node}]",
+            })
+        urls_to_try.append({"url": base_url, "trust_env": True, "desc": "Github 官方节点 (遵循全局代理)"})
 
         try:
             zip_path = os.path.join(self.image_mgr.data_dir, "assets_temp.zip")
@@ -287,24 +204,20 @@ class FlavorFusionUltimate(Star):
 
             for item in urls_to_try:
                 url = item["url"]
-                proxies = item["proxies"]
+                trust_env = item["trust_env"]
                 desc = item["desc"]
                 
                 try:
                     logging.info(f"[ChisaEating] ⬇️ 正在通过 {desc} 下载资源包 (99.2MB)...")
                     self.downloaded_bytes = 0
-                    response = requests.get(url, stream=True, timeout=120, proxies=proxies)
-                    response.raise_for_status()
-                    
-                    sha256_hash = hashlib.sha256()
-                    with open(zip_path, 'wb') as f:
-                        for chunk in response.iter_content(chunk_size=8192):
-                            if chunk:
-                                f.write(chunk)
-                                sha256_hash.update(chunk)
-                                self.downloaded_bytes += len(chunk)
-                                
-                    downloaded_hash = sha256_hash.hexdigest()
+                    downloaded_hash, total = asyncio.run(self._download_allowed_https_file(
+                        url,
+                        zip_path,
+                        max_bytes=512 * 1024 * 1024,
+                        trust_env=trust_env,
+                        timeout_seconds=300,
+                    ))
+                    self.downloaded_bytes = total
                     if downloaded_hash != TARGET_HASH:
                         logging.warning(
                             f"[ChisaEating] ⚠️ 安全警告：下载的资源包哈希值不匹配！\n"
@@ -330,31 +243,25 @@ class FlavorFusionUltimate(Star):
                 self.download_msg = "图库包拉取完成并经过 SHA-256 安全校验，正在解压部署..."
                 logging.info("[ChisaEating] ✅ 资源包下载并校验通过，开始解压...")
                 try:
-                    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                        extract_tmp = os.path.join(self.image_mgr.data_dir, "extract_tmp")
-                        extract_tmp_abs = os.path.abspath(extract_tmp)
-                        for member in zip_ref.infolist():
-                            target_path = os.path.abspath(os.path.join(extract_tmp_abs, member.filename))
-                            if not target_path.startswith(extract_tmp_abs):
-                                logging.warning(f"[ChisaEating] ⚠️ 检测到 Zip-Slip 路径穿越试图: {member.filename}，已拦截！")
-                                continue
-                            zip_ref.extract(member, extract_tmp_abs)
-                        
-                        src_dir = extract_tmp
-                        for root, dirs, files in os.walk(extract_tmp):
-                            if "food" in dirs or "drink" in dirs or "chefs" in dirs:
-                                src_dir = root
-                                break
-                        
-                        for item in os.listdir(src_dir):
-                            s = os.path.join(src_dir, item)
-                            d = os.path.join(self.image_mgr.data_dir, item)
-                            if os.path.isdir(s):
-                                if os.path.exists(d):
-                                    shutil.rmtree(d)
-                                shutil.copytree(s, d)
-                            else:
-                                shutil.copy2(s, d)
+                    extract_tmp = os.path.join(self.image_mgr.data_dir, "extract_tmp")
+                    extract_tmp_abs = os.path.abspath(extract_tmp)
+                    if os.path.exists(extract_tmp_abs):
+                        shutil.rmtree(extract_tmp_abs, ignore_errors=True)
+                    self._extract_dlc_zip_safe(zip_path, extract_tmp_abs)
+                    src_dir = extract_tmp_abs
+                    for root, dirs, files in os.walk(extract_tmp_abs):
+                        if "food" in dirs or "drink" in dirs or "chefs" in dirs:
+                            src_dir = root
+                            break
+                    for item in os.listdir(src_dir):
+                        s = os.path.join(src_dir, item)
+                        d = os.path.join(self.image_mgr.data_dir, item)
+                        if os.path.isdir(s):
+                            if os.path.exists(d):
+                                shutil.rmtree(d)
+                            shutil.copytree(s, d)
+                        else:
+                            shutil.copy2(s, d)
                                 
                     logging.info("[ChisaEating] 🎉 默认图库解压部署完成！")
                     self._reload_all_caches()
@@ -843,19 +750,23 @@ class FlavorFusionUltimate(Star):
             url = original_url
             if node != "direct":
                 url = f"https://{node}/{original_url}"
-            import aiohttp
             try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url, timeout=15) as resp:
-                        if resp.status == 200:
-                            content = await resp.read()
-                            cat_path = self._get_catalog_path()
-                            os.makedirs(os.path.dirname(cat_path), exist_ok=True)
-                            with open(cat_path, 'wb') as f:
-                                f.write(content)
-                            yield event.make_result().message("✅ 同步完成！请再次输入 【千小妹商会】 开始逛街~")
-                        else:
-                            yield event.make_result().message(f"同步失败，节点返回状态码: {resp.status}")
+                content = await self._fetch_allowed_https_bytes(
+                    url,
+                    max_bytes=8 * 1024 * 1024,
+                    trust_env=(node in ("direct", "")),
+                    timeout_seconds=15,
+                )
+                if not content:
+                    raise RuntimeError("目录响应为空")
+                import json as _json
+                catalog = _json.loads(content.decode("utf-8-sig"))
+                if not isinstance(catalog, list) or len(catalog) > 5000 or any(not isinstance(item, dict) for item in catalog):
+                    raise ValueError("目录格式无效")
+                cat_path = self._get_catalog_path()
+                os.makedirs(os.path.dirname(cat_path), exist_ok=True)
+                self._atomic_write_json(cat_path, catalog)
+                yield event.make_result().message("✅ 同步完成！请再次输入 【千小妹商会】 开始逛街~")
             except Exception as e:
                 yield event.make_result().message(f"同步异常: {str(e)}")
             event.stop_event()
@@ -990,7 +901,7 @@ class FlavorFusionUltimate(Star):
                     return
         
         if msg_text in ["千小妹还在吃帮助", "千咲吃什么帮助", "干饭帮助", "美食帮助", "千小妹帮助", "千小妹吃什么帮助"]:
-            help_text = """🌸 【千小妹跨次元干饭指南 v4.1.0】 🌸
+            help_text = """🌸 【千小妹跨次元干饭指南 v4.2.3】 🌸
 不知道今天吃啥？让异次元的导游们为你随机摇号吧！
 
 🎲 基础盲盒（全宇宙随机）
@@ -1812,7 +1723,6 @@ class FlavorFusionUltimate(Star):
             return self._dlc_best_node
             
         import asyncio
-        import aiohttp
         import time
         import logging
         
@@ -1830,13 +1740,14 @@ class FlavorFusionUltimate(Star):
             start = time.time()
             url = f"https://{node}/{test_url}" if node else test_url
             try:
-                async with aiohttp.ClientSession(trust_env=False) as session:
-                    async with session.get(url, timeout=10) as resp:
-                        resp.raise_for_status()
-                        await resp.read()
-                        return node, int((time.time() - start) * 1000)
-            except:
-                return node, float('inf')
+                content = await self._fetch_allowed_https_bytes(
+                    url, max_bytes=8 * 1024 * 1024, trust_env=False, timeout_seconds=10
+                )
+                if content:
+                    return node, int((time.time() - start) * 1000)
+            except Exception:
+                pass
+            return node, float('inf')
                 
         tasks = [asyncio.create_task(test_node(n)) for n in nodes]
         done, pending = await asyncio.wait(tasks, timeout=10, return_when=asyncio.ALL_COMPLETED)
@@ -1909,6 +1820,146 @@ class FlavorFusionUltimate(Star):
             base_data_path = "data"
         return os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", "Webui-PIC", "banner")
 
+    async def _fetch_allowed_https_bytes(self, url, max_bytes, trust_env=False, timeout_seconds=25):
+        """Fetch bytes with preflight validation before every HTTPS redirect hop."""
+        import aiohttp
+        from urllib.parse import urljoin, urlsplit
+
+        allowed_hosts = {
+            "github.com", "raw.githubusercontent.com", "cdn.jsdelivr.net", "api.github.com",
+            "objects.githubusercontent.com", "release-assets.githubusercontent.com",
+            "github-releases.githubusercontent.com", *self.SKIN_MIRROR_NODES,
+        }
+        timeout = aiohttp.ClientTimeout(total=timeout_seconds)
+        current = str(url or "").strip()
+        async with aiohttp.ClientSession(trust_env=trust_env) as session:
+            for _ in range(5):
+                parsed = urlsplit(current)
+                host = str(parsed.hostname or "").lower()
+                if parsed.scheme != "https" or host not in allowed_hosts or parsed.username or parsed.password:
+                    raise ValueError(f"Blocked download URL: {current}")
+                try:
+                    port = parsed.port
+                except ValueError as exc:
+                    raise ValueError("Invalid download URL port") from exc
+                if port not in (None, 443):
+                    raise ValueError(f"Blocked download port: {port}")
+                async with session.get(
+                    current,
+                    timeout=timeout,
+                    headers={"Accept": "application/octet-stream"},
+                    allow_redirects=False,
+                ) as resp:
+                    if resp.status in (301, 302, 303, 307, 308):
+                        location = resp.headers.get("Location", "")
+                        if not location:
+                            return None
+                        current = urljoin(current, location)
+                        continue
+                    if resp.status != 200:
+                        return None
+                    content_length = resp.headers.get("Content-Length")
+                    if content_length:
+                        try:
+                            if int(content_length) > max_bytes:
+                                raise ValueError(f"Remote response exceeds {max_bytes} bytes")
+                        except ValueError as exc:
+                            if "exceeds" in str(exc):
+                                raise
+                    chunks = []
+                    total = 0
+                    async for chunk in resp.content.iter_chunked(256 * 1024):
+                        total += len(chunk)
+                        if total > max_bytes:
+                            raise ValueError(f"Remote response exceeds {max_bytes} bytes")
+                        chunks.append(chunk)
+                    return b"".join(chunks)
+        raise ValueError("Too many download redirects")
+
+    async def _download_allowed_https_file(self, url, target_path, max_bytes, trust_env=False, timeout_seconds=300):
+        """Stream a bounded file with preflight validation before every redirect hop."""
+        import aiohttp
+        import hashlib
+        from urllib.parse import urljoin, urlsplit
+
+        allowed_hosts = {
+            "github.com", "raw.githubusercontent.com", "cdn.jsdelivr.net", "api.github.com",
+            "objects.githubusercontent.com", "release-assets.githubusercontent.com",
+            "github-releases.githubusercontent.com", *self.SKIN_MIRROR_NODES,
+        }
+        timeout = aiohttp.ClientTimeout(total=timeout_seconds)
+        current = str(url or "").strip()
+        try:
+            async with aiohttp.ClientSession(trust_env=trust_env) as session:
+                for _ in range(5):
+                    parsed = urlsplit(current)
+                    host = str(parsed.hostname or "").lower()
+                    if parsed.scheme != "https" or host not in allowed_hosts or parsed.username or parsed.password:
+                        raise ValueError(f"Blocked download URL: {current}")
+                    try:
+                        port = parsed.port
+                    except ValueError as exc:
+                        raise ValueError("Invalid download URL port") from exc
+                    if port not in (None, 443):
+                        raise ValueError(f"Blocked download port: {port}")
+                    async with session.get(current, timeout=timeout, allow_redirects=False) as resp:
+                        if resp.status in (301, 302, 303, 307, 308):
+                            location = resp.headers.get("Location", "")
+                            if not location:
+                                raise RuntimeError("Download redirect has no Location")
+                            current = urljoin(current, location)
+                            continue
+                        if resp.status != 200:
+                            raise RuntimeError(f"HTTP {resp.status}")
+                        content_length = resp.headers.get("Content-Length")
+                        if content_length:
+                            try:
+                                if int(content_length) > max_bytes:
+                                    raise ValueError(f"Remote file exceeds {max_bytes} bytes")
+                            except ValueError as exc:
+                                if "exceeds" in str(exc):
+                                    raise
+                        digest = hashlib.sha256()
+                        total = 0
+                        with open(target_path, "wb") as stream:
+                            async for chunk in resp.content.iter_chunked(256 * 1024):
+                                total += len(chunk)
+                                if total > max_bytes:
+                                    raise ValueError(f"Remote file exceeds {max_bytes} bytes")
+                                stream.write(chunk)
+                                digest.update(chunk)
+                            stream.flush()
+                            os.fsync(stream.fileno())
+                        return digest.hexdigest(), total
+            raise ValueError("Too many download redirects")
+        except Exception:
+            if os.path.exists(target_path):
+                os.remove(target_path)
+            raise
+
+    @staticmethod
+    def _extract_dlc_zip_safe(zip_path, target_dir):
+        import zipfile
+        from pathlib import PurePosixPath
+
+        with zipfile.ZipFile(zip_path, "r") as archive:
+            infos = archive.infolist()
+            if len(infos) > 10000:
+                raise ValueError("ZIP contains too many files")
+            if sum(info.file_size for info in infos) > 2 * 1024 * 1024 * 1024:
+                raise ValueError("ZIP expands beyond 2 GiB")
+            target_root = os.path.abspath(target_dir)
+            for info in infos:
+                normalized = info.filename.replace("\\", "/")
+                parts = PurePosixPath(normalized).parts
+                mode = (info.external_attr >> 16) & 0o170000
+                if not parts or normalized.startswith("/") or ".." in parts or ":" in parts[0] or mode == 0o120000:
+                    raise ValueError("Unsafe path in ZIP")
+                target = os.path.abspath(os.path.join(target_root, *parts))
+                if os.path.commonpath((target_root, target)) != target_root:
+                    raise ValueError("Unsafe path in ZIP")
+            archive.extractall(target_root)
+
     async def page_dlc_catalog(self):
         try:
             import os
@@ -1954,7 +2005,7 @@ class FlavorFusionUltimate(Star):
             from quart import jsonify, request
             
             payload = await request.get_json(silent=True) or {}
-            node = payload.get("node", "smart")
+            node = str(payload.get("node", "smart") or "smart").strip().lower()
             custom_url = payload.get("custom_url", "").strip()
             store_type = payload.get("store_type", "official")
             repo_id = payload.get("repo_id", "")
@@ -1986,19 +2037,23 @@ class FlavorFusionUltimate(Star):
             # 兼容: 用户自定义 raw_base 时 (旧逻辑入参) 仍以标准化结果为准
 
             if node == "smart":
-                node = await self._get_optimal_dlc_node()
+                node = str(await self._get_optimal_dlc_node() or "direct").strip().lower()
+            if node not in ("direct", "") and node not in self.SKIN_MIRROR_NODES:
+                return jsonify({"status": "error", "message": "Invalid download node"}), 400
                 
             import logging
             
             async def _do_fetch(url, use_node):
                 try:
-                    async with aiohttp.ClientSession(trust_env=(use_node in ("direct", ""))) as session:
-                        async with session.get(url, timeout=aiohttp.ClientTimeout(total=20)) as resp:
-                            if resp.status == 200:
-                                return await resp.read()
-                except Exception:
-                    pass
-                return None
+                    return await self._fetch_allowed_https_bytes(
+                        url,
+                        max_bytes=8 * 1024 * 1024,
+                        trust_env=(use_node in ("direct", "")),
+                        timeout_seconds=20,
+                    )
+                except Exception as exc:
+                    logging.warning(f"[Chisa DLC] blocked/failed catalog fetch: {exc}")
+                    return None
                 
             async def _fetch_via(base, path):
                 """对单个源尝试拉取。raw 源: 节点代理优先→直连兜底; jsDelivr 源: CDN直连优先→节点代理兜底
@@ -2037,12 +2092,17 @@ class FlavorFusionUltimate(Star):
                     logging.warning(f"[Chisa DLC] 锁定节点下载失败，清除测速缓存！")
                     self._dlc_best_node = None
                 return jsonify({"status": "error", "message": "Failed to fetch catalog.json"}), 500
+            try:
+                catalog_data = json.loads(catalog_content.decode("utf-8-sig"))
+            except Exception as exc:
+                return jsonify({"status": "error", "message": f"Invalid catalog JSON: {exc}"}), 400
+            if not isinstance(catalog_data, list) or len(catalog_data) > 5000 or any(not isinstance(item, dict) for item in catalog_data):
+                return jsonify({"status": "error", "message": "Catalog must be an array of at most 5000 objects"}), 400
                 
             index_dir = self._get_store_dir(store_type, repo_id)
             os.makedirs(index_dir, exist_ok=True)
-            
-            with open(os.path.join(index_dir, "catalog.json"), 'wb') as f:
-                f.write(catalog_content)
+            catalog_path = os.path.join(index_dir, "catalog.json")
+            self._atomic_write_json(catalog_path, catalog_data)
                 
             meta_path = os.path.join(index_dir, "metadata.json")
             
@@ -2051,6 +2111,8 @@ class FlavorFusionUltimate(Star):
                 try:
                     # utf-8-sig 兼容带 BOM 的元数据文件
                     meta_data = json.loads(meta_content.decode('utf-8-sig'))
+                    if not isinstance(meta_data, dict):
+                        meta_data = {}
                 except Exception as parse_err:
                     logging.warning(f"[Chisa DLC] ⚠️ Chisa_DLC_Metadata.json 解析失败: {parse_err}")
                     
@@ -2311,12 +2373,20 @@ class FlavorFusionUltimate(Star):
     def _skin_store_dir(self, source):
         """Return the isolated local store directory for one skin source."""
         source = self._normalize_skin_source(source) or self.OFFICIAL_SKIN_SOURCE
+        legacy_dir = None
         if source == self.OFFICIAL_SKIN_SOURCE:
             folder = "OfficialWS"
         else:
             owner, repo_name = source.split("/", 1)
-            folder = f"{owner}_{repo_name}"
+            legacy_folder = f"{owner}_{repo_name}"
+            folder = f"{legacy_folder}_{hashlib.sha256(source.encode('utf-8')).hexdigest()[:10]}"
+            legacy_dir = os.path.join(self._skins_dir(), legacy_folder)
         store_dir = os.path.join(self._skins_dir(), folder)
+        if legacy_dir and not os.path.exists(store_dir) and os.path.isdir(legacy_dir):
+            try:
+                shutil.copytree(legacy_dir, store_dir)
+            except OSError as exc:
+                logging.warning(f"[Chisa Skin] 迁移旧来源缓存失败: {exc}")
         os.makedirs(store_dir, exist_ok=True)
         return store_dir
 
@@ -2409,6 +2479,27 @@ class FlavorFusionUltimate(Star):
         "--surface", "--surface-dark", "--input-bg", "--overlay",
     }
     COLOR_RE = re.compile(r"^(#[0-9a-fA-F]{6}|rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*(0|1|0?\.\d+)\s*\))$")
+    SHADOW_RE = re.compile(r"^(?:-?(?:0|\d{1,3}(?:\.\d+)?px)\s+){2,4}(?:#[0-9a-fA-F]{6}|rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*(?:0|1|0?\.\d+)\s*\))(?:\s+inset)?$")
+    SKIN_MIRROR_NODES = ("gh-proxy.com", "hk.gh-proxy.com", "gh.dpik.top", "edgeone.gh-proxy.com")
+    SKIN_JSON_MAX_BYTES = 1024 * 1024
+    SKIN_ASSET_MAX_BYTES = 96 * 1024 * 1024
+
+    @staticmethod
+    def _skin_description(value):
+        return value.strip()[:200] if isinstance(value, str) else ""
+
+    def _skin_index_preview_vars(self, item):
+        """Return the safe two-color catalog preview embedded in a skin index item."""
+        preview = item.get("vars") if isinstance(item, dict) else None
+        if not isinstance(preview, dict):
+            return None
+        sanitized = {}
+        for key in ("--primary", "--bg"):
+            value = preview.get(key)
+            if not isinstance(value, str) or not self.COLOR_RE.match(value.strip()):
+                return None
+            sanitized[key] = value.strip()
+        return sanitized
 
     def _skin_is_glass(self, data):
         if not isinstance(data, dict):
@@ -2423,8 +2514,8 @@ class FlavorFusionUltimate(Star):
         import re as _re
         if not isinstance(data, dict):
             return None, "皮肤配置必须是 JSON 对象"
-        if data.get("schema_version") != 1:
-            return None, "schema_version 必须为 1"
+        if type(data.get("schema_version")) is not int or data.get("schema_version") != 1:
+            return None, "schema_version 必须为整数 1"
         sid = str(data.get("id", "")).strip()
         if not sid or len(sid) > 40 or not _re.fullmatch(r"[a-z0-9_]+", sid):
             return None, "id 必须为 1-40 位小写字母/数字/下划线"
@@ -2435,9 +2526,11 @@ class FlavorFusionUltimate(Star):
         for k, v in vars_in.items():
             if k not in self.SKIN_VAR_WHITELIST:
                 continue  # 白名单外键直接丢弃 (防注入)
-            if not isinstance(v, str) or not self.COLOR_RE.match(v.strip()):
+            value = v.strip() if isinstance(v, str) else ""
+            valid_value = self.COLOR_RE.match(value) or (k == "--shadow" and self.SHADOW_RE.match(value))
+            if not value or not valid_value:
                 return None, f"变量 {k} 的颜色格式不合法"
-            clean_vars[k] = v.strip()
+            clean_vars[k] = value
         if "--text" not in clean_vars or "--bg" not in clean_vars:
             return None, "vars 至少需要包含 --text 与 --bg"
         is_glass = self._skin_is_glass(data)
@@ -2447,7 +2540,7 @@ class FlavorFusionUltimate(Star):
             "name": str(data.get("name", sid))[:40],
             "author": str(data.get("author", ""))[:40],
             "type": "glass" if is_glass else "solid",
-            "desc": str(data.get("desc", ""))[:100],
+            "desc": self._skin_description(data.get("desc")),
             "vars": clean_vars,
             "glass": is_glass,
             "_skin_type_version": 1,
@@ -2456,7 +2549,9 @@ class FlavorFusionUltimate(Star):
         q = data.get("quotes")
         if isinstance(q, list):
             cleaned["quotes"] = [str(x)[:80] for x in q[:6] if str(x).strip()]
-        assets = data.get("assets") if isinstance(data.get("assets"), dict) else {}
+        if "assets" in data and not isinstance(data.get("assets"), dict):
+            return None, "assets 必须是 JSON 对象"
+        assets = data.get("assets") or {}
         bg = assets.get("bg") or data.get("bg") or data.get("background")
         if isinstance(bg, str) and bg.strip():
             rel = self._safe_skin_asset_rel(bg)
@@ -2467,29 +2562,23 @@ class FlavorFusionUltimate(Star):
 
     async def _skin_fetch_raw(self, repo, rel_path, preferred_node=None):
         """Fetch one validated skin file using the selected node then fallbacks."""
-        import aiohttp
         import json as _json
         from urllib.parse import quote
 
         repo = self._normalize_skin_source(repo)
         safe_config = re.fullmatch(r"skin/[a-z0-9_]{1,40}\.json", str(rel_path or ""))
-        if not repo or not (rel_path == "skin/index.json" or safe_config or self._safe_skin_asset_rel(rel_path)):
+        safe_asset = self._safe_skin_asset_rel(rel_path)
+        if not repo or not (rel_path == "skin/index.json" or safe_config or safe_asset):
             return None
 
-        timeout = aiohttp.ClientTimeout(total=25)
+        max_bytes = self.SKIN_ASSET_MAX_BYTES if safe_asset else self.SKIN_JSON_MAX_BYTES
 
         async def _do_fetch(url, trust_env):
             try:
-                async with aiohttp.ClientSession(trust_env=trust_env) as session:
-                    async with session.get(url, timeout=timeout, headers={"Accept": "application/octet-stream"}) as resp:
-                        if resp.status == 200:
-                            content = await resp.read()
-                            if content:
-                                return content
-                        logging.warning(f"[Chisa Skin] GET {url} -> HTTP {resp.status}")
+                return await self._fetch_allowed_https_bytes(url, max_bytes, trust_env=trust_env)
             except Exception as exc:
-                logging.warning(f"[Chisa Skin] GET {url} failed: {exc}")
-            return None
+                logging.warning(f"[Chisa Skin] GET {url} failed or blocked: {exc}")
+                return None
 
         # The kitchen uploader writes to repo.default_branch. Discover and cache it,
         # then retain main/master as compatibility fallbacks when the API is unavailable.
@@ -2501,13 +2590,14 @@ class FlavorFusionUltimate(Star):
         if not branch:
             api_url = f"https://api.github.com/repos/{repo}"
             try:
-                async with aiohttp.ClientSession(trust_env=True) as session:
-                    async with session.get(api_url, timeout=timeout, headers={"Accept": "application/vnd.github+json"}) as resp:
-                        if resp.status == 200:
-                            info = _json.loads((await resp.read()).decode("utf-8"))
-                            candidate = str(info.get("default_branch", "")).strip()
-                            if candidate and ".." not in candidate and re.fullmatch(r"[A-Za-z0-9._/-]{1,120}", candidate):
-                                branch = candidate
+                api_bytes = await self._fetch_allowed_https_bytes(
+                    api_url, max_bytes=256 * 1024, trust_env=True, timeout_seconds=25
+                )
+                if api_bytes:
+                    info = _json.loads(api_bytes.decode("utf-8"))
+                    candidate = str(info.get("default_branch", "")).strip()
+                    if candidate and ".." not in candidate and re.fullmatch(r"[A-Za-z0-9._/-]{1,120}", candidate):
+                        branch = candidate
             except Exception as exc:
                 logging.warning(f"[Chisa Skin] default branch lookup failed for {repo}: {exc}")
         branch = branch or "main"
@@ -2523,11 +2613,9 @@ class FlavorFusionUltimate(Star):
                 preferred = str(await self._get_optimal_dlc_node() or "direct").strip().lower()
             except Exception:
                 preferred = "direct"
-        if preferred not in ("direct", "") and not re.fullmatch(r"[a-z0-9.-]{1,120}", preferred):
-            preferred = "direct"
-        mirror_nodes = ["gh-proxy.com", "hk.gh-proxy.com", "gh.dpik.top", "edgeone.gh-proxy.com"]
+        mirror_nodes = list(self.SKIN_MIRROR_NODES)
         if preferred not in ("direct", "") and preferred not in mirror_nodes:
-            mirror_nodes.insert(0, preferred)
+            preferred = "direct"
 
         # Honor the user's selected acceleration node first. Direct GitHub then
         # remains a proxy-aware fallback, followed by CDN and other mirrors.
@@ -2595,7 +2683,7 @@ class FlavorFusionUltimate(Star):
                     continue
                 try:
                     data = json.loads(raw.decode("utf-8-sig"))
-                    if not isinstance(data, dict) or data.get("schema_version") != 1:
+                    if not isinstance(data, dict) or type(data.get("schema_version")) is not int or data.get("schema_version") != 1:
                         continue
                     items = data.get("skins", [])
                     if not isinstance(items, list):
@@ -2629,6 +2717,7 @@ class FlavorFusionUltimate(Star):
                         "id": skin_id,
                         "name": str(item.get("name", skin_id))[:40],
                         "author": str(item.get("author", ""))[:40],
+                        "desc": self._skin_description(item.get("desc")),
                         "config": config_path,
                         "glass": self._skin_is_glass(item),
                         "_source": repo,
@@ -2637,6 +2726,9 @@ class FlavorFusionUltimate(Star):
                     }
                     if bg_path:
                         entry["bg"] = bg_path
+                    preview_vars = self._skin_index_preview_vars(item)
+                    if preview_vars:
+                        entry["vars"] = preview_vars
                     merged.append(entry)
 
             if mode == "all" and not requested:
@@ -3188,13 +3280,12 @@ class FlavorFusionUltimate(Star):
     async def page_fetch_single_cover(self):
         try:
             import os
-            import aiohttp
             from quart import request, jsonify
             from astrbot.core.utils.astrbot_path import get_astrbot_data_path
             
             payload = await request.get_json(silent=True) or {}
             filename = payload.get("file", "").strip()
-            node = payload.get("node", "smart")
+            node = str(payload.get("node", "smart") or "smart").strip().lower()
             custom_url = payload.get("custom_url", "").strip()
             store_type = payload.get("store_type", "official")
             repo_id = payload.get("repo_id", "")
@@ -3208,22 +3299,29 @@ class FlavorFusionUltimate(Star):
                 m_cover = _re.search(r"github\.com[/:]([A-Za-z0-9_-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?(?:/|$)", custom_url)
                 if m_cover:
                     raw_base = f"https://raw.githubusercontent.com/{m_cover.group(1)}/{m_cover.group(2)}/main"
+                elif store_type == "custom":
+                    return jsonify({"status": "error", "message": "Invalid custom repository"}), 400
                     
             original_url = f"{raw_base}/covers/{filename}"
             
             if node == "smart":
-                node = await self._get_optimal_dlc_node()
+                node = str(await self._get_optimal_dlc_node() or "direct").strip().lower()
+            if node not in ("direct", "") and node not in self.SKIN_MIRROR_NODES:
+                return jsonify({"status": "error", "message": "Invalid download node"}), 400
                 
             url = original_url
             if node and node != "direct":
                 url = f"https://{node}/{original_url}"
                 
             try:
-                async with aiohttp.ClientSession(trust_env=(node == "direct")) as session:
-                    async with session.get(url, timeout=15) as resp:
-                        if resp.status != 200:
-                            raise Exception(f"HTTP {resp.status}")
-                        content = await resp.read()
+                content = await self._fetch_allowed_https_bytes(
+                    url,
+                    max_bytes=16 * 1024 * 1024,
+                    trust_env=(node in ("direct", "")),
+                    timeout_seconds=15,
+                )
+                if not content:
+                    raise RuntimeError("Empty cover response")
             except Exception as e:
                 import logging
                 if payload.get("node", "smart") == "smart":
@@ -3236,8 +3334,16 @@ class FlavorFusionUltimate(Star):
             os.makedirs(cover_dir, exist_ok=True)
             full_path = os.path.join(cover_dir, filename)
             
-            with open(full_path, 'wb') as f:
-                f.write(content)
+            temp_path = f"{full_path}.tmp.{os.getpid()}"
+            try:
+                with open(temp_path, 'wb') as f:
+                    f.write(content)
+                    f.flush()
+                    os.fsync(f.fileno())
+                os.replace(temp_path, full_path)
+            finally:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
                 
             return jsonify({"status": "success"})
         except Exception as e:
@@ -3309,23 +3415,23 @@ class FlavorFusionUltimate(Star):
     async def page_download_dlc(self):
         try:
             import os
-            import aiohttp
-            import hashlib
-            import shutil
-            import zipfile
             import logging
             from quart import jsonify, request
             from astrbot.core.utils.astrbot_path import get_astrbot_data_path
             
             payload = await request.get_json(silent=True) or {}
             dlc_id = payload.get("id", "").strip()
-            expected_sha256 = payload.get("sha256", "").strip()
-            node = payload.get("node", "smart")
+            expected_sha256 = payload.get("sha256", "").strip().lower()
+            node = str(payload.get("node", "smart") or "smart").strip().lower()
             store_type = payload.get("store_type", "official")
             custom_url = payload.get("custom_url", "").strip()
             
             if not dlc_id or ".." in dlc_id or "/" in dlc_id or "\\" in dlc_id:
                 return jsonify({"status": "error", "message": "Invalid DLC ID"}), 400
+            if expected_sha256 and not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
+                return jsonify({"status": "error", "message": "Invalid SHA-256"}), 400
+            if store_type == "custom" and not custom_url:
+                return jsonify({"status": "error", "message": "Missing custom repository"}), 400
                 
             # Release 下载基址: 官方走主仓库; 工坊按用户仓库构建 (Release Tag 约定与官方一致: Chisa_Dlc_Store)
             if store_type == "custom" and custom_url:
@@ -3340,7 +3446,9 @@ class FlavorFusionUltimate(Star):
             original_url = f"{release_base}/{dlc_id}.zip"
             
             if node == "smart":
-                node = await self._get_optimal_dlc_node()
+                node = str(await self._get_optimal_dlc_node() or "direct").strip().lower()
+            if node not in ("direct", "") and node not in self.SKIN_MIRROR_NODES:
+                return jsonify({"status": "error", "message": "Invalid download node"}), 400
                 
             url = original_url
             if node and node != "direct":
@@ -3352,22 +3460,17 @@ class FlavorFusionUltimate(Star):
                 base_data_path = "data"
                 
             temp_zip_path = os.path.abspath(os.path.join(base_data_path, "plugin_data", "astrbot_plugin_chisa_still_eating", f"temp_{dlc_id}.zip"))
+            os.makedirs(os.path.dirname(temp_zip_path), exist_ok=True)
             
             logging.info(f"[Chisa DLC] 开始下载 DLC 包: {url}")
             try:
-                async with aiohttp.ClientSession(trust_env=(node == "direct")) as session:
-                    async with session.get(url, timeout=300) as resp:
-                        if resp.status != 200:
-                            raise Exception(f"HTTP {resp.status}")
-                            
-                        # Streaming download
-                        sha256_hash = hashlib.sha256()
-                        with open(temp_zip_path, 'wb') as f:
-                            async for chunk in resp.content.iter_chunked(8192):
-                                f.write(chunk)
-                                sha256_hash.update(chunk)
-                                
-                        actual_sha256 = sha256_hash.hexdigest()
+                actual_sha256, _ = await self._download_allowed_https_file(
+                    url,
+                    temp_zip_path,
+                    max_bytes=512 * 1024 * 1024,
+                    trust_env=(node in ("direct", "")),
+                    timeout_seconds=300,
+                )
             except Exception as e:
                 import logging
                 if payload.get("node", "smart") == "smart":
@@ -3387,15 +3490,8 @@ class FlavorFusionUltimate(Star):
             try:
                 import asyncio
                 
-                def extract_safe(z_path, t_dir):
-                    with zipfile.ZipFile(z_path, 'r') as z_ref:
-                        for z_info in z_ref.filelist:
-                            if ".." in z_info.filename or z_info.filename.startswith("/") or z_info.filename.startswith("\\"):
-                                raise Exception("Unsafe path in ZIP")
-                        z_ref.extractall(t_dir)
-                
                 # Offload heavy IO to a separate thread so it doesn't block the main asyncio loop
-                await asyncio.to_thread(extract_safe, temp_zip_path, target_extract_dir)
+                await asyncio.to_thread(self._extract_dlc_zip_safe, temp_zip_path, target_extract_dir)
                     
                 # Clean up
                 if os.path.exists(temp_zip_path):
@@ -3429,6 +3525,8 @@ class FlavorFusionUltimate(Star):
                 
                 return jsonify({"status": "success"})
             except Exception as e:
+                if os.path.exists(temp_zip_path):
+                    os.remove(temp_zip_path)
                 return jsonify({"status": "error", "message": f"Extraction failed: {str(e)}"}), 500
         except Exception as e:
             from quart import jsonify

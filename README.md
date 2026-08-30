@@ -5,12 +5,12 @@
 # 🚀 🍱 千小妹还在吃 (Chisa Still Eating)
 [![AstrBot](https://img.shields.io/badge/Framework-AstrBot-🚀_purple.svg)](https://github.com/Soulter/AstrBot)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-4.2.2-ff69b4.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-4.2.3-ff69b4.svg)](CHANGELOG.md)
 
 一个为 [AstrBot](https://github.com/Soulter/AstrBot) 深度定制的跨次元多世界干饭系统。
 每天都在纠结吃什么？那就让异次元的向导们来帮你随机摇号吧！把食物图片扔进对应的文件夹，它就会自动变成菜单里的美味！通过完美的分类引擎，为你的群聊带来极具情感连接和随机惊喜的沉浸式"吃什么"体验！
 
-当前版本：**4.2.2** 🎉 WEBUI已适配移动端 | 作者：Rua432
+当前版本：**4.2.3** 🎉 云端皮肤印象色兼容版 | 作者：Rua432
 
 <div align="center">
   <img src="https://count.getloli.com/@chisa_still_eating?name=chisa_still_eating&theme=asoul&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto">
@@ -18,6 +18,27 @@
 
 ## 特别鸣谢
 感谢 [MimoKit](https://github.com/MimoKit) 移植的 GsCore 版本 —— [ChisaEating](https://github.com/MimoKit/ChisaEating)
+
+---
+
+## 🎨 云端皮肤印象色 (4.2.3)
+
+4.2.3 支持从官方及第三方 `skin/index.json` 条目读取安全的两色预览变量 `--primary` / `--bg` 和商品简介 `desc`。未下载皮肤现在可以在商店卡片上显示自己的主题色块与简介，不再统一回退成当前正在使用皮肤的颜色；下载后的卡片继续读取完整配置中的 `desc`。
+
+这些字段保持 `schema_version: 1`，属于可选扩展。旧皮肤仓库无需修改仍可浏览，旧插件会忽略新增字段；点击“下载 / 更新”会强制刷新完整配置与背景，使已有本地卡片也能取得新简介。远程读取仅使用固定 GitHub/镜像主机，并对重定向与响应大小执行边界检查。
+
+---
+
+## 📱 WebUI 移动端自适应 (4.2.2)
+
+4.2.2 为手机和平板补充独立响应式布局，同时保持桌面端现有密度、间距和操作方式：
+
+- 768px 以下页头自动分层，主导航和商店筛选支持横向滑动，不再挤压或截断标签。
+- 图库在窄屏保持稳定网格；触摸设备直接提供删除入口，并支持轻点图片进行批量选择。
+- 千小妹商会的节点选择、来源切换和刷新操作会按可用宽度自动分行，商品卡在手机端使用单列布局。
+- 皮肤管理器采用动态视口高度、2×2 来源页签和可换行操作区，第三方仓库地址及长来源名称不会撑开页面。
+- 弹窗、Toast、批量操作栏、吉祥物和气泡适配刘海屏安全区，避免固定元素互相遮挡。
+- PC 端断点以上继续使用原有布局；皮肤变量、背景分块加载、来源隔离、偏好恢复和图库优先启动流程均未改动。
 
 ---
 
@@ -134,9 +155,9 @@
 
 ## 🧰 千小妹后厨 · 云仓管理中枢 (创作者工具)
 
-皮肤工坊同步配套发布了具有皮肤商品制作能力的 **千小妹后厨 3.0.17α 图形化打包器**。创作者可以在本地填写皮肤名称、作者、类型和编号，调用 AI 生成 15 变量配色，选择背景与切换台词，并一键创建或更新 GitHub 仓库中的配置、图片和 `skin/index.json`。
+皮肤工坊同步配套 **千小妹后厨 3.0.18β 图形化打包器**。创作者可以读取本地或 GitHub 现有皮肤、局部修改配色与简介、保持未知字段和背景，并以同 ID 原子更新配置、图片及 `skin/index.json`；工具还能一键回填全部云端皮肤的简介和印象色。
 
-**打包器下载**：[Chisa_kitchen_manager_3.0.17.pyw](https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/%E5%8D%83%E5%B0%8F%E5%A6%B9%E5%90%8E%E5%8E%A8DLC%E4%BB%93%E5%BA%93%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7/Chisa_kitchen_manager_3.0.17.pyw)
+**稳定版打包器下载**：[Chisa_kitchen_manager_3.0.17.pyw](https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/%E5%8D%83%E5%B0%8F%E5%A6%B9%E5%90%8E%E5%8E%A8DLC%E4%BB%93%E5%BA%93%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7/Chisa_kitchen_manager_3.0.17.pyw) · 当前开发文件：`千小妹后厨3.0.18β.pyw`
 
 打包器同时保留 DLC 打包、GitHub/Release 同步、商店元数据装潢和云端资源管理能力。具体环境配置和操作手册由打包器独立项目的 README 维护，本插件仓库不重复展开。
 

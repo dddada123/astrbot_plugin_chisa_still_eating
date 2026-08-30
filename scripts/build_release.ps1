@@ -21,6 +21,15 @@ if (-not $nameMatch.Success -or -not $versionMatch.Success) {
 
 $pluginName = $nameMatch.Groups[1].Value.Trim().Trim('"', "'")
 $version = $versionMatch.Groups[1].Value.Trim().Trim('"', "'")
+$mainContent = Get-Content -LiteralPath (Join-Path $repoRoot "main.py") -Raw
+$webContent = Get-Content -LiteralPath (Join-Path $repoRoot "pages\manager\index.html") -Raw
+$mainVersion = [regex]::Match($mainContent, '(?m)^__version__\s*=\s*["'']([^"'']+)["'']')
+if (-not $mainVersion.Success -or $mainVersion.Groups[1].Value -ne $version) {
+    throw "main.py version does not match metadata.yaml: $version"
+}
+if ($webContent -notmatch [regex]::Escape("v$version")) {
+    throw "WebUI version does not match metadata.yaml: $version"
+}
 $artifactName = "$pluginName-$version.zip"
 $outputRoot = Join-Path $repoRoot $OutputDir
 $stagingRoot = Join-Path $outputRoot $pluginName
@@ -48,7 +57,6 @@ $includeFiles = @(
     "metadata.yaml",
     "README.md",
     "rate_limiter.py",
-    "reorder_schema.py",
     "responder.py"
 )
 
@@ -94,4 +102,22 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
     $false
 )
 
+$archive = [System.IO.Compression.ZipFile]::OpenRead($artifactPath)
+try {
+    $entryNames = @($archive.Entries | ForEach-Object { $_.FullName.Replace('\', '/') })
+    foreach ($requiredEntry in @("main.py", "metadata.yaml", "pages/manager/index.html")) {
+        if ($requiredEntry -notin $entryNames) {
+            throw "Release archive missing: $requiredEntry"
+        }
+    }
+    foreach ($forbiddenEntry in @("reorder_schema.py", "catalog_test.json")) {
+        if ($forbiddenEntry -in $entryNames) {
+            throw "Developer-only file leaked into release: $forbiddenEntry"
+        }
+    }
+} finally {
+    $archive.Dispose()
+}
+
+Remove-Item -LiteralPath $stagingRoot -Recurse -Force
 Write-Output "Created $artifactPath"
