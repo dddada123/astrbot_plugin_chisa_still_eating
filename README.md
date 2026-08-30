@@ -157,7 +157,7 @@
 
 皮肤工坊同步配套 **千小妹后厨 3.0.18β 图形化打包器**。创作者可以读取本地或 GitHub 现有皮肤、局部修改配色与简介、保持未知字段和背景，并以同 ID 原子更新配置、图片及 `skin/index.json`；工具还能一键回填全部云端皮肤的简介和印象色。
 
-**稳定版打包器下载**：[Chisa_kitchen_manager_3.0.17.pyw](https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/%E5%8D%83%E5%B0%8F%E5%A6%B9%E5%90%8E%E5%8E%A8DLC%E4%BB%93%E5%BA%93%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7/Chisa_kitchen_manager_3.0.17.pyw) · 当前开发文件：`千小妹后厨3.0.18β.pyw`
+**稳定版打包器下载**：[Chisa_kitchen_manager_3.0.18β.pyw](https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/%E5%8D%83%E5%B0%8F%E5%A6%B9%E5%90%8E%E5%8E%A8DLC%E4%BB%93%E5%BA%93%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7/Chisa_kitchen_manager_3.0.18.pyw) 
 
 打包器同时保留 DLC 打包、GitHub/Release 同步、商店元数据装潢和云端资源管理能力。具体环境配置和操作手册由打包器独立项目的 README 维护，本插件仓库不重复展开。
 
