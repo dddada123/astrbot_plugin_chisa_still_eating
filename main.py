@@ -18,9 +18,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "4.2.1"
+__version__ = "4.2.2"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "4.2.1", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "4.2.2", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)

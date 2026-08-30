@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>千小妹还在吃 - 后厨仪表盘</title>
   <style>
     :root {
@@ -137,6 +137,7 @@
       cursor: pointer;
       padding: 15px;
       width: 100%;
+      box-sizing: border-box;
       text-align: left;
       border: 1px solid var(--line);
       outline: none;
@@ -251,6 +252,7 @@
     .char-block { background: var(--card); margin-bottom: 15px; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary); }
     .char-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .char-block-header h3 { margin: 0; }
+    .char-lines-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
     .char-lines {
       width: 100%; height: 80px; background: var(--input-bg); color: var(--text);
       border: 1px solid var(--line); border-radius: 4px; padding: 8px;
@@ -288,6 +290,7 @@
       width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
     }
     .modal-content {
+      box-sizing: border-box;
       background-color: var(--card); margin: 10% auto; padding: 20px;
       border: 1px solid var(--line); border-radius: 12px; width: 80%;
         max-height: 86vh;
@@ -388,6 +391,248 @@
       .skin-manager-grid { grid-template-columns: 1fr; }
     }
   
+    /* v4.2.2: responsive layout only; theme variables and skin delivery remain unchanged. */
+    @media (max-width: 768px) {
+      body {
+        overflow-x: hidden;
+        background-attachment: scroll;
+        -webkit-text-size-adjust: 100%;
+      }
+      main {
+        width: calc(100% - 20px);
+        margin: 10px auto;
+        padding-bottom: calc(110px + env(safe-area-inset-bottom));
+      }
+      header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+      }
+      .header-main { min-width: 0; }
+      h1 { font-size: 22px; }
+      .subtitle {
+        min-width: 0;
+        flex-wrap: wrap;
+        line-height: 1.45;
+      }
+      .blur-control {
+        min-width: 0;
+        flex: 1 1 100%;
+        flex-wrap: wrap;
+      }
+      #bgBlurRange {
+        width: clamp(90px, 38vw, 180px) !important;
+        flex: 1 1 110px;
+      }
+      .header-refresh { width: 100%; min-height: 44px; }
+      .nav-tabs {
+        flex-wrap: nowrap;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding: 0 1px 8px;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scroll-snap-type: inline proximity;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .nav-tabs::-webkit-scrollbar { display: none; }
+      .tab-btn {
+        flex: 0 0 auto;
+        min-height: 44px;
+        padding: 10px 14px;
+        white-space: nowrap;
+        scroll-snap-align: start;
+        touch-action: manipulation;
+      }
+      .section { padding: 12px; border-radius: 8px; }
+      .controls { flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+      .controls .btn { flex: 1 1 128px; min-height: 40px; }
+      .accordion {
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 12px;
+        font-size: 14px;
+      }
+      .accordion-title { min-width: 0; overflow-wrap: anywhere; }
+      .accordion-actions { display: flex; gap: 6px; margin: 0 0 0 auto; flex-wrap: wrap; }
+      .accordion-actions .btn { min-height: 40px; }
+      .panel { padding: 0 6px; transition: none; }
+      .panel.open { max-height: none; overflow: visible; }
+      .image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 88px), 1fr));
+        gap: 8px;
+        padding: 10px 0;
+      }
+      .char-block { padding: 12px; }
+      .char-block-header { align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+      .char-block-header .btn { min-height: 40px; }
+      .char-lines-header { align-items: stretch; flex-direction: column; }
+      .char-lines-header .btn { min-height: 40px; }
+      .batch-action-bar {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      }
+      .batch-summary { text-align: center; line-height: 1.5; }
+      .batch-buttons { display: flex; gap: 8px; }
+      .batch-buttons .btn { flex: 1 1 0; min-height: 44px; margin-right: 0 !important; }
+      body.batch-mode-active main { padding-bottom: calc(170px + env(safe-area-inset-bottom)); }
+      body.batch-mode-active .chisa-mascot,
+      body.batch-mode-active .mascot-bubble { display: none !important; }
+      .modal {
+        height: 100dvh;
+        padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      .modal-content,
+      .skin-manager-modal {
+        box-sizing: border-box;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: calc(100dvh - 16px);
+        margin: 8px auto !important;
+        padding: 16px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+      .close {
+        display: flex;
+        width: 44px;
+        height: 44px;
+        margin: -10px -8px 0 8px;
+        align-items: center;
+        justify-content: center;
+      }
+      .form-group input[type="text"],
+      .form-group textarea,
+      .form-group select,
+      #custom-repo-url {
+        min-width: 0 !important;
+        max-width: 100%;
+        font-size: 16px;
+      }
+      .form-group input[type="file"] { width: 100%; max-width: 100%; box-sizing: border-box; }
+      .modal-buttons { flex-wrap: wrap; gap: 8px; }
+      .modal-buttons .btn { flex: 1 1 120px; min-height: 44px; }
+      .status-toast {
+        top: max(10px, env(safe-area-inset-top));
+        width: max-content;
+        max-width: calc(100vw - 24px);
+        padding: 10px 14px;
+        box-sizing: border-box;
+        text-align: center;
+        overflow-wrap: anywhere;
+      }
+      .chisa-mascot { width: 88px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); }
+      .mascot-bubble,
+      body.skin-glass .mascot-bubble {
+        right: 10px;
+        bottom: calc(104px + env(safe-area-inset-bottom));
+        width: max-content;
+        max-width: calc(100vw - 24px);
+        padding: 10px 12px;
+        box-sizing: border-box;
+        overflow-wrap: anywhere;
+      }
+      .store-banner-container {
+        aspect-ratio: 16 / 7 !important;
+        min-height: 0 !important;
+        max-height: none !important;
+      }
+      #store-banner-overlay { padding: 24px 10px 8px !important; }
+      #store-banner-name { font-size: 16px !important; }
+      #store-banner-desc {
+        max-width: 100% !important;
+        white-space: normal !important;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+      .store-controls { padding: 12px; }
+      .store-control-row { align-items: stretch !important; }
+      .network-select {
+        width: 100%;
+        min-width: 0;
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .network-select select {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        margin: 6px 0 0;
+        box-sizing: border-box;
+        font-size: 16px;
+      }
+      .store-actions { width: 100%; min-width: 0; flex-wrap: wrap; gap: 8px !important; }
+      .top-store-switch { width: 100%; flex: 1 1 100%; }
+      .top-store-switch .store-tab-btn { flex: 1 1 0; min-width: 0; min-height: 44px; }
+      .store-actions > .btn { flex: 1 1 calc(50% - 4px); min-width: 0; min-height: 44px; }
+      .store-filters {
+        flex-wrap: nowrap;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding-bottom: 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .store-filters::-webkit-scrollbar { display: none; }
+      .filter-btn { flex: 0 0 auto; min-height: 40px; touch-action: manipulation; }
+      .store-card-title > div { max-width: 100%; box-sizing: border-box; }
+      .store-grid > div[style*="padding: 50px"] { padding: 24px 12px !important; overflow-wrap: anywhere; }
+      #custom-repo-url { width: 100% !important; flex-basis: 100% !important; box-sizing: border-box; }
+      #ws-connect-body, #ws-bookshelf-body, #workshop-chips { min-width: 0; overflow-wrap: anywhere; }
+      .skin-manager-head { align-items: stretch; flex-direction: column; }
+      .skin-manager-head-actions { width: 100%; justify-content: flex-start !important; }
+      .skin-manager-head-actions .btn { flex: 1 1 180px; min-height: 40px; }
+      .skin-manager-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin: 14px 0;
+      }
+      .skin-manager-tab { width: 100%; min-height: 40px; }
+      .skin-source-fixed { align-items: stretch; flex-direction: column; }
+      .skin-source-fixed .btn { width: 100%; min-height: 40px; }
+      .skin-card-actions { flex-wrap: wrap; }
+    }
+
+    @media (max-width: 480px) {
+      main { width: calc(100% - 12px); margin: 6px auto; }
+      header { padding: 12px; }
+      h1 { font-size: 20px; }
+      .section { padding: 10px; }
+      .store-grid { grid-template-columns: minmax(0, 1fr); }
+      .store-actions > .btn { flex-basis: 100%; }
+      .skin-source-actions { width: 100%; flex-wrap: wrap; }
+      .skin-source-actions .btn { flex: 1 1 120px; min-height: 40px; }
+      .skin-card-actions .btn { flex: 1 1 120px; min-height: 40px; }
+      .batch-hint { display: none; }
+    }
+
+    @media (hover: none), (pointer: coarse) {
+      .img-card .delete-btn {
+        width: 40px;
+        height: 40px;
+        top: 4px;
+        right: 4px;
+        opacity: 1;
+        font-size: 18px;
+      }
+      .img-card.batch-mode .delete-btn { display: none !important; }
+      .store-card:hover,
+      .chisa-mascot:hover { transform: none !important; }
+      button, .tab-btn, .filter-btn, .accordion { touch-action: manipulation; }
+    }
+
     @keyframes btnDownloading {
       0% { background-position: 0 0; }
       100% { background-position: 40px 40px; }
@@ -408,12 +653,12 @@
 
   <main>
     <header>
-      <div>
+      <div class="header-main">
         <h1><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px; margin-right:8px;"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>千小妹跨次元后厨</h1>
         <div class="subtitle" style="display:flex; align-items:center; gap:10px;">
-        <span>v4.2.1</span>
+        <span>v4.2.2</span>
         <button class="btn btn-small btn-ghost" style="padding:3px 8px; font-size:12px; cursor:pointer;" id="skin-switch-btn" onclick="openSkinModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:3px;"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>主题皮肤: 红枫·凝露</button>
-        <span style="display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:12px;">
+        <span class="blur-control" style="display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:12px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>毛玻璃
             <input type="range" id="bgBlurRange" min="0" max="100" value="0" style="width:110px; accent-color: var(--primary); cursor:pointer;" oninput="setBgBlur(this.value, false)">
             <span id="bgBlurVal" style="width:26px; text-align:right;">0</span>
@@ -421,7 +666,7 @@
         </span>
       </div>
       </div>
-      <button class="btn btn-neutral" onclick="fetchData()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>刷新本地数据</button>
+      <button class="btn btn-neutral header-refresh" onclick="fetchData()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>刷新本地数据</button>
     </header>
 
     <div class="nav-tabs">
@@ -476,7 +721,7 @@
 
             <!-- 商店主控区 (节点、按钮) -->
       <div class="store-controls" style="flex-direction: column; align-items: stretch; gap: 15px; margin-bottom: 20px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 10px;">
+          <div class="store-control-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 10px;">
               <div class="network-select">
                   <label>下载节点引擎: </label>
                   <select id="dlc-node">
@@ -538,8 +783,8 @@
   </main>
 
   <div id="batchActionBar" class="batch-action-bar">
-    <div>当前处于批量选择模式 <span style="color:var(--muted); font-size:13px; margin:0 8px;">(💡 提示：按住鼠标滑动可快速多选)</span> | 已选定 <span id="batchCount" style="color:var(--primary); font-size:20px; font-weight:bold;">0</span> 张图片</div>
-    <div>
+    <div class="batch-summary">当前处于批量选择模式 <span class="batch-hint" style="color:var(--muted); font-size:13px; margin:0 8px;">(💡 提示：按住鼠标滑动可快速多选)</span> | 已选定 <span id="batchCount" style="color:var(--primary); font-size:20px; font-weight:bold;">0</span> 张图片</div>
+    <div class="batch-buttons">
         <button class="btn" style="background:#555; margin-right:10px;" onclick="toggleBatchMode()">取消</button>
         <button class="btn" onclick="executeBatchDelete()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>删除选定项</button>
     </div>
@@ -622,7 +867,7 @@
           <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:5px;"><circle cx="12" cy="12" r="10"/><circle cx="8.5" cy="10.5" r="1"/><circle cx="15.5" cy="10.5" r="1"/><circle cx="12" cy="15.5" r="1"/></svg>跨次元后厨 - 皮肤源管理</h3>
           <p>内置皮肤始终可用。在线皮肤会先下载配置并预缓存背景，顶部滑块继续控制毛玻璃力度。</p>
         </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+        <div class="skin-manager-head-actions" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
           <button class="btn btn-small btn-neutral" onclick="copySkinAiPrompt()">复制 AI 配色提示词</button>
           <button class="btn btn-small btn-neutral" onclick="redownloadSkinBg(event)">重新下载当前背景</button>
         </div>
@@ -3044,12 +3289,30 @@
     }
 
     function switchTab(tabId, btnElement) {
+      if (tabId === 'tab-dlc' && isBatchMode) {
+          isBatchMode = false;
+          selectedFiles.clear();
+          updateBatchUI();
+      }
       var sections = document.getElementsByClassName('section');
-      for (var i = 0; i < sections.length; i++) sections[i].classList.remove('active');
+      for (var i = 0; i < sections.length; i++) {
+          sections[i].classList.remove('active');
+          sections[i].setAttribute('aria-hidden', 'true');
+      }
       var btns = document.getElementsByClassName('tab-btn');
-      for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+      for (var j = 0; j < btns.length; j++) {
+          btns[j].classList.remove('active');
+          btns[j].setAttribute('aria-selected', 'false');
+      }
       document.getElementById(tabId).classList.add('active');
-      if (btnElement) btnElement.classList.add('active');
+      document.getElementById(tabId).setAttribute('aria-hidden', 'false');
+      if (btnElement) {
+          btnElement.classList.add('active');
+          btnElement.setAttribute('aria-selected', 'true');
+          if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
+              btnElement.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          }
+      }
       
       if (tabId === 'tab-dlc') {
           triggerMascotQuote('shop');
@@ -3071,22 +3334,39 @@
       if(customSaved && document.getElementById("custom-repo-url")) {
           document.getElementById("custom-repo-url").value = customSaved;
       }
+
+      function toggleAccordion(trigger) {
+          var expanded = !trigger.classList.contains("expanded");
+          trigger.classList.toggle("expanded", expanded);
+          trigger.setAttribute("aria-expanded", expanded ? "true" : "false");
+          var panel = trigger.nextElementSibling;
+          if (panel) panel.classList.toggle("open", expanded);
+          if (trigger.id) accordionState[trigger.id] = expanded;
+      }
+
       var acc = document.getElementsByClassName("accordion");
       for (var i = 0; i < acc.length; i++) {
-        var clone = acc[i].cloneNode(true);
-        acc[i].parentNode.replaceChild(clone, acc[i]);
-
-        if (clone.id && accordionState[clone.id]) {
-            clone.classList.add("expanded");
-            var panel = clone.nextElementSibling;
-            if(panel) panel.classList.add("open");
+        var trigger = acc[i];
+        var panel = trigger.nextElementSibling;
+        var expanded = !!(trigger.id && accordionState[trigger.id]);
+        trigger.classList.toggle("expanded", expanded);
+        trigger.setAttribute("aria-expanded", expanded ? "true" : "false");
+        if (panel) {
+            if (!panel.id && trigger.id) panel.id = trigger.id + "-panel";
+            if (panel.id) trigger.setAttribute("aria-controls", panel.id);
+            panel.classList.toggle("open", expanded);
         }
-
-        clone.addEventListener("click", function() {
-          this.classList.toggle("expanded");
-          var panel = this.nextElementSibling;
-          if (panel) panel.classList.toggle("open");
-          if (this.id) accordionState[this.id] = this.classList.contains("expanded");
+        if (trigger.dataset.accordionBound === "1") continue;
+        trigger.dataset.accordionBound = "1";
+        trigger.addEventListener("click", function(event) {
+          if (event.target.closest && event.target.closest(".accordion-actions")) return;
+          toggleAccordion(this);
+        });
+        trigger.addEventListener("keydown", function(event) {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          if (event.target.closest && event.target.closest(".accordion-actions")) return;
+          event.preventDefault();
+          toggleAccordion(this);
         });
       }
     }
@@ -3144,7 +3424,10 @@
         selectedFiles.clear();
         updateBatchUI();
         if (isBatchMode) {
-            showMascotBubble("那个...如果有很多记录要处理，按住鼠标滑动就可以快速多选哦，不用一个个点啦~");
+            var touchMode = window.matchMedia && window.matchMedia('(hover: none), (pointer: coarse)').matches;
+            showMascotBubble(touchMode
+                ? "轻点图片就能批量选择，再点一次可以取消哦~"
+                : "那个...如果有很多记录要处理，按住鼠标滑动就可以快速多选哦，不用一个个点啦~");
         }
     
         _chisa_applying_skin = false;
@@ -3152,6 +3435,7 @@
 
         function updateBatchUI() {
         var bar = document.getElementById('batchActionBar');
+        document.body.classList.toggle('batch-mode-active', isBatchMode);
         if (isBatchMode) {
             bar.style.display = 'flex';
             document.getElementById('batchCount').innerText = selectedFiles.size;
@@ -3249,32 +3533,74 @@
         container.innerHTML = '<div class="coming-soon">空空如也...</div>';
         return;
       }
-      
-      var htmlStr = '';
-      for (var i = 0; i < items.length; i++) {
-        var file = items[i];
-        var imgPath = basePath + '/' + file;
-        var displayFile = file;
-        if (file.indexOf('/') !== -1) displayFile = file.split('/').pop();
-        
-        var classes = 'img-card';
-        if (isBatchMode) classes += ' batch-mode';
-        if (selectedFiles.has(imgPath)) classes += ' selected';
-        
-        htmlStr += '<div class="' + classes + '" onmousedown="startDragSelect(event, this, \'' + imgPath + '\')" onmouseenter="enterDragSelect(event, this, \'' + imgPath + '\')" onclick="openRenameModal(\'' + imgPath + '\', \'' + displayFile + '\')">';
-        htmlStr += '<div class="img-skeleton"></div>';
-        htmlStr += '<img data-path="' + imgPath + '" class="lazy-img" draggable="false" />';
-        htmlStr += '<div class="img-name" title="' + displayFile + '">' + displayFile + '</div>';
-        htmlStr += '<button class="delete-btn" onclick="deleteImage(\'' + imgPath + '\', event)">×</button>';
-        htmlStr += '</div>';
-      }
-      container.innerHTML = htmlStr;
 
-      // Observe images for lazy load
-      var imgs = container.getElementsByTagName('img');
-      for(var i=0; i<imgs.length; i++) {
-          lazyObserver.observe(imgs[i]);
+      function appendImageCard(fileValue) {
+        var file = String(fileValue || '');
+        var imgPath = basePath + '/' + file;
+        var displayFile = file.indexOf('/') !== -1 ? file.split('/').pop() : file;
+        var card = document.createElement('div');
+        card.className = 'img-card' + (isBatchMode ? ' batch-mode' : '') + (selectedFiles.has(imgPath) ? ' selected' : '');
+        card.tabIndex = 0;
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', displayFile + '，轻点重命名');
+
+        card.addEventListener('mousedown', function(event) {
+          card._batchMouseHandled = isBatchMode;
+          startDragSelect(event, card, imgPath);
+        });
+        card.addEventListener('mouseenter', function(event) {
+          enterDragSelect(event, card, imgPath);
+        });
+        card.addEventListener('click', function() {
+          if (isBatchMode) {
+            if (card._batchMouseHandled) {
+              card._batchMouseHandled = false;
+              return;
+            }
+            toggleCardSelection(card, imgPath, !selectedFiles.has(imgPath));
+            return;
+          }
+          openRenameModal(imgPath, displayFile);
+        });
+        card.addEventListener('keydown', function(event) {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          if (isBatchMode) toggleCardSelection(card, imgPath, !selectedFiles.has(imgPath));
+          else openRenameModal(imgPath, displayFile);
+        });
+
+        var skeleton = document.createElement('div');
+        skeleton.className = 'img-skeleton';
+        card.appendChild(skeleton);
+
+        var image = document.createElement('img');
+        image.className = 'lazy-img';
+        image.setAttribute('data-path', imgPath);
+        image.draggable = false;
+        card.appendChild(image);
+
+        var name = document.createElement('div');
+        name.className = 'img-name';
+        name.title = displayFile;
+        name.textContent = displayFile;
+        card.appendChild(name);
+
+        var deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'delete-btn';
+        deleteButton.textContent = '×';
+        deleteButton.title = '删除 ' + displayFile;
+        deleteButton.setAttribute('aria-label', '删除 ' + displayFile);
+        deleteButton.addEventListener('click', function(event) {
+          event.stopPropagation();
+          deleteImage(imgPath, event);
+        });
+        card.appendChild(deleteButton);
+        container.appendChild(card);
+        lazyObserver.observe(image);
       }
+
+      for (var i = 0; i < items.length; i++) appendImageCard(items[i]);
     }
 
     var worldLabels = {
@@ -3312,11 +3638,28 @@
         var w = worlds[i];
         var items = catData[w] || [];
         
-        var btn = document.createElement('button');
+        var btn = document.createElement('div');
         btn.className = 'accordion';
         btn.id = 'acc-meme-' + w;
-        btn.innerHTML = '<span class="accordion-title">' + svgIcon(worldIcons[w] || 'globe', 15) + worldLabels[w] + '</span>' + 
-                        '<span class="accordion-actions"><button class="btn btn-small btn-neutral" onclick="openUploadModal(\'memes\', \'' + w + '\'); event.stopPropagation();">上传</button></span>';
+        btn.tabIndex = 0;
+        btn.setAttribute('role', 'button');
+        var titleNode = document.createElement('span');
+        titleNode.className = 'accordion-title';
+        titleNode.innerHTML = svgIcon(worldIcons[w] || 'globe', 15) + worldLabels[w];
+        var actionNode = document.createElement('span');
+        actionNode.className = 'accordion-actions';
+        var uploadButton = document.createElement('button');
+        uploadButton.type = 'button';
+        uploadButton.className = 'btn btn-small btn-neutral';
+        uploadButton.textContent = '上传';
+        uploadButton.dataset.world = w;
+        uploadButton.addEventListener('click', function(event) {
+            event.stopPropagation();
+            openUploadModal('memes', this.dataset.world);
+        });
+        actionNode.appendChild(uploadButton);
+        btn.appendChild(titleNode);
+        btn.appendChild(actionNode);
         
         var panel = document.createElement('div');
         panel.className = 'panel';
@@ -3382,11 +3725,29 @@
         var basePath = dirName + '/' + w;
         var gridId = catName + '-' + w + '-grid';
         
-        var btn = document.createElement('button');
+        var btn = document.createElement('div');
         btn.className = 'accordion';
         btn.id = 'acc-' + catName + '-' + w;
-        btn.innerHTML = '<span class="accordion-title">' + svgIcon(worldIcons[w] || 'globe', 15) + worldLabels[w] + '</span>' + 
-                        '<span class="accordion-actions"><button class="btn btn-small btn-neutral" onclick="openUploadModal(\'' + dirName + '\', \'' + w + '\'); event.stopPropagation();">上传</button></span>';
+        btn.tabIndex = 0;
+        btn.setAttribute('role', 'button');
+        var titleNode = document.createElement('span');
+        titleNode.className = 'accordion-title';
+        titleNode.innerHTML = svgIcon(worldIcons[w] || 'globe', 15) + worldLabels[w];
+        var actionNode = document.createElement('span');
+        actionNode.className = 'accordion-actions';
+        var uploadButton = document.createElement('button');
+        uploadButton.type = 'button';
+        uploadButton.className = 'btn btn-small btn-neutral';
+        uploadButton.textContent = '上传';
+        uploadButton.dataset.dir = dirName;
+        uploadButton.dataset.world = w;
+        uploadButton.addEventListener('click', function(event) {
+            event.stopPropagation();
+            openUploadModal(this.dataset.dir, this.dataset.world);
+        });
+        actionNode.appendChild(uploadButton);
+        btn.appendChild(titleNode);
+        btn.appendChild(actionNode);
         
         var panel = document.createElement('div');
         panel.className = 'panel';
@@ -3445,14 +3806,38 @@
         var charData = data[charName];
         var charLines = charData.words ? charData.words : '';
         
-        var btn = document.createElement('button');
+        var btn = document.createElement('div');
         btn.className = 'accordion';
         btn.id = 'acc-gf-' + charName;
-        btn.innerHTML = '<span class="accordion-title">' + charName + '</span>' + 
-                        '<span class="accordion-actions">' +
-                        '<button class="btn btn-small btn-neutral" style="margin-right:5px;" onclick="openUploadModal(\'ganfanren\', \'\', \'' + charName + '\'); event.stopPropagation();">上传立绘</button>' +
-                        '<button class="btn btn-small btn-danger-outline" onclick="deleteGanfanren(\'' + charName + '\'); event.stopPropagation();"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:3px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>删除角色</button>' +
-                        '</span>';
+        btn.tabIndex = 0;
+        btn.setAttribute('role', 'button');
+        var titleNode = document.createElement('span');
+        titleNode.className = 'accordion-title';
+        titleNode.textContent = charName;
+        var actionNode = document.createElement('span');
+        actionNode.className = 'accordion-actions';
+        var uploadButton = document.createElement('button');
+        uploadButton.type = 'button';
+        uploadButton.className = 'btn btn-small btn-neutral';
+        uploadButton.textContent = '上传立绘';
+        uploadButton.dataset.charName = charName;
+        uploadButton.addEventListener('click', function(event) {
+            event.stopPropagation();
+            openUploadModal('ganfanren', '', this.dataset.charName);
+        });
+        var deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'btn btn-small btn-danger-outline';
+        deleteButton.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:3px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>删除角色';
+        deleteButton.dataset.charName = charName;
+        deleteButton.addEventListener('click', function(event) {
+            event.stopPropagation();
+            deleteGanfanren(this.dataset.charName);
+        });
+        actionNode.appendChild(uploadButton);
+        actionNode.appendChild(deleteButton);
+        btn.appendChild(titleNode);
+        btn.appendChild(actionNode);
         
         var panel = document.createElement('div');
         panel.className = 'panel';
@@ -3460,7 +3845,21 @@
         
         var taContainer = document.createElement('div');
         taContainer.style.marginBottom = '10px';
-        taContainer.innerHTML = '<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>专属截胡语录：</span><button class="btn btn-small btn-neutral" onclick="saveGanfanrenWords(\'' + charName + '\')">保存语录</button></div>';
+        var linesHeader = document.createElement('div');
+        linesHeader.className = 'char-lines-header';
+        var linesLabel = document.createElement('span');
+        linesLabel.textContent = '专属截胡语录：';
+        var saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'btn btn-small btn-neutral';
+        saveButton.textContent = '保存语录';
+        saveButton.dataset.charName = charName;
+        saveButton.addEventListener('click', function() {
+            saveGanfanrenWords(this.dataset.charName);
+        });
+        linesHeader.appendChild(linesLabel);
+        linesHeader.appendChild(saveButton);
+        taContainer.appendChild(linesHeader);
         
         var ta = document.createElement('textarea');
         ta.className = 'char-lines';
