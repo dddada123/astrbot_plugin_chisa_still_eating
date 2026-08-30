@@ -5,7 +5,7 @@
 # 🚀 🍱 千小妹还在吃 (Chisa Still Eating)
 [![AstrBot](https://img.shields.io/badge/Framework-AstrBot-🚀_purple.svg)](https://github.com/Soulter/AstrBot)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-4.2.3-ff69b4.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-4.2.4-ff69b4.svg)](CHANGELOG.md)
 
 一个为 [AstrBot](https://github.com/Soulter/AstrBot) 深度定制的跨次元多世界干饭系统。
 每天都在纠结吃什么？那就让异次元的向导们来帮你随机摇号吧！把食物图片扔进对应的文件夹，它就会自动变成菜单里的美味！通过完美的分类引擎，为你的群聊带来极具情感连接和随机惊喜的沉浸式"吃什么"体验！
