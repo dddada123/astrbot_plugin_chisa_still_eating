@@ -14,6 +14,7 @@
       --muted: #d9a08d;
       --primary: #ff6b4a;
       --primary-hover: #ff8a6b;
+       --primary-contrast: #1d0c06;
       --line: rgba(255, 150, 120, 0.22);
       --shadow: 0 10px 24px rgba(20, 5, 2, 0.5);
       --blur: blur(12px);
@@ -117,8 +118,7 @@
     }
 
     .tab-btn:hover:not(.active) { background: var(--hover-tint); }
-    .tab-btn.active { color: white; }
-    .tab-btn.active { background: var(--primary); border-color: var(--primary-hover); color: white; }
+    .tab-btn.active { background: var(--primary); border-color: var(--primary-hover); color: var(--primary-contrast, #fff); }
 
     .section {
       display: none;
@@ -242,8 +242,8 @@
     }
 
     .controls { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px; }
-    button.btn { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
-    button.btn:hover { background: var(--primary-hover); }
+    button.btn { background: var(--primary); color: var(--primary-contrast, #fff); border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+    button.btn:hover { background: var(--primary-hover); color: var(--primary-contrast, #fff); }
     button.btn-small { padding: 4px 10px; font-size: 12px; }
     
     .coming-soon { text-align: center; padding: 20px; color: var(--muted); font-style: italic; }
@@ -324,21 +324,21 @@
     .store-filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     .filter-btn { background: var(--surface); border: 1px solid var(--line); color: var(--muted); padding: 6px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.2s ease; }
     .filter-btn:hover:not(.active) { background: var(--hover-tint); color: var(--text); border-color: var(--primary); }
-    .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .filter-btn.active { background: var(--primary); color: var(--primary-contrast, #fff); border-color: var(--primary); }
     button.btn.btn-neutral { background: var(--surface) !important; color: var(--text) !important; border: 1px solid var(--line); }
     button.btn.btn-neutral:hover { background: var(--hover-tint) !important; color: var(--text) !important; border-color: var(--primary); }
     .store-tab-btn { background: var(--surface) !important; color: var(--text) !important; }
     /* v4.0.07 按钮三态: 常驻不亮 / hover 灰度微光 / :active 按下高亮松开恢复 */
     button.btn.btn-neutral:active,
     .batch-toggle-btn:active:not(.active-batch),
-    .store-tab-btn:active { background: var(--primary) !important; color: white !important; border-color: var(--primary); }
+    .store-tab-btn:active { background: var(--primary) !important; color: var(--primary-contrast, #fff) !important; border-color: var(--primary); }
     .batch-toggle-btn { background: var(--surface) !important; color: var(--text) !important; border: 1px solid var(--line); }
     .batch-toggle-btn:hover:not(.active-batch) { background: var(--hover-tint) !important; border-color: var(--primary); }
     .btn-ghost { background: transparent !important; color: var(--muted) !important; border: 1px dashed var(--line); }
     .btn-ghost:hover { background: var(--hover-tint) !important; color: var(--text) !important; border-color: var(--primary); }
     .btn-danger-outline { background: transparent !important; color: var(--primary) !important; border: 1px solid var(--primary) !important; }
-    .btn-danger-outline:hover { background: var(--primary) !important; color: white !important; }
-    .store-tab-btn.active { background: var(--primary) !important; color: white !important; }
+    .btn-danger-outline:hover { background: var(--primary) !important; color: var(--primary-contrast, #fff) !important; }
+    .store-tab-btn.active { background: var(--primary) !important; color: var(--primary-contrast, #fff) !important; }
     .store-tab-btn:hover:not(.active) { background: var(--hover-tint) !important; }
     
     .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
@@ -352,6 +352,41 @@
     .store-download-btn { width: 100%; background: rgba(226, 172, 107, 0.1); color: var(--primary); border: 1px solid var(--primary); margin-top: auto;}
     .store-download-btn:hover { background: var(--primary); color: #121212; }
 
+    /* v4.1.9 skin source manager */
+    .skin-manager-modal { width: min(920px, calc(100vw - 32px)); max-width: 920px; margin: 4vh auto; padding: 22px; text-align: left; }
+    .skin-manager-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-right: 28px; }
+    .skin-manager-head h3 { margin: 0; color: var(--primary); }
+    .skin-manager-head p { margin: 7px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .skin-manager-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+    .skin-manager-tab.active { background: var(--primary) !important; color: var(--primary-contrast, #fff) !important; border-color: var(--primary) !important; }
+    .skin-manager-view { display: none; }
+    .skin-manager-view.active { display: block; }
+    .skin-source-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+    .skin-source-toolbar input { flex: 1; min-width: 0; padding: 10px; box-sizing: border-box; background: var(--input-bg); color: var(--text); border: 1px solid var(--line); border-radius: 4px; }
+    .skin-source-fixed { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 11px 13px; margin-bottom: 14px; background: var(--surface-dark); border: 1px solid var(--line); border-left: 3px solid var(--primary); border-radius: 6px; }
+    .skin-source-list { display: grid; gap: 8px; margin-bottom: 16px; }
+    .skin-source-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+    .skin-source-name { min-width: 0; overflow-wrap: anywhere; font-family: Consolas, "Courier New", monospace; font-size: 13px; }
+    .skin-source-actions { display: flex; gap: 7px; flex-shrink: 0; }
+    .skin-manager-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+    .skin-manager-card { min-height: 154px; display: flex; flex-direction: column; padding: 14px; background: var(--surface-dark); border: 1px solid var(--line); border-radius: 8px; box-sizing: border-box; }
+    .skin-manager-card.active { border: 2px solid var(--primary); padding: 13px; }
+    .skin-card-title-row { display: flex; align-items: center; gap: 9px; }
+    .skin-color-swatch { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--line); flex: 0 0 18px; }
+    .skin-card-title { font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
+    .skin-card-meta { color: var(--muted); font-size: 12px; margin-top: 7px; overflow-wrap: anywhere; }
+    .skin-card-repo { color: var(--muted); font-size: 12px; line-height: 1.35; margin-top: 3px; overflow-wrap: anywhere; }
+    .skin-card-desc { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 9px 0 12px; flex: 1; }
+    .skin-card-actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+    .skin-state { margin-right: auto; color: var(--muted); font-size: 12px; }
+    .skin-state.active { color: var(--primary); font-weight: 700; }
+    .skin-manager-empty { padding: 28px 16px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 6px; }
+    @media (max-width: 620px) {
+      .skin-manager-modal { width: calc(100vw - 20px); margin: 10px auto; padding: 16px; }
+      .skin-source-toolbar, .skin-source-item { align-items: stretch; flex-direction: column; }
+      .skin-source-actions { justify-content: flex-end; }
+      .skin-manager-grid { grid-template-columns: 1fr; }
+    }
   
     @keyframes btnDownloading {
       0% { background-position: 0 0; }
@@ -376,8 +411,7 @@
       <div>
         <h1><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px; margin-right:8px;"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>千小妹跨次元后厨</h1>
         <div class="subtitle" style="display:flex; align-items:center; gap:10px;">
-        <span>v4.1.8 | 高性能流式数据大屏</span>
-        <span style="color:var(--muted);">|</span>
+        <span>v4.2.1</span>
         <button class="btn btn-small btn-ghost" style="padding:3px 8px; font-size:12px; cursor:pointer;" id="skin-switch-btn" onclick="openSkinModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:3px;"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>主题皮肤: 红枫·凝露</button>
         <span style="display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:12px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>毛玻璃
@@ -581,50 +615,63 @@
   
     <!-- UI Skin Modal -->
   <div id="skinModal" class="modal">
-    <div class="modal-content" style="max-width: 400px; text-align: center;">
-      <span class="close" onclick="document.getElementById('skinModal').style.display='none'">&times;</span>
-      <h3 style="margin-top: 0; color: var(--primary);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:5px;"><circle cx="12" cy="12" r="10"/><circle cx="8.5" cy="10.5" r="1"/><circle cx="15.5" cy="10.5" r="1"/><circle cx="12" cy="15.5" r="1"/></svg>跨次元后厨 - 主题装扮</h3>
-      <p style="color: var(--muted); font-size: 13px; margin-bottom: 20px;">
-        默认主题为「红枫·凝露」毛玻璃风格。全新「秧秧·玄翎」蓝黑毛玻璃已上线；长夜·执剪为经典夜间配色，破晓·引线适合采光良好的环境。顶部滑块可调节背景毛玻璃力度。
-      </p>
-      <div style="text-align: right; margin: -10px 0 8px 0;">
-          <button class="btn btn-small btn-neutral" style="font-size: 12px; margin-right: 5px; opacity: 0.6; cursor: not-allowed;" onclick="fetchSkinIndex()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:3px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>暂未开放</button>
-          <button class="btn btn-small btn-neutral" style="font-size: 12px;" onclick="redownloadSkinBg(event)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:3px;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>重新下载背景</button>
+    <div class="modal-content skin-manager-modal">
+      <span class="close" onclick="closeSkinModal()">&times;</span>
+      <div class="skin-manager-head">
+        <div>
+          <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:5px;"><circle cx="12" cy="12" r="10"/><circle cx="8.5" cy="10.5" r="1"/><circle cx="15.5" cy="10.5" r="1"/><circle cx="12" cy="15.5" r="1"/></svg>跨次元后厨 - 皮肤源管理</h3>
+          <p>内置皮肤始终可用。在线皮肤会先下载配置并预缓存背景，顶部滑块继续控制毛玻璃力度。</p>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+          <button class="btn btn-small btn-neutral" onclick="copySkinAiPrompt()">复制 AI 配色提示词</button>
+          <button class="btn btn-small btn-neutral" onclick="redownloadSkinBg(event)">重新下载当前背景</button>
+        </div>
+      </div>
+      <div class="skin-manager-tabs">
+        <button class="btn btn-small btn-neutral skin-manager-tab active" data-skin-view="builtin" onclick="switchSkinManagerView('builtin', this)">内置皮肤</button>
+        <button class="btn btn-small btn-neutral skin-manager-tab" data-skin-view="official" onclick="switchSkinManagerView('official', this)">官方源</button>
+        <button class="btn btn-small btn-neutral skin-manager-tab" data-skin-view="custom" onclick="switchSkinManagerView('custom', this)">第三方源</button>
+        <button class="btn btn-small btn-neutral skin-manager-tab" data-skin-view="downloaded" onclick="switchSkinManagerView('downloaded', this)">已下载</button>
       </div>
 
-      <div style="display:flex; flex-direction:column; gap:10px;" id="skinCardArea">
-          <div id="skin-card-maple_dew" onclick="applySkin('maple_dew')" style="padding: 15px; background: var(--surface); border: 2px solid var(--primary); border-radius: 8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
-              <span style="font-weight:bold;">
-                  <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #ff6b4a 50%, #5a1e12 50%); vertical-align:-2px; margin-right:8px; border:1px solid #a66;"></span>红枫·凝露 <span style="font-size:11px; color:var(--muted);">默认 · 毛玻璃</span>
-              </span>
-              <span class="skin-state" style="color:var(--primary); font-size:12px;">✓ 正在使用</span>
-          </div>
-          <div id="skin-card-yy_xuanling" onclick="applySkin('yy_xuanling')" style="padding: 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
-              <span style="font-weight:bold;">
-                  <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #4aa3ff 50%, #0a1220 50%); vertical-align:-2px; margin-right:8px; border:1px solid #6a9;"></span>秧秧·玄翎 <span style="font-size:11px; color:var(--muted);">毛玻璃 · 新上线</span>
-              </span>
-              <span class="skin-state" style="color:var(--muted); font-size:12px;">点击使用</span>
-          </div>
-          <div id="skin-card-chisa_red_black" onclick="applySkin('chisa_red_black')" style="padding: 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
-              <span style="font-weight:bold;">
-                  <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #d32f2f 50%, #121212 50%); vertical-align:-2px; margin-right:8px; border:1px solid #555;"></span>长夜·执剪 <span style="font-size:11px; color:var(--muted);">夜间</span>
-              </span>
-              <span class="skin-state" style="color:var(--muted); font-size:12px;">点击使用</span>
-          </div>
-          <div id="skin-card-chisa_red_white" onclick="applySkin('chisa_red_white')" style="padding: 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
-              <span style="font-weight:bold;">
-                  <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #c62828 50%, #f7f5f2 50%); vertical-align:-2px; margin-right:8px; border:1px solid #bbb;"></span>破晓·引线 <span style="font-size:11px; color:var(--muted);">日间</span>
-              </span>
-              <span class="skin-state" style="color:var(--muted); font-size:12px;">点击使用</span>
-          </div>
+      <div id="skin-view-builtin" class="skin-manager-view active">
+        <div id="skinBuiltinGrid" class="skin-manager-grid"></div>
+      </div>
+      <div id="skin-view-official" class="skin-manager-view">
+        <div class="skin-source-fixed">
+          <div><strong>官方固定源</strong><div class="skin-card-meta" id="officialSkinSourceLabel"></div></div>
+          <button class="btn btn-small btn-neutral" onclick="fetchSkinIndex('official')">刷新</button>
+        </div>
+        <div id="skinOfficialGrid" class="skin-manager-grid"></div>
+      </div>
+      <div id="skin-view-custom" class="skin-manager-view">
+        <div class="skin-source-toolbar">
+          <input id="skinSourceUrl" type="text" value="https://github.com/dddada123/chisa_dlc_store_test01" placeholder="https://github.com/owner/repo" aria-label="GitHub 皮肤源仓库地址">
+          <button class="btn btn-small" onclick="connectSkinSource()">连接并保存</button>
+        </div>
+        <div id="skinSourceList" class="skin-source-list"></div>
+        <div id="skinCustomGrid" class="skin-manager-grid"></div>
+      </div>
+      <div id="skin-view-downloaded" class="skin-manager-view">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+          <button class="btn btn-small btn-neutral" onclick="loadDownloadedSkins(true)">刷新本地列表</button>
+        </div>
+        <div id="skinDownloadedGrid" class="skin-manager-grid"></div>
       </div>
     </div>
   </div>
   
   <script>
-    function openSkinModal() {
-        document.getElementById('skinModal').style.display='flex';
+    async function openSkinModal() {
+        document.getElementById("skinModal").style.display = "flex";
+        document.getElementById("officialSkinSourceLabel").textContent = OFFICIAL_SKIN_SOURCE;
+        renderBuiltinSkins();
         renderSkinModalState();
+        await loadSkinSources(false);
+    }
+
+    function closeSkinModal() {
+        document.getElementById("skinModal").style.display = "none";
     }
 
     /* ===== 皮肤系统 =====
@@ -636,7 +683,7 @@
             vars: {
                 "--hover-tint": "rgba(211, 47, 47, 0.16)",
                 "--bg": "#121212", "--panel": "rgba(30, 30, 30, 0.85)", "--card": "rgba(45, 45, 45, 0.75)",
-                "--text": "#ffffff", "--muted": "#a0a0a0", "--primary": "#d32f2f", "--primary-hover": "#f44336",
+                "--text": "#ffffff", "--muted": "#a0a0a0", "--primary": "#d32f2f", "--primary-hover": "#f44336", "--primary-contrast": "#ffffff",
                 "--line": "#333333", "--shadow": "0 10px 24px rgba(0, 0, 0, 0.6)",
                 "--surface": "#2a2a2a", "--surface-dark": "#1a1a1a", "--input-bg": "#1e1e1e",
                 "--overlay": "rgba(18, 18, 18, 0.7)"
@@ -650,7 +697,7 @@
             vars: {
                 "--hover-tint": "rgba(74, 163, 255, 0.16)",
                 "--bg": "#0a1220", "--panel": "rgba(18, 32, 54, 0.42)", "--card": "rgba(26, 44, 70, 0.38)",
-                "--text": "#e2eeff", "--muted": "#8fa8cc", "--primary": "#4aa3ff", "--primary-hover": "#73bdff",
+                "--text": "#e2eeff", "--muted": "#8fa8cc", "--primary": "#4aa3ff", "--primary-hover": "#73bdff", "--primary-contrast": "#111111",
                 "--line": "rgba(110, 170, 255, 0.22)", "--shadow": "0 10px 24px rgba(2, 8, 18, 0.5)",
                 "--surface": "rgba(22, 38, 62, 0.45)", "--surface-dark": "rgba(14, 26, 44, 0.5)",
                 "--input-bg": "#16263e", "--overlay": "rgba(6, 12, 24, 0.3)"
@@ -661,7 +708,7 @@
             vars: {
                 "--hover-tint": "rgba(198, 40, 40, 0.10)",
                 "--bg": "#f7f5f2", "--panel": "rgba(255, 255, 255, 0.92)", "--card": "rgba(242, 235, 227, 0.95)",
-                "--text": "#212121", "--muted": "#6e6e6e", "--primary": "#c62828", "--primary-hover": "#e53935",
+                "--text": "#212121", "--muted": "#6e6e6e", "--primary": "#c62828", "--primary-hover": "#e53935", "--primary-contrast": "#ffffff",
                 "--line": "#e3ded8", "--shadow": "0 10px 24px rgba(120, 40, 40, 0.14)",
                 "--surface": "#ffffff", "--surface-dark": "#fdfbf8", "--input-bg": "#ffffff",
                 "--overlay": "rgba(250, 246, 240, 0.72)"
@@ -675,62 +722,396 @@
             vars: {
                 "--hover-tint": "rgba(255, 107, 74, 0.16)",
                 "--bg": "#241009", "--panel": "rgba(58, 26, 18, 0.42)", "--card": "rgba(74, 32, 22, 0.38)",
-                "--text": "#ffece2", "--muted": "#d9a08d", "--primary": "#ff6b4a", "--primary-hover": "#ff8a6b",
+                "--text": "#ffece2", "--muted": "#d9a08d", "--primary": "#ff6b4a", "--primary-hover": "#ff8a6b", "--primary-contrast": "#1d0c06",
                 "--line": "rgba(255, 150, 120, 0.22)", "--shadow": "0 10px 24px rgba(20, 5, 2, 0.5)",
                 "--surface": "rgba(64, 28, 20, 0.45)", "--surface-dark": "rgba(44, 18, 12, 0.5)",
                 "--input-bg": "#3a1a12", "--overlay": "rgba(26, 9, 5, 0.3)"
             }
         }
     };
+    var OFFICIAL_SKIN_SOURCE = "dddada123/astrbot_plugin_chisa_still_eating_photo";
+    var EMBEDDED_SKIN_IDS = ["maple_dew", "yy_xuanling", "chisa_red_black", "chisa_red_white"];
+    var SKIN_VAR_KEYS = ["--hover-tint", "--bg", "--panel", "--card", "--text", "--muted", "--primary", "--primary-hover", "--primary-contrast", "--line", "--shadow", "--surface", "--surface-dark", "--input-bg", "--overlay"];
     var currentSkinId = "maple_dew";
+    var currentSkinSource = "";
+    var skinSources = [OFFICIAL_SKIN_SOURCE];
+    var skinApplySequence = 0;
+    var skinInitPromise = null;
+    var currentSkinBackgroundObjectUrl = "";
 
-    function getSkinDef(id) { return SKIN_REGISTRY[id]; }
+    function skinRegistryKey(id, source) {
+        var normalizedSource = normalizeRepo(source) || String(source || "").trim();
+        return normalizedSource ? normalizedSource + "::" + id : id;
+    }
+    function getSkinDef(id, source) {
+        return SKIN_REGISTRY[skinRegistryKey(id, source)] || SKIN_REGISTRY[id];
+    }
+    function setSkinDef(skin) {
+        if (!skin || !skin.id) return;
+        SKIN_REGISTRY[skinRegistryKey(skin.id, skin._source)] = skin;
+    }
+    function deleteSkinDef(id, source) {
+        delete SKIN_REGISTRY[skinRegistryKey(id, source)];
+    }
+    function isEmbeddedSkin(id) { return EMBEDDED_SKIN_IDS.indexOf(id) !== -1; }
 
-    var _chisa_applying_skin = false;
-    function applySkin(skinId, skipSave) {
-        if (_chisa_applying_skin) return;
-        _chisa_applying_skin = true;
-        var skin = getSkinDef(skinId);
-        if (!skin) { _chisa_applying_skin = false; return; }
-        var root = document.documentElement;
-        for (var k in skin.vars) {
-            root.style.setProperty(k, skin.vars[k]);
+    function parseSkinResponse(res) {
+        var data = parseSdkResponse(res);
+        var depth = 0;
+        while (typeof data === "string" && depth < 5) {
+            try { data = JSON.parse(data); } catch (e) { return null; }
+            depth++;
         }
-        // v4.0.03: 毛玻璃标记与远程背景 (先应用面板配色, 背景图异步渐进加载)
-        document.body.classList.remove("skin-glass");
-        if (skin.glass) document.body.classList.add("skin-glass");
-        if (skin.remoteBg) {
-            var sdk = getSdk();
-            if (sdk) {
-                sdk.apiGet("skin_asset", { file: skin.remoteBg }).then(function(res) {
-                    var d = parseSdkResponse(res);
-                    if (d && d.status === "success" && d.data_url) {
-                        root.style.setProperty("--bg-image", "url('" + d.data_url + "')");
-                    }
-                }).catch(function() {});
+        if (data && typeof data === "object" && !Array.isArray(data) &&
+            (data.status === "ok" || data.code === 200) && Object.prototype.hasOwnProperty.call(data, "data")) {
+            data = parseSdkResponse(data.data);
+        }
+        return data && typeof data === "object" ? data : null;
+    }
+
+    function skinSuccessData(res) {
+        var parsed = parseSkinResponse(res);
+        if (!parsed) return null;
+        if (parsed.status === "success" || parsed.status === "ok") {
+            return Object.prototype.hasOwnProperty.call(parsed, "data") ? parsed.data : parsed;
+        }
+        // AstrBot bridge versions may already unwrap a successful response.
+        // Accept only recognizable skin business values, never arbitrary errors.
+        if (Array.isArray(parsed)) return parsed;
+        if (typeof parsed === "object" &&
+            (Object.prototype.hasOwnProperty.call(parsed, "id") ||
+             Object.prototype.hasOwnProperty.call(parsed, "skins") ||
+             Object.prototype.hasOwnProperty.call(parsed, "data_url") ||
+             parsed.saved === true)) return parsed;
+        return null;
+    }
+
+    function skinListFromResponse(res) {
+        var data = skinSuccessData(res);
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray(data.skins)) return data.skins;
+        if (data && typeof data === "object") {
+            var values = [];
+            for (var key in data) {
+                if (Object.prototype.hasOwnProperty.call(data, key) && data[key] && typeof data[key] === "object") values.push(data[key]);
             }
-        } else {
-            root.style.removeProperty("--bg-image");
+            return values;
         }
-        currentSkinId = skinId;
-        renderSkinModalState();
+        return null;
+    }
+
+    function normalizeRepo(value) {
+        var text = String(value || "").trim().replace(/\.git\/?$/, "").replace(/\/$/, "");
+        var match = text.match(/^(?:https?:\/\/)?github\.com\/([A-Za-z0-9_-]+)\/([A-Za-z0-9_.-]+)$/i);
+        if (!match) match = text.match(/^([A-Za-z0-9_-]+)\/([A-Za-z0-9_.-]+)$/);
+        return match ? match[1] + "/" + match[2] : "";
+    }
+
+    function splitSkinSource(source) {
+        var normalized = normalizeRepo(source) || String(source || "").trim();
+        var separator = normalized.indexOf("/");
+        if (separator <= 0 || separator >= normalized.length - 1) {
+            return { owner: normalized, repo: "" };
+        }
+        return { owner: normalized.slice(0, separator), repo: normalized.slice(separator + 1) };
+    }
+
+    function assetBasename(path) {
+        var clean = String(path || "").split(/[?#]/)[0].replace(/\\/g, "/");
+        return clean ? clean.substring(clean.lastIndexOf("/") + 1) : "";
+    }
+
+    function normalizeSkinAssetPath(path) {
+        var clean = String(path || "").split(/[?#]/)[0].replace(/\\/g, "/").trim();
+        if (!clean) return "";
+        if (!/^skin\/[A-Za-z0-9][A-Za-z0-9_.-]{0,110}$/.test(clean)) {
+            var basename = assetBasename(clean);
+            clean = basename ? "skin/" + basename : "";
+        }
+        return /\.(?:jpg|jpeg|png|webp|gif|bmp|tiff|tif|svg|ico)$/i.test(clean) ? clean : "";
+    }
+
+    function getSkinDownloadNode() {
+        var select = document.getElementById("dlc-node");
+        return select && select.value ? String(select.value).trim() : "direct";
+    }
+
+    function frontendLog(message, level) {
+        var text = String(message || "");
+        if (!text) return;
+        var fn = console[level] || console.log;
+        fn.call(console, "[Chisa Skin] " + text);
+        var sdk = getSdk();
+        if (sdk) sdk.apiPost("frontend_log", { msg: (level ? level.toUpperCase() + " " : "") + text }).catch(function(){});
+    }
+
+    var SKIN_AI_PROMPT = "你是一名前端主题配色设计师。请根据我给出的风格描述输出一个完整、可直接用于本项目的 JSON 皮肤配置。\\n\\n" +
+        "硬性要求：只输出 JSON，不要 Markdown、解释或代码块；顶层必须包含 schema_version=1、id、name、author、type、glass、vars；id 使用小写字母/数字/下划线。\\n" +
+        "vars 只能包含以下键：--hover-tint、--bg、--panel、--card、--text、--muted、--primary、--primary-hover、--primary-contrast、--line、--shadow、--surface、--surface-dark、--input-bg、--overlay。\\n" +
+        "必须同时提供 --text、--bg、--primary、--primary-hover、--primary-contrast；所有颜色使用 #rrggbb 或 rgba(r,g,b,a)。\\n" +
+        "对比度要求：--text 在 --bg、--panel、--card 上清晰可读；--muted 不能与面板融合；--primary-hover 必须与 --primary 有明显亮度差；使用 --primary 的按钮和选中标签上的文字统一使用 --primary-contrast，确保高亮背景下文字清晰，必要时选择 #111111，否则选择 #ffffff。\\n" +
+        "半透明要求：--panel、--card、--surface、--surface-dark、--overlay 使用合理 alpha；--input-bg 使用不透明颜色；--hover-tint alpha 为 0.08 到 0.20；--line 必须能勾勒边界。\\n\\n" +
+        "风格描述：在这里替换为你的主题风格。";
+
+    function copySkinAiPrompt() {
+        var fallbackCopy = function() {
+            var area = document.createElement("textarea");
+            area.value = SKIN_AI_PROMPT; document.body.appendChild(area); area.select();
+            var copied = false;
+            try { copied = document.execCommand("copy"); } catch (ignore) {}
+            area.remove();
+            return copied;
+        };
+        var copied = false;
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(SKIN_AI_PROMPT).then(function() {
+                    showToast("新的 AI 配色提示词已复制", "success");
+                    frontendLog("已复制新的 AI 配色提示词");
+                }).catch(function() {
+                    var ok = fallbackCopy();
+                    showToast(ok ? "新的 AI 配色提示词已复制" : "复制失败，请查看控制台日志", ok ? "success" : "error");
+                });
+                return;
+            }
+            copied = fallbackCopy();
+        } catch (e) {
+            copied = fallbackCopy();
+        }
+        showToast(copied ? "新的 AI 配色提示词已复制" : "复制失败，请查看控制台日志", copied ? "success" : "error");
+        if (copied) frontendLog("已复制新的 AI 配色提示词");
+    }
+
+    function isGlassSkinValue(raw) {
+        if (!raw || typeof raw !== "object") return false;
+        var typeValue = String(raw.type || raw.skin_type || raw.theme_type || "").trim().toLowerCase();
+        var glassValue = raw.glass;
+        return typeValue === "glass" || typeValue === "frosted" || typeValue === "frosted-glass" ||
+            typeValue === "transparent" || typeValue === "毛玻璃" || glassValue === true ||
+            ["1", "true", "yes", "glass", "frosted", "毛玻璃"].indexOf(String(glassValue || "").trim().toLowerCase()) !== -1;
+    }
+
+    function inferPrimaryContrast(primary, hover) {
+        function rgb(value) {
+            var match = String(value || "").trim().match(/^#([0-9a-f]{6})$/i);
+            if (!match) return null;
+            return [parseInt(match[1].slice(0, 2), 16), parseInt(match[1].slice(2, 4), 16), parseInt(match[1].slice(4, 6), 16)];
+        }
+        function luminance(color) {
+            var channels = color.map(function(channel) {
+                var value = channel / 255;
+                return value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+        }
+        function ratio(first, second) {
+            var lighter = Math.max(luminance(first), luminance(second));
+            var darker = Math.min(luminance(first), luminance(second));
+            return (lighter + 0.05) / (darker + 0.05);
+        }
+        var colors = [rgb(primary), rgb(hover)].filter(Boolean);
+        if (!colors.length) return "#ffffff";
+        var dark = rgb("#111111");
+        var light = rgb("#ffffff");
+        var darkMinimum = Math.min.apply(null, colors.map(function(color) { return ratio(dark, color); }));
+        var lightMinimum = Math.min.apply(null, colors.map(function(color) { return ratio(light, color); }));
+        return darkMinimum >= lightMinimum ? "#111111" : "#ffffff";
+    }
+
+    function normalizeDownloadedSkin(raw, sourceHint) {
+        if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+        var id = String(raw.id || raw.skin_id || "").trim();
+        if (!/^[a-z0-9_]{1,40}$/.test(id) || !raw.vars || typeof raw.vars !== "object") return null;
+        var vars = {};
+        for (var i = 0; i < SKIN_VAR_KEYS.length; i++) {
+            var key = SKIN_VAR_KEYS[i];
+            if (typeof raw.vars[key] === "string") vars[key] = raw.vars[key];
+        }
+        if (!Object.keys(vars).length) return null;
+        if (!vars["--primary-contrast"]) {
+            vars["--primary-contrast"] = inferPrimaryContrast(vars["--primary"], vars["--primary-hover"]);
+        }
+        var normalized = {
+            id: id,
+            skin_id: id,
+            name: String(raw.name || id),
+            author: String(raw.author || ""),
+            desc: String(raw.desc || ""),
+            vars: vars,
+            glass: isGlassSkinValue(raw)
+        };
+        if (Array.isArray(raw.quotes)) normalized.quotes = raw.quotes.slice(0, 6);
+        var bg = raw.assets && typeof raw.assets === "object" ? raw.assets.bg : null;
+        if (!bg) bg = raw.remoteBg || raw.bg || raw.background;
+        var normalizedBg = normalizeSkinAssetPath(bg);
+        if (normalizedBg) normalized.remoteBg = normalizedBg;
+        if (Object.prototype.hasOwnProperty.call(raw, "_source")) normalized._source = raw._source;
+        else if (sourceHint) normalized._source = sourceHint;
+        if (Object.prototype.hasOwnProperty.call(raw, "is_custom")) normalized.is_custom = raw.is_custom;
+        return normalized;
+    }
+
+    function updateSkinSwitchLabel(skin) {
         var skinBtn = document.getElementById("skin-switch-btn");
-        if (skinBtn) skinBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:3px;"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>主题皮肤: ' + skin.name;
-        // v4.0.04: 皮肤偏好持久化 (后端保存, sandbox 下 localStorage 不可用)
-        if (!skipSave) {
-            // 双通道: localStorage 可用环境即时生效; 后端为跨刷新主通道
-            safeStorageSet("chisa_skin_id", skinId);
-            var sdkPs = getSdk();
-            if (sdkPs) {
-                var blurVal = document.getElementById("bgBlurRange");
-                sdkPs.apiPost("save_skin_pref", { skin_id: skinId, bg_blur: blurVal ? parseInt(blurVal.value, 10) || 0 : 0})
-                    .then(function() { console.log("[Chisa Skin] 偏好已保存:", skinId); })
-                    .catch(function() {
-                        console.warn("[Chisa Skin] 偏好保存失败:", skinId);
-                        showToast("皮肤偏好保存失败，刷新后可能恢复默认", "error");
-                    });
+        if (!skinBtn) return;
+        skinBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:3px;"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>';
+        skinBtn.appendChild(document.createTextNode("主题皮肤: " + skin.name));
+    }
+
+    function releaseSkinBackgroundObjectUrl() {
+        if (!currentSkinBackgroundObjectUrl) return;
+        try { URL.revokeObjectURL(currentSkinBackgroundObjectUrl); } catch (e) {}
+        currentSkinBackgroundObjectUrl = "";
+    }
+
+    function decodeSkinAssetChunk(encoded) {
+        var binary = atob(encoded);
+        var bytes = new Uint8Array(binary.length);
+        for (var index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+        return bytes;
+    }
+
+    async function assembleChunkedSkinBackground(sdk, payload, descriptor, expectedApplyId) {
+        var count = Number(descriptor.chunk_count);
+        var expectedSize = Number(descriptor.size);
+        if (!Number.isInteger(count) || count < 1 || count > 512 || !Number.isFinite(expectedSize) || expectedSize < 1 || expectedSize > 96 * 1024 * 1024) {
+            throw new Error("无效的背景分块描述");
+        }
+        var parts = new Array(count);
+        var nextIndex = 0;
+        async function worker() {
+            while (true) {
+                var index = nextIndex++;
+                if (index >= count) return;
+                if (expectedApplyId && expectedApplyId !== skinApplySequence) return;
+                var chunkPayload = {
+                    skin_id: payload.skin_id,
+                    file: payload.file,
+                    source: payload.source,
+                    index: String(index)
+                };
+                var chunk = skinSuccessData(await sdk.apiGet("skin_asset_chunk", chunkPayload));
+                if (!chunk || Number(chunk.index) !== index || typeof chunk.chunk !== "string") {
+                    throw new Error("背景分块 " + index + " 返回无效");
+                }
+                parts[index] = decodeSkinAssetChunk(chunk.chunk);
             }
         }
+        var workers = [];
+        for (var workerIndex = 0; workerIndex < Math.min(4, count); workerIndex++) workers.push(worker());
+        await Promise.all(workers);
+        if (expectedApplyId && expectedApplyId !== skinApplySequence) return null;
+        var blob = new Blob(parts, { type: descriptor.mime || "application/octet-stream" });
+        if (blob.size !== expectedSize) throw new Error("背景分块大小校验失败");
+        return URL.createObjectURL(blob);
+    }
+
+    async function requestSkinBackground(skinId, skin, force, expectedApplyId) {
+        var root = document.documentElement;
+        if (!skin.remoteBg) {
+            root.style.removeProperty("--bg-image");
+            releaseSkinBackgroundObjectUrl();
+            return true;
+        }
+        var sdk = getSdk();
+        if (!sdk) {
+            root.style.removeProperty("--bg-image");
+            releaseSkinBackgroundObjectUrl();
+            return false;
+        }
+        var payload = { skin_id: skinId, file: skin.remoteBg, source: skin._source || "", node: getSkinDownloadNode() };
+        if (force) payload.force = "1";
+        frontendLog("开始拉取背景: " + skinId + " " + skin.remoteBg + " via " + payload.node + (force ? " (force)" : ""));
+        try {
+            var data = skinSuccessData(await sdk.apiGet("skin_asset", payload));
+            if (expectedApplyId && expectedApplyId !== skinApplySequence) return false;
+            if (data && data.delivery === "chunked") {
+                var objectUrl = await assembleChunkedSkinBackground(sdk, payload, data, expectedApplyId);
+                if (!objectUrl) return false;
+                if (expectedApplyId && expectedApplyId !== skinApplySequence) {
+                    URL.revokeObjectURL(objectUrl);
+                    return false;
+                }
+                root.style.setProperty("--bg-image", 'url("' + objectUrl + '")');
+                releaseSkinBackgroundObjectUrl();
+                currentSkinBackgroundObjectUrl = objectUrl;
+                frontendLog("背景分块加载成功: " + skinId + " size=" + data.size + " chunks=" + data.chunk_count + " cached=" + !!data.cached);
+                return true;
+            }
+            if (data && data.data_url) {
+                root.style.setProperty("--bg-image", "url('" + data.data_url + "')");
+                releaseSkinBackgroundObjectUrl();
+                frontendLog("背景兼容加载成功: " + skinId + " cached=" + !!data.cached);
+                return true;
+            }
+        } catch (e) {
+            frontendLog("背景请求异常: " + (e && e.message ? e.message : e), "error");
+        }
+        frontendLog("背景加载失败: " + skinId + " " + skin.remoteBg, "error");
+        if (expectedApplyId && expectedApplyId !== skinApplySequence) return false;
+        root.style.removeProperty("--bg-image");
+        releaseSkinBackgroundObjectUrl();
+        return false;
+    }
+
+    async function saveCurrentSkinPreference() {
+        var sdk = getSdk();
+        if (!sdk || !currentSkinId) return false;
+        var blurVal = document.getElementById("bgBlurRange");
+        var blurValue = blurVal ? parseInt(blurVal.value, 10) || 0 : 0;
+        safeStorageSet("chisa_skin_id", currentSkinId);
+        safeStorageSet("chisa_skin_source", currentSkinSource || "");
+        safeStorageSet("chisa_skin_blur", String(blurValue));
+        var payload = {
+            skin_id: currentSkinId,
+            bg_blur: blurValue,
+            source: currentSkinSource || ""
+        };
+        try {
+            var raw = await sdk.apiPost("save_skin_pref", payload);
+            var parsed = parseSkinResponse(raw);
+            if (parsed && parsed.status === "error") {
+                console.warn("[Chisa Skin] 偏好保存被后端拒绝:", parsed.message || "unknown error");
+                return false;
+            }
+            // apiPost may return the bridge's unwrapped data object, or the
+            // complete envelope depending on the AstrBot console version.
+            if (parsed && parsed.status === "success") return true;
+            if (parsed && parsed.status === "ok" && parsed.data) parsed = parsed.data;
+            return !!(parsed && parsed.saved === true);
+        } catch (e) {
+            console.warn("[Chisa Skin] 偏好保存请求失败:", e && e.message ? e.message : e);
+            return false;
+        }
+    }
+
+    async function applySkin(skinId, skipSave, skinSource) {
+        var skin = getSkinDef(skinId, skinSource);
+        if (!skin) return false;
+        var applyId = ++skinApplySequence;
+        var root = document.documentElement;
+        for (var i = 0; i < SKIN_VAR_KEYS.length; i++) {
+            var key = SKIN_VAR_KEYS[i];
+            root.style.removeProperty(key);
+            if (skin.vars && typeof skin.vars[key] === "string") root.style.setProperty(key, skin.vars[key]);
+        }
+        document.body.classList.toggle("skin-glass", !!skin.glass);
+        currentSkinId = skinId;
+        currentSkinSource = skin._source || "";
+        updateSkinSwitchLabel(skin);
+        renderSkinModalState();
+
+        var backgroundOk = await requestSkinBackground(skinId, skin, false, applyId);
+        if (applyId !== skinApplySequence) return false;
+        if (!skipSave) {
+            safeStorageSet("chisa_skin_id", skinId);
+            safeStorageSet("chisa_skin_source", currentSkinSource);
+            var blurForStorage = document.getElementById("bgBlurRange");
+            safeStorageSet("chisa_skin_blur", blurForStorage ? String(parseInt(blurForStorage.value, 10) || 0) : "0");
+            var saved = await saveCurrentSkinPreference();
+            if (!saved) showToast("皮肤偏好保存失败，刷新后可能恢复默认", "error");
+        }
+
         if (skin.quotes && skin.quotes.length) {
             showMascotBubble(skin.quotes[Math.floor(Math.random() * skin.quotes.length)]);
         } else if (skinId === "chisa_red_white") {
@@ -739,27 +1120,28 @@
             showMascotBubble("秧秧·玄翎已就位！风里都藏着答案的味道呢~");
         } else if (skinId === "maple_dew") {
             showMascotBubble("红枫·凝露已就位！枫叶正在为你飘落哦~");
-        } else {
+        } else if (skinId === "chisa_red_black") {
             showMascotBubble("长夜·执剪归来！这才是千咲的本体配色嘛~");
         }
-    
+
         var sdkLogger = getSdk();
         if (sdkLogger) {
-            sdkLogger.apiPost("frontend_log", { msg: "🎨 成功在前端应用皮肤: " + skinId + " (skipSave=" + skipSave + ")" }).catch(function(){});
+            sdkLogger.apiPost("frontend_log", { msg: "成功在前端应用皮肤: " + skinId + " (background=" + backgroundOk + ")" }).catch(function(){});
         }
-        
-        _chisa_applying_skin = false;
+        return backgroundOk;
     }
 
     function renderSkinModalState() {
-        var cards = document.querySelectorAll("#skinCardArea .skin-state");
+        var cards = document.querySelectorAll(".skin-manager-card[data-skin-id]");
         for (var i = 0; i < cards.length; i++) {
-            var card = cards[i].parentElement;
-            var cardId = card.id ? card.id.replace("skin-card-", "") : "";
-            var active = (cardId === currentSkinId);
-            cards[i].textContent = active ? "✓ 正在使用" : "点击使用";
-            cards[i].style.color = active ? "var(--primary)" : "var(--muted)";
-            card.style.border = active ? "2px solid var(--primary)" : "1px solid var(--line)";
+            var cardSource = cards[i].getAttribute("data-skin-source") || "";
+            var active = cards[i].getAttribute("data-skin-id") === currentSkinId && cardSource === (currentSkinSource || "");
+            cards[i].classList.toggle("active", active);
+            var state = cards[i].querySelector(".skin-state");
+            if (state) {
+                state.textContent = active ? "正在使用" : "";
+                state.classList.toggle("active", active);
+            }
         }
     }
 
@@ -779,128 +1161,516 @@
         }
     }
     
-    // v4.1.7: 独立的手动保存函数
-    function saveBlurPref() {
+    // v4.1.9: 手动保存当前皮肤、毛玻璃力度和来源
+    async function saveBlurPref() {
         if (!currentSkinId) return;
-        var sdk = getSdk();
-        if (sdk) {
-            var rng = document.getElementById("bgBlurRange");
-            var val = rng ? parseInt(rng.value, 10) || 0 : 0;
-            showToast("正在保存皮肤偏好...", "");
-            sdk.apiPost("save_skin_pref", { skin_id: currentSkinId, bg_blur: val })
-                .then(function() { showToast("偏好保存成功！", "success"); })
-                .catch(function() { showToast("偏好保存失败", "error"); });
-        }
+        showToast("正在保存皮肤偏好...", "");
+        var saved = await saveCurrentSkinPreference();
+        showToast(saved ? "偏好保存成功！" : "偏好保存失败", saved ? "success" : "error");
     }
 
-    // v4.0.04: 初始化皮肤 - 后端有偏好则恢复用户选择, 否则默认红枫·凝露
-    var _skinInitLock = false;
-    function initSkinFromPref(onComplete) {
-        if (_skinInitLock) { if (onComplete) onComplete(); return; }
-        _skinInitLock = true;
-        
-        var finish = function() {
-            if (onComplete) {
-                var cb = onComplete;
-                onComplete = null;
-                cb();
-            }
-        };
+    function extractSkinPreference(raw) {
+        var parsed = parseSkinResponse(raw);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+        if (parsed.status === "success" || parsed.status === "ok") {
+            var data = parsed.data;
+            return data && typeof data === "object" && !Array.isArray(data) ? data : null;
+        }
+        if (typeof parsed.skin_id === "string") return parsed;
+        if (parsed.data && typeof parsed.data === "object" && typeof parsed.data.skin_id === "string") return parsed.data;
+        return null;
+    }
 
-        var fallback = function(reason) {
-            console.warn("[Chisa Skin] 触发兜底加载, 理由:", reason);
-            var localId = safeStorageGet("chisa_skin_id");
-            if (localId && SKIN_REGISTRY[localId]) {
-                applySkin(localId, true);
-            } else {
-                applySkin("maple_dew", true);
-            }
-            finish();
-        };
-
-        var sdk = getSdk();
-        if (!sdk) { fallback("SDK未就绪"); return; }
-        
-        // 废除 800ms 重试与花里胡哨的判断，直接“鸭子类型”暴力抓取！
-        sdk.apiGet("skin_pref", {}).then(function(res) {
-            var data = parseSdkResponse(res);
-            
-            // 极简提取：不管是包在哪一层，只要找到 skin_id，就是成功！
-            var sid = null;
-            var blur = 0;
-            
-            if (data && data.skin_id) {
-                sid = data.skin_id;
-                blur = data.bg_blur;
-            } else if (data && data.data && data.data.skin_id) {
-                sid = data.data.skin_id;
-                blur = data.data.bg_blur;
-            }
-            
-            if (sid && typeof sid === "string") {
-                console.log("[Chisa Skin] 🎯 成功抓取到持久化偏好:", sid, "blur:", blur);
-                if (SKIN_REGISTRY[sid]) {
-                    // 已知皮肤，直接用！
-                    if (typeof blur !== "undefined") setBgBlur(blur, false);
-                    applySkin(sid, true);
-                    finish();
-                } else {
-                    // 未知皮肤，尝试网络拉取配置 (一次过，不重试)
-                    sdk.apiPost("skin_get", { id: sid }).then(function(res2) {
-                        var sData = parseSdkResponse(res2);
-                        if (sData && sData.skin_id) {
-                            SKIN_REGISTRY[sid] = sData;
-                            if (typeof blur !== "undefined") setBgBlur(blur, false);
-                            applySkin(sid, true);
-                        } else if (sData && sData.data && sData.data.skin_id) {
-                            SKIN_REGISTRY[sid] = sData.data;
-                            if (typeof blur !== "undefined") setBgBlur(blur, false);
-                            applySkin(sid, true);
-                        } else {
-                            fallback("未知皮肤拉取配置失败");
-                            return;
-                        }
-                        finish();
-                    }).catch(function(e) {
-                        fallback("未知皮肤拉取网络异常");
-                    });
-                }
-            } else {
-                // 没有找到有效的 skin_id，说明没存过偏好或者是损坏的数据
-                fallback("未找到有效皮肤偏好数据");
-            }
-        }).catch(function(e) {
-            fallback("网络拉取偏好异常");
+    function applySkinInBackground(sid, source, reason) {
+        applySkin(sid, true, source).then(function(backgroundOk) {
+            frontendLog((reason || "后台皮肤恢复") + ": " + sid + " background=" + backgroundOk);
+        }).catch(function(error) {
+            frontendLog((reason || "后台皮肤恢复") + "异常: " + (error.message || error), "error");
         });
     }
 
-    // v4.0.08: 拉取皮肤仓库索引并渲染创意工坊皮肤分区 (v4.1.2: 暂未开放)
-    function fetchSkinIndex() {
-        showToast("在线皮肤功能暂未开放", "info");
+    async function restoreSkinDefinition(sdk, sid, source) {
+        var existing = getSkinDef(sid, source);
+        if (!existing || (!isEmbeddedSkin(sid) && source && existing._source !== source)) {
+            var skinResponse = await sdk.apiPost("skin_get", { id: sid, source: source, node: getSkinDownloadNode() });
+            var dynamicSkin = normalizeDownloadedSkin(skinSuccessData(skinResponse), source);
+            if (!dynamicSkin || dynamicSkin.id !== sid) throw new Error("动态皮肤配置响应错误");
+            setSkinDef(dynamicSkin);
+        }
+        // Theme variables are applied synchronously inside applySkin. Background
+        // transport continues independently so startup data rendering never waits for it.
+        applySkinInBackground(sid, source, "恢复皮肤偏好");
+        return true;
     }
 
-    // v4.1.0: 强制重新下载当前皮肤的背景图 (走当前下载引擎, 覆盖本地缓存)
-    function redownloadSkinBg(ev) {
-        if (ev) ev.stopPropagation();
-        var skin = getSkinDef(currentSkinId);
-        if (!skin || !skin.remoteBg) {
-            showToast("当前皮肤为纯色主题，无需下载背景哦~", "");
+    // Restore browser-local preference first. Only explicit missing state uses the built-in default.
+    function initSkinFromPref(onComplete) {
+        if (!skinInitPromise) {
+            skinInitPromise = (async function() {
+                var sdk = getSdk();
+                if (!sdk) {
+                    frontendLog("初始化终止: SDK 未就绪", "error");
+                    return false;
+                }
+
+                var localId = String(safeStorageGet("chisa_skin_id") || "").trim();
+                var localSource = normalizeRepo(safeStorageGet("chisa_skin_source") || "");
+                var localBlur = safeStorageGet("chisa_skin_blur");
+                if (/^[a-z0-9_]{1,40}$/.test(localId)) {
+                    if (localBlur !== null && localBlur !== "") setBgBlur(localBlur, false);
+                    try {
+                        await restoreSkinDefinition(sdk, localId, localSource);
+                        frontendLog("优先恢复本地皮肤偏好: " + localId);
+                        return true;
+                    } catch (localError) {
+                        frontendLog("本地皮肤缓存无法恢复，继续读取后端偏好: " + (localError.message || localError), "warn");
+                    }
+                }
+
+                var rawResponse;
+                try {
+                    rawResponse = await sdk.apiGet("skin_pref", {});
+                } catch (error) {
+                    frontendLog("偏好请求失败: " + (error.message || error), "error");
+                    return false;
+                }
+                var parsed = parseSkinResponse(rawResponse);
+                if (parsed && parsed.status === "missing") {
+                    frontendLog("未找到持久化偏好，后台加载红枫默认主题");
+                    applySkinInBackground("maple_dew", "", "加载默认皮肤");
+                    return true;
+                }
+                var pref = extractSkinPreference(rawResponse);
+                if (!pref) {
+                    frontendLog("偏好响应中没有有效 skin_id", "error");
+                    return false;
+                }
+                var sid = String(pref.skin_id || "").trim();
+                if (!/^[a-z0-9_]{1,40}$/.test(sid)) {
+                    frontendLog("偏好 skin_id 无效: " + sid, "error");
+                    return false;
+                }
+                setBgBlur(pref.bg_blur, false);
+                var savedSource = normalizeRepo(pref.source) || (typeof pref.source === "string" ? pref.source.trim() : "");
+                try {
+                    await restoreSkinDefinition(sdk, sid, savedSource);
+                    safeStorageSet("chisa_skin_id", sid);
+                    safeStorageSet("chisa_skin_source", savedSource);
+                    frontendLog("恢复后端皮肤偏好: " + sid + (savedSource ? " source=" + savedSource : ""));
+                    return true;
+                } catch (error) {
+                    frontendLog("皮肤偏好配置恢复失败: " + (error.message || error), "error");
+                    return false;
+                }
+            })();
+        }
+        if (typeof onComplete === "function") {
+            var completed = false;
+            var finish = function() {
+                if (completed) return;
+                completed = true;
+                onComplete();
+            };
+            skinInitPromise.then(finish, function(error) {
+                frontendLog("初始化异常: " + (error.message || error), "error");
+                finish();
+            });
+        }
+        return skinInitPromise;
+    }
+
+    function setSkinGridMessage(containerId, message) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = "";
+        var empty = document.createElement("div");
+        empty.className = "skin-manager-empty";
+        empty.textContent = message;
+        container.appendChild(empty);
+    }
+
+    function makeSkinButton(label, className, handler) {
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn btn-small " + (className || "");
+        button.textContent = label;
+        button.addEventListener("click", handler);
+        return button;
+    }
+
+    function createSkinCard(item, kind, sourceHint) {
+        var id = String(item.id || item.skin_id || "");
+        var source = normalizeRepo(item._source || sourceHint) || String(item._source || sourceHint || "");
+        var card = document.createElement("div");
+        card.className = "skin-manager-card";
+        card.setAttribute("data-skin-id", id);
+        card.setAttribute("data-skin-source", source);
+
+        var titleRow = document.createElement("div");
+        titleRow.className = "skin-card-title-row";
+        var swatch = document.createElement("span");
+        swatch.className = "skin-color-swatch";
+        var primary = item.vars && item.vars["--primary"] ? item.vars["--primary"] : "var(--primary)";
+        var bg = item.vars && item.vars["--bg"] ? item.vars["--bg"] : "var(--surface)";
+        swatch.style.background = "linear-gradient(135deg, " + primary + " 50%, " + bg + " 50%)";
+        var title = document.createElement("span");
+        title.className = "skin-card-title";
+        title.textContent = item.name || id;
+        titleRow.appendChild(swatch);
+        titleRow.appendChild(title);
+        card.appendChild(titleRow);
+
+        var sourceParts = splitSkinSource(source);
+        var meta = document.createElement("div");
+        meta.className = "skin-card-meta";
+        var metaParts = [];
+        if (item.author) metaParts.push("作者: " + item.author);
+        if (sourceParts.owner) metaParts.push(sourceParts.owner);
+        if (kind === "builtin") metaParts.push("内置 · 不可删除");
+        meta.textContent = metaParts.join(" · ");
+        card.appendChild(meta);
+        if (sourceParts.repo) {
+            var repo = document.createElement("div");
+            repo.className = "skin-card-repo";
+            repo.textContent = sourceParts.repo;
+            repo.title = source;
+            card.appendChild(repo);
+        }
+
+        var desc = document.createElement("div");
+        desc.className = "skin-card-desc";
+        desc.textContent = item.desc || (isGlassSkinValue(item) ? "毛玻璃主题" : "纯色主题");
+        card.appendChild(desc);
+
+        var actions = document.createElement("div");
+        actions.className = "skin-card-actions";
+        var state = document.createElement("span");
+        state.className = "skin-state";
+        actions.appendChild(state);
+        if (kind === "catalog") {
+            actions.appendChild(makeSkinButton("下载 / 更新", "btn-neutral", function() {
+                installSkin(id, source || sourceHint, this);
+            }));
+        } else {
+            actions.appendChild(makeSkinButton("使用", "btn-neutral", function() { applySkin(id, false, source); }));
+            if (kind === "downloaded" && !isEmbeddedSkin(id)) {
+                actions.appendChild(makeSkinButton("删除", "btn-danger-outline", function() { deleteDownloadedSkin(id, source); }));
+            }
+        }
+        card.appendChild(actions);
+        return card;
+    }
+
+    function renderBuiltinSkins() {
+        var container = document.getElementById("skinBuiltinGrid");
+        if (!container) return;
+        container.innerHTML = "";
+        for (var i = 0; i < EMBEDDED_SKIN_IDS.length; i++) {
+            var id = EMBEDDED_SKIN_IDS[i];
+            var skin = SKIN_REGISTRY[id];
+            var copy = {
+                id: id,
+                name: skin.name,
+                vars: skin.vars,
+                glass: skin.glass,
+                desc: id === "maple_dew" ? "默认毛玻璃主题" : (skin.glass ? "毛玻璃主题" : "内置配色主题")
+            };
+            container.appendChild(createSkinCard(copy, "builtin", ""));
+        }
+        renderSkinModalState();
+    }
+
+    function renderCatalogSkins(items, containerId, source, mode) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        var filtered = items.filter(function(item) {
+            if (!item || !item.id) return false;
+            if (mode === "official") return item._official === true || !item._source || item._source === OFFICIAL_SKIN_SOURCE;
+            return !item._source || !source || item._source === source;
+        });
+        container.innerHTML = "";
+        if (!filtered.length) {
+            var emptyMessage = mode === "official"
+                ? "官方源暂未发布在线皮肤。四套内置皮肤仍可正常使用。"
+                : "该第三方源暂未发布皮肤。";
+            setSkinGridMessage(containerId, emptyMessage);
+            return;
+        }
+        for (var i = 0; i < filtered.length; i++) container.appendChild(createSkinCard(filtered[i], "catalog", filtered[i]._source || source));
+        renderSkinModalState();
+    }
+
+    async function switchSkinManagerView(view, button) {
+        var views = document.querySelectorAll(".skin-manager-view");
+        for (var i = 0; i < views.length; i++) views[i].classList.toggle("active", views[i].id === "skin-view-" + view);
+        var tabs = document.querySelectorAll(".skin-manager-tab");
+        for (var j = 0; j < tabs.length; j++) tabs[j].classList.toggle("active", tabs[j] === button || tabs[j].getAttribute("data-skin-view") === view);
+        if (view === "builtin") renderBuiltinSkins();
+        else if (view === "official") await fetchSkinIndex("official");
+        else if (view === "custom") await loadSkinSources(true);
+        else if (view === "downloaded") await loadDownloadedSkins(false);
+    }
+
+    async function loadSkinSources(showErrors) {
+        var sdk = getSdk();
+        if (!sdk) return false;
+        try {
+            var data = skinSuccessData(await sdk.apiGet("skin_sources", {}));
+            var list = Array.isArray(data) ? data : (data && Array.isArray(data.sources) ? data.sources : null);
+            if (!list) throw new Error("皮肤源响应格式错误");
+            skinSources = [OFFICIAL_SKIN_SOURCE];
+            for (var i = 0; i < list.length; i++) {
+                var repo = normalizeRepo(list[i]);
+                if (repo && skinSources.indexOf(repo) === -1) skinSources.push(repo);
+            }
+            renderSkinSourceList();
+            return true;
+        } catch (e) {
+            console.error("[Chisa Skin] 读取皮肤源失败", e);
+            if (showErrors) showToast("读取皮肤源失败", "error");
+            renderSkinSourceList();
+            return false;
+        }
+    }
+
+    function renderSkinSourceList() {
+        var container = document.getElementById("skinSourceList");
+        if (!container) return;
+        container.innerHTML = "";
+        var custom = skinSources.filter(function(source) { return source !== OFFICIAL_SKIN_SOURCE; });
+        if (!custom.length) {
+            var empty = document.createElement("div");
+            empty.className = "skin-manager-empty";
+            empty.textContent = "尚未保存第三方皮肤源。";
+            container.appendChild(empty);
+            setSkinGridMessage("skinCustomGrid", "输入 GitHub 仓库地址后连接以读取 skin_index。");
+            return;
+        }
+        for (var i = 0; i < custom.length; i++) {
+            (function(source) {
+                var row = document.createElement("div");
+                row.className = "skin-source-item";
+                var name = document.createElement("div");
+                name.className = "skin-source-name";
+                name.textContent = source;
+                var actions = document.createElement("div");
+                actions.className = "skin-source-actions";
+                actions.appendChild(makeSkinButton("查看皮肤", "btn-neutral", function() { fetchSkinIndex("custom", source); }));
+                actions.appendChild(makeSkinButton("移除源", "btn-danger-outline", function() { removeSkinSource(source); }));
+                row.appendChild(name);
+                row.appendChild(actions);
+                container.appendChild(row);
+            })(custom[i]);
+        }
+    }
+
+    async function persistSkinSources() {
+        var sdk = getSdk();
+        if (!sdk) return false;
+        var custom = skinSources.filter(function(source) { return source !== OFFICIAL_SKIN_SOURCE; });
+        try {
+            var payloadSources = custom.map(function(source) { return "github.com/" + source; });
+            var raw = await sdk.apiPost("save_skin_sources", { sources: payloadSources });
+            // The bridge may unwrap the successful data array before returning it.
+            var saved = skinSuccessData(raw);
+            if (saved && !Array.isArray(saved) && Array.isArray(saved.sources)) saved = saved.sources;
+            if (!Array.isArray(saved)) {
+                var parsed = parseSkinResponse(raw);
+                if (parsed && parsed.status === "error") {
+                    frontendLog("皮肤源保存被后端拒绝: " + (parsed.message || "unknown error"), "error");
+                } else {
+                    frontendLog("皮肤源保存响应格式无法识别", "error");
+                }
+                return false;
+            }
+            var normalizedSaved = [OFFICIAL_SKIN_SOURCE];
+            for (var i = 0; i < saved.length; i++) {
+                var repo = normalizeRepo(saved[i]);
+                if (repo && normalizedSaved.indexOf(repo) === -1) normalizedSaved.push(repo);
+            }
+            skinSources = normalizedSaved;
+            frontendLog("皮肤源保存成功: " + normalizedSaved.slice(1).join(", "));
+            return true;
+        } catch (e) {
+            frontendLog("保存皮肤源异常: " + (e && e.message ? e.message : e), "error");
+            return false;
+        }
+    }
+
+    async function connectSkinSource() {
+        var input = document.getElementById("skinSourceUrl");
+        var source = normalizeRepo(input ? input.value : "");
+        if (!source) {
+            showToast("请输入有效的 GitHub 仓库 URL", "error");
+            return;
+        }
+        if (source === OFFICIAL_SKIN_SOURCE) {
+            showToast("该仓库是固定官方源", "");
+            await fetchSkinIndex("official");
+            return;
+        }
+        if (skinSources.indexOf(source) === -1) skinSources.push(source);
+        if (!await persistSkinSources()) {
+            skinSources = skinSources.filter(function(item) { return item !== source; });
+            showToast("皮肤源保存失败", "error");
+            renderSkinSourceList();
+            return;
+        }
+        if (input) input.value = "https://github.com/" + source;
+        renderSkinSourceList();
+        showToast("皮肤源已保存，正在读取索引", "success");
+        await fetchSkinIndex("custom", source);
+    }
+
+    async function removeSkinSource(source) {
+        skinSources = skinSources.filter(function(item) { return item === OFFICIAL_SKIN_SOURCE || item !== source; });
+        if (!await persistSkinSources()) {
+            if (skinSources.indexOf(source) === -1) skinSources.push(source);
+            showToast("移除皮肤源失败", "error");
+        } else {
+            showToast("第三方皮肤源已移除", "success");
+            setSkinGridMessage("skinCustomGrid", "请选择其他来源或连接新的 GitHub 仓库。");
+        }
+        renderSkinSourceList();
+    }
+
+    async function fetchSkinIndex(mode, source) {
+        mode = mode === "custom" ? "custom" : "official";
+        source = mode === "custom" ? normalizeRepo(source) : "";
+        var containerId = mode === "custom" ? "skinCustomGrid" : "skinOfficialGrid";
+        if (mode === "custom" && !source) {
+            setSkinGridMessage(containerId, "请先选择一个第三方皮肤源。");
             return;
         }
         var sdk = getSdk();
         if (!sdk) return;
-        showToast("正在按当前下载引擎重新拉取背景...", "");
-        sdk.apiGet("skin_asset", { file: skin.remoteBg, force: "1" }).then(function(res) {
-            var d = parseSdkResponse(res);
-            if (d && d.status === "success" && d.data_url) {
-                document.documentElement.style.setProperty("--bg-image", "url('" + d.data_url + "')");
-                showToast("背景已重新下载并应用！", "success");
-            } else {
-                showToast("背景重新下载失败，请检查网络或切换节点重试", "error");
+        setSkinGridMessage(containerId, "正在读取皮肤索引...");
+        var params = { mode: mode, node: getSkinDownloadNode() };
+        if (source) params.source = source;
+        try {
+            var items = skinListFromResponse(await sdk.apiGet("skin_index", params));
+            if (!items) throw new Error("skin_index 响应格式错误");
+            renderCatalogSkins(items, containerId, source || OFFICIAL_SKIN_SOURCE, mode);
+        } catch (e) {
+            console.error("[Chisa Skin] 读取 skin_index 失败", e);
+            setSkinGridMessage(containerId, "皮肤索引读取失败。");
+            showToast("皮肤索引读取失败", "error");
+        }
+    }
+
+    async function precacheSkinBackground(skin) {
+        if (!skin.remoteBg) return true;
+        var sdk = getSdk();
+        if (!sdk) return false;
+        try {
+            var data = skinSuccessData(await sdk.apiGet("skin_asset", {
+                skin_id: skin.id || skin.skin_id,
+                file: skin.remoteBg,
+                source: skin._source || "",
+                node: getSkinDownloadNode()
+            }));
+            return !!(data && (data.data_url || data.delivery === "chunked"));
+        } catch (e) {
+            return false;
+        }
+    }
+
+    async function installSkin(id, source, button) {
+        var sdk = getSdk();
+        source = normalizeRepo(source) || String(source || "");
+        if (!sdk || !id) return;
+        if (isEmbeddedSkin(id)) {
+            showToast("内置皮肤始终使用随页面提供的版本，无需下载", "");
+            return;
+        }
+        if (button) {
+            button.disabled = true;
+            button.classList.add("btn-downloading");
+            button.textContent = "下载中...";
+        }
+        try {
+            var config = normalizeDownloadedSkin(skinSuccessData(await sdk.apiPost("skin_get", { id: id, source: source, node: getSkinDownloadNode() })), source);
+            if (!config || config.id !== id) throw new Error("skin_get 响应格式错误");
+            setSkinDef(config);
+            var cached = await precacheSkinBackground(config);
+            showToast(cached || !config.remoteBg ? "皮肤已下载并缓存" : "皮肤已下载，背景预缓存失败", cached || !config.remoteBg ? "success" : "error");
+            renderSkinModalState();
+        } catch (e) {
+            console.error("[Chisa Skin] 下载皮肤失败", e);
+            showToast("皮肤下载失败", "error");
+        } finally {
+            if (button) {
+                button.disabled = false;
+                button.classList.remove("btn-downloading");
+                button.textContent = "下载 / 更新";
             }
-        }).catch(function() {
-            showToast("背景重新下载失败", "error");
-        });
+        }
+    }
+
+    async function loadDownloadedSkins(showToastOnSuccess) {
+        var sdk = getSdk();
+        if (!sdk) return;
+        setSkinGridMessage("skinDownloadedGrid", "正在读取本地皮肤...");
+        try {
+            var items = skinListFromResponse(await sdk.apiGet("skin_local", {}));
+            if (!items) throw new Error("skin_local 响应格式错误");
+            var normalized = [];
+            for (var i = 0; i < items.length; i++) {
+                var skin = normalizeDownloadedSkin(items[i], items[i] && items[i]._source);
+                if (!skin) continue;
+                if (!isEmbeddedSkin(skin.id)) setSkinDef(skin);
+                normalized.push(isEmbeddedSkin(skin.id) ? Object.assign({ id: skin.id }, SKIN_REGISTRY[skin.id]) : skin);
+            }
+            var container = document.getElementById("skinDownloadedGrid");
+            container.innerHTML = "";
+            if (!normalized.length) {
+                setSkinGridMessage("skinDownloadedGrid", "尚未下载动态皮肤。");
+            } else {
+                for (var j = 0; j < normalized.length; j++) container.appendChild(createSkinCard(normalized[j], "downloaded", normalized[j]._source));
+                renderSkinModalState();
+            }
+            if (showToastOnSuccess) showToast("本地皮肤列表已刷新", "success");
+        } catch (e) {
+            console.error("[Chisa Skin] 读取 skin_local 失败", e);
+            setSkinGridMessage("skinDownloadedGrid", "本地皮肤读取失败。");
+            showToast("本地皮肤读取失败", "error");
+        }
+    }
+
+    async function deleteDownloadedSkin(id, source) {
+        if (isEmbeddedSkin(id)) {
+            showToast("内置皮肤不可删除", "error");
+            return;
+        }
+        if (id === currentSkinId && (source || "") === (currentSkinSource || "")) {
+            showToast("当前正在使用的皮肤不可删除，请先切换皮肤", "error");
+            return;
+        }
+        if (typeof customConfirm === "function" && !await customConfirm("确认删除已下载皮肤 “" + id + "” 吗？\n来源：" + (source || "未知来源"))) return;
+        var sdk = getSdk();
+        if (!sdk) return;
+        try {
+            var deleted = skinSuccessData(await sdk.apiPost("skin_delete", { id: id, source: source || "" }));
+            if (!deleted || deleted.id !== id || deleted.deleted !== true) throw new Error("skin_delete 返回失败");
+            deleteSkinDef(id, source);
+            showToast("皮肤已删除", "success");
+            await loadDownloadedSkins(false);
+        } catch (e) {
+            console.error("[Chisa Skin] 删除皮肤失败", e);
+            showToast("皮肤删除失败", "error");
+        }
+    }
+
+    async function redownloadSkinBg(ev) {
+        if (ev) ev.stopPropagation();
+        var skin = getSkinDef(currentSkinId, currentSkinSource);
+        if (!skin || !skin.remoteBg) {
+            showToast("当前皮肤为纯色主题，无需下载背景哦~", "");
+            return;
+        }
+        showToast("正在按当前下载引擎重新拉取背景...", "");
+        var ok = await requestSkinBackground(currentSkinId, skin, true);
+        showToast(ok ? "背景已重新下载并应用！" : "背景重新下载失败，请检查网络或切换节点重试", ok ? "success" : "error");
     }
 
   </script>
@@ -2725,20 +3495,27 @@
 
     function fetchData() {
       var sdk = getSdk();
-      if (!sdk) { showToast("环境错误：未检测到 AstrBot SDK", "error"); return; }
-      showToast("正在拉取数据列表...", "");
+      if (!sdk) {
+        showToast("环境错误：未检测到 AstrBot SDK", "error");
+        return Promise.resolve(false);
+      }
+      showToast("正在优先读取本地图库...", "");
       
-      sdk.apiGet("list_images").then(function(res) {
+      return sdk.apiGet("list_images").then(function(res) {
         var json = parseSdkResponse(res);
         if (json && (json.status === 'ok' || json.food)) {
-          var realData = json.data || json; 
+          var realData = json.data || json;
           renderData(realData);
-          showToast("列表拉取完毕！下滑加载图片。", "success");
-        } else {
-          showToast("后台返回了错误", "error");
+          showToast("本地图库读取完毕！下滑加载图片。", "success");
+          frontendLog("本地图库已优先渲染，开始后台恢复皮肤与其他数据");
+          return true;
         }
+        showToast("后台返回了错误", "error");
+        return false;
       }).catch(function(e) {
         showToast("网络请求失败，请查看控制台日志。", "error");
+        frontendLog("本地图库读取失败: " + (e && e.message ? e.message : e), "error");
+        return false;
       });
     }
 
@@ -2870,11 +3647,13 @@
             if (sdk) {
                 astrSdk = sdk;
                 sdk.ready().then(function() {
-                    loadMascot();
-                    // v4.1.7 改造为流水线式 (Pipeline) 顺次加载，彻底杜绝高并发导致前端 SDK 响应串线
-                    initSkinFromPref(function() {
+                    // v4.2.1: 本地图库拥有最高启动优先级。皮肤变量随后恢复，
+                    // 背景分块在后台继续，不能再阻塞图库、工坊书架或吉祥物。
+                    fetchData().then(function() {
                         loadWorkshopHistoryFromBackend(function() {
-                            fetchData();
+                            initSkinFromPref(function() {
+                                loadMascot();
+                            });
                         });
                     });
                 }).catch(function(e) { console.error("SDK Ready failed", e); });

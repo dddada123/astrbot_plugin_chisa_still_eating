@@ -5,12 +5,12 @@
 # 🚀 🍱 千小妹还在吃 (Chisa Still Eating)
 [![AstrBot](https://img.shields.io/badge/Framework-AstrBot-🚀_purple.svg)](https://github.com/Soulter/AstrBot)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-4.1.8-ff69b4.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-4.2.1-ff69b4.svg)](CHANGELOG.md)
 
 一个为 [AstrBot](https://github.com/Soulter/AstrBot) 深度定制的跨次元多世界干饭系统。
 每天都在纠结吃什么？那就让异次元的向导们来帮你随机摇号吧！把食物图片扔进对应的文件夹，它就会自动变成菜单里的美味！通过完美的分类引擎，为你的群聊带来极具情感连接和随机惊喜的沉浸式"吃什么"体验！
 
-当前版本：**4.1.8** 🎉 官方四套皮肤正式上线 & 图库创意工坊已开放！ | 作者：Rua432
+当前版本：**4.2.1** 🎉 本地图库优先加载优化版 | 作者：Rua432
 
 <div align="center">
   <img src="https://count.getloli.com/@chisa_still_eating?name=chisa_still_eating&theme=asoul&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto">
@@ -21,7 +21,44 @@
 
 ---
 
-## 🎨 全新主题装扮系统 & 创意工坊 (4.1.8)
+## 🎨 皮肤工坊正式上线 (4.2.0)
+
+4.2.0 将皮肤工坊作为稳定功能正式发布。在四套不可删除的内置皮肤之外，WebUI 同步提供 **官方固定皮肤源** 与 **第三方 GitHub 自定义源**：玩家可以浏览主题、下载或更新皮肤、切换毛玻璃背景，并在“已下载”页面管理本地内容。
+
+- **官方源同步**：官方仓库集中发布经过维护的皮肤商品，打开皮肤管理器即可刷新获取。
+- **第三方源订阅**：输入 `owner/repo` 或完整 GitHub 地址即可连接和保存；可同时订阅多个社区皮肤仓库，没有商品时也会显示明确的空状态。
+- **来源完全隔离**：官方内容保存到 `Webui-PIC/skins/OfficialWS/skin`，第三方内容保存到各自的 `<owner>_<repo>/skin`；不同来源可以使用相同皮肤 ID，删除时互不影响。
+- **大图稳定加载**：背景下载到本地后通过分块传递到 WebUI，数 MB 的 JPG/PNG 不再因为单次 base64 响应过大而无法显示。
+- **启动不再等待背景**：WebUI 优先读取和渲染本地图库，红枫背景下载及分块装配在后台进行；下载节点卡顿也不会把用户困在初始界面。
+- **格式向前兼容**：支持传统 14 变量皮肤及带 `--primary-contrast` 的 15 变量皮肤，旧商品无需重新制作。
+
+皮肤仓库按 `skin/index.json`、`skin/{id}.json` 和配置中的 `assets.bg` 组织资源。当前皮肤 ID、来源和毛玻璃力度会持久化保存，刷新或重开 WebUI 后仍可恢复。配套的“千小妹后厨”图形化打包器也已加入皮肤商品制作、编号编辑及已有商品更新能力；打包器的详细 README 在独立项目中维护，本仓库仅介绍播放器端功能。
+
+### 官方皮肤商店源
+
+官方固定源集中展示经过维护的皮肤商品，可直接刷新、下载和更新。
+
+<div align="center">
+  <img src="https://s1.imagehub.cc/images/2026/08/30/1a36dbbdfbf295a3575be417b7a9b4a5.jpg" alt="新增官方皮肤商店源" width="900">
+</div>
+
+### 第三方源皮肤工坊
+
+输入 GitHub 仓库地址即可订阅社区皮肤源；多个来源可以并存，没有发布皮肤的仓库也会显示明确空状态。
+
+<div align="center">
+  <img src="https://s1.imagehub.cc/images/2026/08/30/ce7e416c11baa308f309f033fbb425a1.jpg" alt="支持第三方源皮肤工坊功能" width="900">
+</div>
+
+### 已下载皮肤管理
+
+已下载页面可以切换、更新和删除动态皮肤；删除操作按来源隔离，不会误删其他仓库的同 ID 商品。
+
+<div align="center">
+  <img src="https://s1.imagehub.cc/images/2026/08/30/109ea2101bc88f29af7b740b4be6e36b.jpg" alt="自由管理已下载皮肤" width="900">
+</div>
+
+### 内置主题
 
 千小妹跨次元后厨现已实装 **四套官方皮肤** 以及高自由度的毛玻璃模糊度调节（0-100级细腻平滑映射），你的大屏，由你定义！
 并且完美支持 **皮肤偏好持久化**：不管是在不同的设备打开，还是断网刷新，你的皮肤设置都会被完美记忆。
@@ -97,10 +134,11 @@
 
 ## 🧰 千小妹后厨 · 云仓管理中枢 (创作者工具)
 
-想成为创意工坊的作者？我们配套开发了图形化的 **云仓管理中枢**，让你零命令行完成从创作到上架的全流程：图形化打包 DLC、一键推送 GitHub 仓库与 Release、商店元数据装潢（名称/作者/简介/横幅海报）、云端资源管理（下载/比对/合并/清理）全都有。
+皮肤工坊同步配套发布了具有皮肤商品制作能力的 **千小妹后厨 3.0.17α 图形化打包器**。创作者可以在本地填写皮肤名称、作者、类型和编号，调用 AI 生成 15 变量配色，选择背景与切换台词，并一键创建或更新 GitHub 仓库中的配置、图片和 `skin/index.json`。
 
-**📥 管理器下载**：[Chisa_kitchen_manager_2.9.72.pyw（点我下载）](https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/%E5%8D%83%E5%B0%8F%E5%A6%B9%E5%90%8E%E5%8E%A8DLC%E4%BB%93%E5%BA%93%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7/Chisa_kitchen_manager_2.9.72.pyw)
-**📖 详细使用说明书**：请移步 [图库仓库 README](https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo) 查看。
+**打包器下载**：[Chisa_kitchen_manager_3.0.17.pyw](https://github.com/dddada123/astrbot_plugin_chisa_still_eating_photo/releases/download/%E5%8D%83%E5%B0%8F%E5%A6%B9%E5%90%8E%E5%8E%A8DLC%E4%BB%93%E5%BA%93%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7/Chisa_kitchen_manager_3.0.17.pyw)
+
+打包器同时保留 DLC 打包、GitHub/Release 同步、商店元数据装潢和云端资源管理能力。具体环境配置和操作手册由打包器独立项目的 README 维护，本插件仓库不重复展开。
 
 *图形化打包器：自由创作图库，打包上架一气呵成：*
 <div align="center">
