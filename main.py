@@ -18,9 +18,9 @@ from .food_data import FoodDataManager
 from .rate_limiter import RateLimiter
 from .responder import Responder
 
-__version__ = "4.2.3"
+__version__ = "4.2.4"
 
-@register("astrbot_plugin_chisa_still_eating", "Rua432", "4.2.3", "终极跨次元干饭系统")
+@register("astrbot_plugin_chisa_still_eating", "Rua432", "4.2.4", "终极跨次元干饭系统")
 class FlavorFusionUltimate(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -901,7 +901,7 @@ class FlavorFusionUltimate(Star):
                     return
         
         if msg_text in ["千小妹还在吃帮助", "千咲吃什么帮助", "干饭帮助", "美食帮助", "千小妹帮助", "千小妹吃什么帮助"]:
-            help_text = """🌸 【千小妹跨次元干饭指南 v4.2.3】 🌸
+            help_text = """🌸 【千小妹跨次元干饭指南 v4.2.4】 🌸
 不知道今天吃啥？让异次元的导游们为你随机摇号吧！
 
 🎲 基础盲盒（全宇宙随机）
