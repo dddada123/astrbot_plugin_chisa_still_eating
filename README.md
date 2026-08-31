@@ -18,6 +18,7 @@
 
 ## 特别鸣谢
 ·感谢 [NTidal](https://github.com/NTidal)移植的NekroAgent版本 —— [Nekro-Chisa-Still-Eating](https://github.com/NTidal/Nekro-Chisa-Still-Eating)
+
 ·感谢 [MimoKit](https://github.com/MimoKit) 移植的GsCore版本 —— [ChisaEating](https://github.com/MimoKit/ChisaEating)
 
 ---
