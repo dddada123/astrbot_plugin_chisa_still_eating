@@ -364,6 +364,16 @@ data/plugin_data/astrbot_plugin_chisa_still_eating/
 
 ---
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=dddada123%2Fastrbot_plugin_chisa_still_eating&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=dddada123/astrbot_plugin_chisa_still_eating&type=date&theme=dark&legend=top-left&sealed_token=wY_JG6M4Z2Hxe-JW1zIx9PFpNM5RppbWqQE-ZfsvgXPpbCyTk0S9GwIwbH2V9UHsPycdbE_xJoqMKSEgcZvUoux7fo2hg_tMLcBiIuiWITJ4q03erUGIAg" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=dddada123/astrbot_plugin_chisa_still_eating&type=date&legend=top-left&sealed_token=wY_JG6M4Z2Hxe-JW1zIx9PFpNM5RppbWqQE-ZfsvgXPpbCyTk0S9GwIwbH2V9UHsPycdbE_xJoqMKSEgcZvUoux7fo2hg_tMLcBiIuiWITJ4q03erUGIAg" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=dddada123/astrbot_plugin_chisa_still_eating&type=date&legend=top-left&sealed_token=wY_JG6M4Z2Hxe-JW1zIx9PFpNM5RppbWqQE-ZfsvgXPpbCyTk0S9GwIwbH2V9UHsPycdbE_xJoqMKSEgcZvUoux7fo2hg_tMLcBiIuiWITJ4q03erUGIAg" />
+ </picture>
+</a>
+
 ## ☕ 赞助与支持 (完全自愿)
 
 本插件及其核心逻辑**本体完全免费、永久开源**。
