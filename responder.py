@@ -1,7 +1,21 @@
 import logging
+import re
 
 class Responder:
     """高阶AI拟人化沉浸回复接入总线：仅提供情境，完全依赖 AstrBot 原生人格进行回复"""
+    # 兼容未标记 role="err"、而是把上游错误作为普通文本返回的接口。
+    _ERROR_TEXT = re.compile(
+        r"all chat models failed\b|all available chat models are unavailable\b|"
+        r"no available channel for model\b|"
+        r"\b(?:InternalServerError|RateLimitError|APITimeoutError|"
+        r"APIConnectionError|TimeoutError)\s*:|"
+        r"\b(?:error code|http(?:/\d(?:\.\d)?)?(?: error)?|status(?: code)?)"
+        r"\s*[:=]?\s*[45]\d{2}\b|"
+        r"\b(?:request|connection) (?:timed out|timeout)\b|"
+        r'Traceback \(most recent call last\):|^\s*\{\s*"error"\s*:',
+        re.IGNORECASE,
+    )
+
     def __init__(self):
         self.logger = logging.getLogger("astrbot")
 
@@ -38,19 +52,16 @@ class Responder:
         )
 
         try:
+            response = None
             # === 适配 AstrBot 最新版 API 调用大模型 ===
             if hasattr(context, "get_current_chat_provider_id") and hasattr(context, "tool_loop_agent"):
                 umo = event.unified_msg_origin
                 prov_id = await context.get_current_chat_provider_id(umo)
-                llm_resp = await context.tool_loop_agent(
+                response = await context.tool_loop_agent(
                     event=event,
                     chat_provider_id=prov_id,
                     prompt=prompt
                 )
-                if llm_resp and hasattr(llm_resp, "completion_text"):
-                    result_text = llm_resp.completion_text.strip()
-                    if result_text:
-                        return result_text
             
             # === 向下兼容旧版 API ===
             elif hasattr(context, "get_llm_service"):
@@ -58,13 +69,27 @@ class Responder:
                 if llm_service:
                     if hasattr(llm_service, "text_chat"):
                         response = await llm_service.text_chat(prompt)
-                        if response and response.strip():
-                            return response.strip()
                     elif hasattr(llm_service, "generate_text"):
                         response = await llm_service.generate_text(prompt)
-                        if response and response.strip():
-                            return response.strip()
             
+            # AstrBot 的失败响应可能包含非空 completion_text，不能当作台词发送。
+            if getattr(response, "role", None) == "err":
+                self.logger.warning(
+                    "[FlavorFusion AI] 大模型返回错误，使用本地文案: %s",
+                    getattr(response, "completion_text", ""),
+                )
+                return ""
+
+            result_text = response if isinstance(response, str) else getattr(response, "completion_text", "")
+            if isinstance(result_text, str) and result_text.strip():
+                result_text = result_text.strip()
+                if self._ERROR_TEXT.search(result_text):
+                    self.logger.warning(
+                        "[FlavorFusion AI] 大模型返回错误文本，使用本地文案: %s", result_text
+                    )
+                    return ""
+                return result_text
+
             self.logger.warning("[FlavorFusion AI] 未能找到兼容的 AstrBot 大模型接口或模型返回为空")
             return ""
         except Exception as e:
